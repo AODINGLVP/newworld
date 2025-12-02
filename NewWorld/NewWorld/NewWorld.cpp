@@ -23,6 +23,10 @@ struct PRIM_VERTEX
 	Vec3 position;
 	Colour colour;
 };
+struct alignas(16) ConstantBuffer1
+{
+	float time;
+};
 
 
 class Mesh {
@@ -90,61 +94,8 @@ public:
 		mesh.init(core, &vertices[0], sizeof(PRIM_VERTEX), 3);
 	}
 };
-class Shader {
-public:
-	ID3DBlob* vertexShader;
-	ID3DBlob* pixelShader;
-	PSOManager psos;
-	ScreenSpaceTriangle triangle;
-	int debug = 0;
-	
-	string ReadShader(string filename) {
-		std::ifstream file(filename);
-		std::stringstream buffer;
-		buffer << file.rdbuf();
-		return buffer.str();
-	}
-	void Compile(Core* core) {
-		debug = 1;
-		OutputDebugStringA(to_string(debug).c_str());
-		//Compile vertex shader
-		ID3DBlob* status;
-		string vertexShadersStr=ReadShader("ShaderVertices.hlsl");
-		HRESULT hr = D3DCompile(vertexShadersStr.c_str(), strlen(vertexShadersStr.c_str()), NULL,
-			NULL, NULL, "VS", "vs_5_0", 0, 0, &vertexShader, &status);
-		string pixelShaderStr = ReadShader("ShaderPixel.hlsl");
-		hr = D3DCompile(pixelShaderStr.c_str(), strlen(pixelShaderStr.c_str()), NULL, NULL,
-			NULL, "PS", "ps_5_0", 0, 0, &pixelShader, &status);
-		if (FAILED(hr)) {
-			if (status) {
-				// Print the error to the Visual Studio Output window
-				OutputDebugStringA((char*)status->GetBufferPointer());
-				status->Release();
-			}
-			return;
-		}
-		debug = 2;
-	
-		psos.createPSO(core, "Triangle", vertexShader, pixelShader, triangle.mesh.inputLayoutDesc);
-		debug = 3;
-		
-	}
-	void init(Core* core) {
-		triangle.init(core);
-		Compile(core);
-	}
-	void draw(Core* core) {
-		core->beginRenderPass();
-		psos.bind(core, "Triangle");
-		triangle.mesh.draw(core);
-	}
-
-};
-struct alignas(16) ConstantBuffer1
-{
-	float time;
-};
 class ConstantBuffer {
+public:
 	ID3D12Resource* constantBuffer;
 	unsigned char* buffer;
 	unsigned int cbSizeInBytes;
@@ -180,6 +131,67 @@ class ConstantBuffer {
 		return (constantBuffer->GetGPUVirtualAddress() + (frame * cbSizeInBytes));
 	}
 };
+class Shader {
+public:
+	ID3DBlob* vertexShader;
+	ID3DBlob* pixelShader;
+	PSOManager psos;
+	ScreenSpaceTriangle triangle; 
+	ConstantBuffer constantBuffer;
+	int debug = 0;
+	
+	string ReadShader(string filename) {
+		std::ifstream file(filename);
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		return buffer.str();
+	}
+	void Compile(Core* core) {
+		debug = 1;
+		OutputDebugStringA(to_string(debug).c_str());
+		//Compile vertex shader
+		ID3DBlob* status;
+		string vertexShadersStr=ReadShader("ShaderVertices.hlsl");
+		HRESULT hr = D3DCompile(vertexShadersStr.c_str(), strlen(vertexShadersStr.c_str()), NULL,
+			NULL, NULL, "VS", "vs_5_0", 0, 0, &vertexShader, &status);
+		string pixelShaderStr = ReadShader("ShaderPixel.hlsl");
+		hr = D3DCompile(pixelShaderStr.c_str(), strlen(pixelShaderStr.c_str()), NULL, NULL,
+			NULL, "PS", "ps_5_0", 0, 0, &pixelShader, &status);
+		if (FAILED(hr)) {
+			if (status) {
+				// Print the error to the Visual Studio Output window
+				OutputDebugStringA((char*)status->GetBufferPointer());
+				status->Release();
+			}
+			return;
+		}
+		debug = 2;
+	
+		psos.createPSO(core, "Triangle", vertexShader, pixelShader, triangle.mesh.inputLayoutDesc);
+		debug = 3;
+		
+	}
+	void init(Core* core) {
+		triangle.init(core);
+		constantBuffer.init(core, sizeof(ConstantBuffer1), 2);
+		Compile(core);
+	}
+	void draw(Core* core) {
+		core->beginRenderPass();
+		psos.bind(core, "Triangle");
+		triangle.mesh.draw(core);
+	}
+	void draw(Core* core, ConstantBuffer1* cb)
+	{
+		core->beginRenderPass();
+		constantBuffer.update(cb, sizeof(ConstantBuffer1), core->frameIndex());
+		core->getCommandList()->SetGraphicsRootConstantBufferView(1, constantBuffer.getGPUAddress(core->frameIndex()));
+			psos.bind(core, "Triangle");
+			triangle.mesh.draw(core);
+	}
+
+};
+
 class Window;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 Window* window;
@@ -300,8 +312,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Core core;
 	Window win;
 	Shader scv;
-	ConstantBuffer1 constBufferCPU;
-	constBufferCPU.time = 0;
+	ConstantBuffer1 constBufferCPU1;
+	constBufferCPU1.time = 0;
 	GamesEngineeringBase::Timer timer;
 	
 	
@@ -309,15 +321,18 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	
 	core.init(window->hwnd,kuan,gao);
 	scv.init(&core);
-
+	float dt;
 	while (1) {
+		dt = timer.dt();
+		constBufferCPU1.time += dt;
+
 		core.beginFrame();
 		win.processMessages();
 		if (win.keys[VK_ESCAPE] == 1)
 		{
 			break;
 		}
-		scv.draw(&core);
+		scv.draw(&core,&constBufferCPU1);
 		core.finishFrame();
 	}
 	core.flushGraphicsQueue();
