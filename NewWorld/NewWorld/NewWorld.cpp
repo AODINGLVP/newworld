@@ -27,7 +27,13 @@ struct alignas(16) ConstantBuffer1
 {
 	float time;
 };
+struct alignas(16) ConstantBuffer2
+{
+	float time;
+	float padding[3];
+	Vec4 lights[4];
 
+};
 
 class Mesh {
 public:
@@ -173,7 +179,7 @@ public:
 	}
 	void init(Core* core) {
 		triangle.init(core);
-		constantBuffer.init(core, sizeof(ConstantBuffer1), 2);
+		constantBuffer.init(core, sizeof(ConstantBuffer2), 2);
 		Compile(core);
 	}
 	void draw(Core* core) {
@@ -188,6 +194,14 @@ public:
 		core->getCommandList()->SetGraphicsRootConstantBufferView(1, constantBuffer.getGPUAddress(core->frameIndex()));
 			psos.bind(core, "Triangle");
 			triangle.mesh.draw(core);
+	}
+	void draw(Core* core, ConstantBuffer2* cb)
+	{
+		core->beginRenderPass();
+		constantBuffer.update(cb, sizeof(ConstantBuffer2), core->frameIndex());
+		core->getCommandList()->SetGraphicsRootConstantBufferView(1, constantBuffer.getGPUAddress(core->frameIndex()));
+		psos.bind(core, "Triangle");
+		triangle.mesh.draw(core);
 	}
 
 };
@@ -312,11 +326,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Core core;
 	Window win;
 	Shader scv;
-	ConstantBuffer1 constBufferCPU1;
-	constBufferCPU1.time = 0;
+	//ConstantBuffer1 constBufferCPU1;
+	//constBufferCPU1.time = 0;
+	ConstantBuffer2 constBufferCPU2;
 	GamesEngineeringBase::Timer timer;
 	
-	
+	constBufferCPU2.time = 0;
 	win.create(kuan, gao, "My Window");
 	
 	core.init(window->hwnd,kuan,gao);
@@ -324,15 +339,22 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	float dt;
 	while (1) {
 		dt = timer.dt();
-		constBufferCPU1.time += dt;
-
+		//constBufferCPU1.time += dt;
+		constBufferCPU2.time += dt;
+		for (int i = 0; i < 4; i++)
+		{
+			float angle = constBufferCPU2.time + (i * M_PI / 2.0f);
+			constBufferCPU2.lights[i] = Vec4(kuan / 2.0f + (cosf(angle) * (kuan * 0.3f)),
+				gao / 2.0f + (sinf(angle) * (gao * 0.3f)),
+				0, 0);
+		}
 		core.beginFrame();
 		win.processMessages();
 		if (win.keys[VK_ESCAPE] == 1)
 		{
 			break;
 		}
-		scv.draw(&core,&constBufferCPU1);
+		scv.draw(&core,&constBufferCPU2);
 		core.finishFrame();
 	}
 	core.flushGraphicsQueue();

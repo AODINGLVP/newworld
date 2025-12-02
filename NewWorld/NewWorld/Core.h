@@ -230,6 +230,7 @@ public:
      
       // Update Root Signature
         std::vector<D3D12_ROOT_PARAMETER> parameters;
+
         D3D12_ROOT_PARAMETER rootParameterCBVS;
         rootParameterCBVS.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
         rootParameterCBVS.Descriptor.ShaderRegister = 0; // Register(b0)
