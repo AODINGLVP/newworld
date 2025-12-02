@@ -85,21 +85,6 @@ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 		core->getCommandList()->DrawInstanced(3, 1, 0, 0);
 	}
 };
-class ScreenSpaceTriangle {
-public:
-	PRIM_VERTEX vertices[3];
-	Mesh mesh;
-	void init(Core* core) {
-		
-		vertices[0].position = Vec3(0, 1.0f, 0);
-		vertices[0].colour = Colour(0, 1.0f, 0);
-		vertices[1].position = Vec3(-1.0f, -1.0f, 0);
-		vertices[1].colour = Colour(1.0f, 0, 0);
-		vertices[2].position = Vec3(1.0f, -1.0f, 0);
-		vertices[2].colour = Colour(0, 0, 1.0f);
-		mesh.init(core, &vertices[0], sizeof(PRIM_VERTEX), 3);
-	}
-};
 class ConstantBuffer {
 public:
 	ID3D12Resource* constantBuffer;
@@ -141,11 +126,11 @@ class Shader {
 public:
 	ID3DBlob* vertexShader;
 	ID3DBlob* pixelShader;
-	PSOManager psos;
-	ScreenSpaceTriangle triangle; 
+	
+
 	ConstantBuffer constantBuffer;
 	int debug = 0;
-	
+
 	string ReadShader(string filename) {
 		std::ifstream file(filename);
 		std::stringstream buffer;
@@ -157,7 +142,7 @@ public:
 		OutputDebugStringA(to_string(debug).c_str());
 		//Compile vertex shader
 		ID3DBlob* status;
-		string vertexShadersStr=ReadShader("ShaderVertices.hlsl");
+		string vertexShadersStr = ReadShader("ShaderVertices.hlsl");
 		HRESULT hr = D3DCompile(vertexShadersStr.c_str(), strlen(vertexShadersStr.c_str()), NULL,
 			NULL, NULL, "VS", "vs_5_0", 0, 0, &vertexShader, &status);
 		string pixelShaderStr = ReadShader("ShaderPixel.hlsl");
@@ -171,37 +156,44 @@ public:
 			}
 			return;
 		}
-		debug = 2;
 	
-		psos.createPSO(core, "Triangle", vertexShader, pixelShader, triangle.mesh.inputLayoutDesc);
-		debug = 3;
+
 		
 	}
 	void init(Core* core) {
-		triangle.init(core);
+		
 		constantBuffer.init(core, sizeof(ConstantBuffer2), 2);
 		Compile(core);
 	}
-	void draw(Core* core) {
-		core->beginRenderPass();
-		psos.bind(core, "Triangle");
-		triangle.mesh.draw(core);
-	}
-	void draw(Core* core, ConstantBuffer1* cb)
-	{
-		core->beginRenderPass();
-		constantBuffer.update(cb, sizeof(ConstantBuffer1), core->frameIndex());
-		core->getCommandList()->SetGraphicsRootConstantBufferView(1, constantBuffer.getGPUAddress(core->frameIndex()));
-			psos.bind(core, "Triangle");
-			triangle.mesh.draw(core);
+	
+	
+};
+
+class ScreenSpaceTriangle {
+public:
+	Shader shader;
+	PRIM_VERTEX vertices[3];
+	PSOManager psos;
+	Mesh mesh;
+	void init(Core* core) {
+		
+		vertices[0].position = Vec3(0, 1.0f, 0);
+		vertices[0].colour = Colour(0, 1.0f, 0);
+		vertices[1].position = Vec3(-1.0f, -1.0f, 0);
+		vertices[1].colour = Colour(1.0f, 0, 0);
+		vertices[2].position = Vec3(1.0f, -1.0f, 0);
+		vertices[2].colour = Colour(0, 0, 1.0f);
+		mesh.init(core, &vertices[0], sizeof(PRIM_VERTEX), 3);
+		shader.init(core);
+		psos.createPSO(core, "Triangle", shader.vertexShader, shader.pixelShader, mesh.inputLayoutDesc);
 	}
 	void draw(Core* core, ConstantBuffer2* cb)
 	{
 		core->beginRenderPass();
-		constantBuffer.update(cb, sizeof(ConstantBuffer2), core->frameIndex());
-		core->getCommandList()->SetGraphicsRootConstantBufferView(1, constantBuffer.getGPUAddress(core->frameIndex()));
+		shader.constantBuffer.update(cb, sizeof(ConstantBuffer2), core->frameIndex());
+		core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader.constantBuffer.getGPUAddress(core->frameIndex()));
 		psos.bind(core, "Triangle");
-		triangle.mesh.draw(core);
+		mesh.draw(core);
 	}
 
 };
@@ -323,19 +315,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	PSTR lpCmdLine, int nCmdShow) {
-	Core core;
 	Window win;
-	Shader scv;
-	//ConstantBuffer1 constBufferCPU1;
-	//constBufferCPU1.time = 0;
+	Core core;
+	core.init(window->hwnd, kuan, gao);
+	
+	ScreenSpaceTriangle scv;
+	scv.init(&core);
 	ConstantBuffer2 constBufferCPU2;
+	constBufferCPU2.time = 0;
 	GamesEngineeringBase::Timer timer;
 	
-	constBufferCPU2.time = 0;
+	
 	win.create(kuan, gao, "My Window");
 	
-	core.init(window->hwnd,kuan,gao);
-	scv.init(&core);
+	
+	
 	float dt;
 	while (1) {
 		dt = timer.dt();
