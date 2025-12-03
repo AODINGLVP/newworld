@@ -281,7 +281,7 @@ public:
 
 
 
-			core->getCommandList()->SetGraphicsRootConstantBufferView(slot, shader.ps_constantBuffer[i.first].getGPUAddress());
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader.ps_constantBuffer[i.first].getGPUAddress());
 			shader.ps_constantBuffer[i.first].next();
 			slot++;
 

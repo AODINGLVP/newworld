@@ -19,8 +19,9 @@ public:
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
 		desc.InputLayout = layout;
 		desc.pRootSignature = core->rootSignature;
-		desc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
 		desc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
+		desc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
+		
 
 		// Responsible for configuring the rasterizer
 		D3D12_RASTERIZER_DESC rasterDesc = {};
