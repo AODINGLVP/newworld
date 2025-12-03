@@ -496,8 +496,8 @@ public:
 
 		core->beginRenderPass();
 	
-		shader.ps_constantBuffer["staticMeshBuffer"].update("W", w);
-		shader.ps_constantBuffer["staticMeshBuffer"].update("VP",vp);
+		shader.vs_constantBuffer["staticMeshBuffer"].update("W", w);
+		shader.vs_constantBuffer["staticMeshBuffer"].update("VP",vp);
 		
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
@@ -634,11 +634,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 	Matrix prespection;
-	prespection = prespection.Perspective(M_PI / 3, 1920 / 1080, 0.1f, 100.0f);
+	prespection = prespection.Perspective(M_PI / 4, 1920 / 1080, 0.1f, 100.0f);
 
 	ConstantBuffer3 constBufferCPU3;
 	
-	constBufferCPU3.VP= prespection.projectionMatrix(M_PI / 3, 1920 / 1080, 0.1f, 100.0f);
+	constBufferCPU3.VP= prespection.Perspective(M_PI / 4, 1920 / 1080, 0.1f, 100.0f);
 	
 	GamesEngineeringBase::Timer timer;
 	
@@ -651,10 +651,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		dt += timer.dt();
 		//constBufferCPU1.time += dt;
 		Vec4 from = Vec4(11 * cos(dt), 5, 11 * sin(dt), 0);
-		Vec4 to = Vec4(0, 11, 0, 0);
+		Vec4 to = Vec4(0, 1, 0, 0);
 		Vec4 up = Vec4(0, 1, 0, 0);
-		
-		constBufferCPU3.w = constBufferCPU3.w.lookAtMatrix(from.TransToVec3(), to.TransToVec3(), up.TransToVec3());
+		constBufferCPU3.w = constBufferCPU3.w.LookatMatrix(from, to, up);
+		//constBufferCPU3.w = constBufferCPU3.w.lookAtMatrix(from.TransToVec3(), to.TransToVec3(), up.TransToVec3());
 		core.beginFrame();
 		win.processMessages();
 		if (win.keys[VK_ESCAPE] == 1)
