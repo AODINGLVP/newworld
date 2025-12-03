@@ -1,7 +1,7 @@
 // NewWorld.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-#define kuan 1920
-#define gao 1080
+#define kuan 1024.f
+#define gao 768.f
 #define WINDOW_GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define WINDOW_GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 #include <Windows.h>
@@ -664,11 +664,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 	Matrix prespection;
-	prespection = prespection.Perspective(M_PI / 4, 1920 / 1080, 0.3f, 100.0f);
+	prespection = prespection.Perspective(M_PI / 4, kuan / gao, 0.3f, 100.0f);
 
 	ConstantBuffer3 constBufferCPU3;
 	
-	constBufferCPU3.VP= prespection.Perspective(M_PI / 4, 1920 / 1080, 0.3f, 100.0f);
+	constBufferCPU3.VP= prespection.Perspective(M_PI / 4, kuan / gao, 0.3f, 100.0f);
 	
 	GamesEngineeringBase::Timer timer;
 	

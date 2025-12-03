@@ -3,8 +3,8 @@
 #include <iostream>
 
 #include "GamesEngineeringBase.h"
-#define width 2560
-#define height 1440
+#define width 1024.f
+#define height 768.f
 #include <cmath>
 #include <vector>
 using namespace std;
