@@ -831,7 +831,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Vec4 to = Vec4(0, 1, 0, 0);
 		Vec4 up = Vec4(0, 1, 0, 0);
 		constBufferCPU3.w = constBufferCPU3.w.LookatMatrix(from, to, up);
-		Matrix scv111 = constBufferCPU3.VP.mul(constBufferCPU3.w);
+		Matrix VP = constBufferCPU3.VP.mul(constBufferCPU3.w);//w is camera matrix,.VP is projection matrix,the answer is right VP
 		//constBufferCPU3.w = constBufferCPU3.w.lookAtMatrix(from.TransToVec3(), to.TransToVec3(), up.TransToVec3());
 		core.beginFrame();
 		win.processMessages();
@@ -843,7 +843,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		//cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP);
 		for (int i = 0; i < meshes.size(); i++)
 		{
-			meshes[i].draw(&core, &world, &scv111);
+			meshes[i].draw(&core, &world, &VP);
 		}
 		core.finishFrame();
 	}
