@@ -13,6 +13,7 @@
 #include <sstream>
 #include "PSOManager.h"
 #include"VertexLayoutCache.h"
+#include "GEMLoader.h"
 
 using namespace MathTool;
 using namespace std;
@@ -63,7 +64,6 @@ public:
 	D3D12_INDEX_BUFFER_VIEW ibView;
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
 	unsigned int numMeshIndices;
-
 
 	void init(Core* core, void* vertices, int vertexSizeInBytes, int numVertices,
 		unsigned int* indices, int numIndices) {
@@ -121,6 +121,7 @@ public:
 		init(core, &vertices[0], sizeof(STATIC_VERTEX), vertices.size(), &indices[0], indices.size());
 		inputLayoutDesc = VertexLayoutCache::getStaticLayout();
 	}
+	
 	void draw(Core* core)
 	{
 		core->getCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -538,6 +539,126 @@ public:
 	}
 
 };
+class GEMtest {
+public:
+
+
+	Shader shader;
+	PRIM_VERTEX vertices[3];
+	PSOManager psos;
+	GeneralMesh mesh;
+	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
+	{
+		STATIC_VERTEX v;
+		v.pos = p;
+		v.normal = n;
+		v.tangent = Vec3(0, 0, 0); // For now
+		v.tu = tu;
+		v.tv = tv;
+		return v;
+	}
+	void init(Core* core) {
+
+		std::vector<STATIC_VERTEX> vertices;
+		Vec3 p0 = Vec3(-1.0f, -1.0f, -1.0f);
+		Vec3 p1 = Vec3(1.0f, -1.0f, -1.0f);
+		Vec3 p2 = Vec3(1.0f, 1.0f, -1.0f);
+		Vec3 p3 = Vec3(-1.0f, 1.0f, -1.0f);
+		Vec3 p4 = Vec3(-1.0f, -1.0f, 1.0f);
+		Vec3 p5 = Vec3(1.0f, -1.0f, 1.0f);
+		Vec3 p6 = Vec3(1.0f, 1.0f, 1.0f);
+		Vec3 p7 = Vec3(-1.0f, 1.0f, 1.0f);
+
+		vertices.push_back(addVertex(p0, Vec3(0.0f, 0.0f, -1.0f), 0.0f, 1.0f));
+		vertices.push_back(addVertex(p1, Vec3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f));
+		vertices.push_back(addVertex(p2, Vec3(0.0f, 0.0f, -1.0f), 1.0f, 0.0f));
+		vertices.push_back(addVertex(p3, Vec3(0.0f, 0.0f, -1.0f), 0.0f, 0.0f));
+		vertices.push_back(addVertex(p5, Vec3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f));
+		vertices.push_back(addVertex(p4, Vec3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f));
+		vertices.push_back(addVertex(p7, Vec3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f));
+		vertices.push_back(addVertex(p6, Vec3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f));
+		vertices.push_back(addVertex(p4, Vec3(-1.0f, 0.0f, 0.0f), 0.0f, 1.0f));
+		vertices.push_back(addVertex(p0, Vec3(-1.0f, 0.0f, 0.0f), 1.0f, 1.0f));
+		vertices.push_back(addVertex(p3, Vec3(-1.0f, 0.0f, 0.0f), 1.0f, 0.0f));
+		vertices.push_back(addVertex(p7, Vec3(-1.0f, 0.0f, 0.0f), 0.0f, 0.0f));
+
+		vertices.push_back(addVertex(p1, Vec3(1.0f, 0.0f, 0.0f), 0.0f, 1.0f));
+		vertices.push_back(addVertex(p5, Vec3(1.0f, 0.0f, 0.0f), 1.0f, 1.0f));
+		vertices.push_back(addVertex(p6, Vec3(1.0f, 0.0f, 0.0f), 1.0f, 0.0f));
+		vertices.push_back(addVertex(p2, Vec3(1.0f, 0.0f, 0.0f), 0.0f, 0.0f));
+		vertices.push_back(addVertex(p3, Vec3(0.0f, 1.0f, 0.0f), 0.0f, 1.0f));
+		vertices.push_back(addVertex(p2, Vec3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f));
+		vertices.push_back(addVertex(p6, Vec3(0.0f, 1.0f, 0.0f), 1.0f, 0.0f));
+		vertices.push_back(addVertex(p7, Vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f));
+		vertices.push_back(addVertex(p4, Vec3(0.0f, -1.0f, 0.0f), 0.0f, 1.0f));
+		vertices.push_back(addVertex(p5, Vec3(0.0f, -1.0f, 0.0f), 1.0f, 1.0f));
+		vertices.push_back(addVertex(p1, Vec3(0.0f, -1.0f, 0.0f), 1.0f, 0.0f));
+		vertices.push_back(addVertex(p0, Vec3(0.0f, -1.0f, 0.0f), 0.0f, 0.0f));
+
+		std::vector<unsigned int> indices;
+		indices.push_back(0); indices.push_back(1); indices.push_back(2);
+		indices.push_back(0); indices.push_back(2); indices.push_back(3);
+		indices.push_back(4); indices.push_back(5); indices.push_back(6);
+		indices.push_back(4); indices.push_back(6); indices.push_back(7);
+		indices.push_back(8); indices.push_back(9); indices.push_back(10);
+		indices.push_back(8); indices.push_back(10); indices.push_back(11);
+		indices.push_back(12); indices.push_back(13); indices.push_back(14);
+		indices.push_back(12); indices.push_back(14); indices.push_back(15);
+		indices.push_back(16); indices.push_back(17); indices.push_back(18);
+		indices.push_back(16); indices.push_back(18); indices.push_back(19);
+		indices.push_back(20); indices.push_back(21); indices.push_back(22);
+		indices.push_back(20); indices.push_back(22); indices.push_back(23);
+
+		//mesh.init(core, vertices, indices);
+
+
+		shader.init(core);
+
+		psos.createPSO(core, "Triangle", shader.vertexShader, shader.pixelShader, mesh.inputLayoutDesc);
+	}
+	void apply(Core* core) {
+		// Bind VS buffers
+		unsigned int slot = 0;
+
+
+
+		/*for (auto i : shader.ps_constantBuffer)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader.ps_constantBuffer[i.first].getGPUAddress());
+			shader.ps_constantBuffer[i.first].next();
+			slot++;
+
+		}*/
+
+		for (auto& pair : shader.vs_constantBuffer)
+		{
+
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, pair.second.getGPUAddress());
+			pair.second.next();
+			//core->rootSignature.
+			slot++;
+
+		}
+
+	}
+	void draw(Core* core, Matrix* w, Matrix* vp)
+	{
+
+
+		core->beginRenderPass();
+
+		shader.vs_constantBuffer["staticMeshBuffer"].update("W", w);
+		shader.vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
+
+		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
+		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
+
+		apply(core);
+		psos.bind(core, "Triangle");
+		mesh.draw(core);
+	}
+
+};
 class Window;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 Window* window;
@@ -655,6 +776,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	PSTR lpCmdLine, int nCmdShow) {
+
+
+
+	
+
+
 	Window win;
 	Core core;
 	core.init(window->hwnd, kuan, gao);
@@ -674,16 +801,37 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	
 	win.create(kuan, gao, "My Window");
 	float dt=0;
+
+	std::vector<GEMtest> meshes;
+	GEMLoader::GEMModelLoader loader;
+	std::vector<GEMLoader::GEMMesh> gemmeshes;
+	loader.load("../Resources/acacia_003.gem", gemmeshes);
+	for (int i = 0; i < gemmeshes.size(); i++) {
+		GEMtest mesh;
+		std::vector<STATIC_VERTEX> vertices;
+		for (int j = 0; j < gemmeshes[i].verticesStatic.size(); j++) {
+			STATIC_VERTEX v;
+			memcpy(&v, &gemmeshes[i].verticesStatic[j], sizeof(STATIC_VERTEX));
+			vertices.push_back(v);
+		}
+		mesh.mesh.init(&core, vertices, gemmeshes[i].indices);
+		mesh.init(&core);
+		meshes.push_back(mesh);
+	}
+	Matrix world;
 	
-	
+	world.scale(0.01f, 0.01f, 0.01f);
 
 	while (1) {
+		
+
 		dt += timer.dt();
 		//constBufferCPU1.time += dt;
 		Vec4 from = Vec4(11 * cos(dt), 5, 11 * sin(dt), 0);
 		Vec4 to = Vec4(0, 1, 0, 0);
 		Vec4 up = Vec4(0, 1, 0, 0);
 		constBufferCPU3.w = constBufferCPU3.w.LookatMatrix(from, to, up);
+		Matrix scv111 = constBufferCPU3.VP.mul(constBufferCPU3.w);
 		//constBufferCPU3.w = constBufferCPU3.w.lookAtMatrix(from.TransToVec3(), to.TransToVec3(), up.TransToVec3());
 		core.beginFrame();
 		win.processMessages();
@@ -692,12 +840,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			break;
 		}
 
-
-
-
-
-		cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP);
-		
+		//cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP);
+		for (int i = 0; i < meshes.size(); i++)
+		{
+			meshes[i].draw(&core, &world, &scv111);
+		}
 		core.finishFrame();
 	}
 	core.flushGraphicsQueue();
