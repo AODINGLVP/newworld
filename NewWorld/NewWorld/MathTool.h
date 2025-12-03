@@ -519,6 +519,29 @@ namespace MathTool
 						a[i][j] = 1.0f;
 				}
 		}
+		static Matrix lookAtMatrix(Vec3 from, Vec3 to, Vec3 up) {
+			Matrix lookat;
+			memset(lookat.m, 0, 16 * sizeof(float));
+			Vec3 dir = (to - from) / (to - from).length();
+			Vec3 right = up.Cross(dir);//only cross x,y,z. 
+			Vec3 realUp = dir.Cross(right);//real up vector
+
+			lookat.a[0][0] = right.x;  lookat.a[0][1] = right.y;  lookat.a[0][2] = right.z;  lookat.a[0][3] = -(from.Dot(right));
+			lookat.a[1][0] = realUp.x; lookat.a[1][1] = realUp.y; lookat.a[1][2] = realUp.z; lookat.a[1][3] = -(from.Dot(realUp));
+			lookat.a[2][0] = dir.x;    lookat.a[2][1] = dir.y;    lookat.a[2][2] = dir.z;    lookat.a[2][3] = -(from.Dot(dir));
+			lookat.a[3][3] = 1;
+			return lookat;
+		}
+		static Matrix projectionMatrix(float fov, float aspect, float _near, float _far) {
+			Matrix proM;
+			memset(proM.m, 0, 16 * sizeof(float));
+			proM.a[0][0] = 1 / (aspect * (tan(fov / 2)));//no pi
+			proM.a[1][1] = 1 / (tan(fov / 2));
+			proM.a[2][2] = _far / (_far - _near);
+			proM.a[2][3] = -(_far * _near) / (_far - _near);
+			proM.a[3][2] = 1;
+			return proM;
+		}
 		Matrix invert()
 		{
 			Matrix inv;

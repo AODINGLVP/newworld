@@ -12,6 +12,8 @@
 #include <fstream>
 #include <sstream>
 #include "PSOManager.h"
+#include"VertexLayoutCache.h"
+
 using namespace MathTool;
 using namespace std;
 extern "C" {
@@ -23,9 +25,21 @@ struct PRIM_VERTEX
 	Vec3 position;
 	Colour colour;
 };
+struct alignas(16) ConstantBuffer3 {
+	Matrix w;
+	Matrix VP;
+};
 struct alignas(16) ConstantBuffer1
 {
 	float time;
+};
+struct STATIC_VERTEX
+{
+	Vec3 pos;
+	Vec3 normal;
+	Vec3 tangent;
+	float tu;
+	float tv;
 };
 struct alignas(16) ConstantBuffer2
 {
@@ -39,6 +53,86 @@ struct ConstantBufferVariable
 	unsigned int offset;
 	unsigned int size;
 };
+std::map<std::string, ConstantBufferVariable> scvvv;
+
+class GeneralMesh {
+public:
+	ID3D12Resource* vertexBuffer;
+	ID3D12Resource* indexBuffer;
+	D3D12_VERTEX_BUFFER_VIEW vbView;
+	D3D12_INDEX_BUFFER_VIEW ibView;
+	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
+	unsigned int numMeshIndices;
+
+
+	void init(Core* core, void* vertices, int vertexSizeInBytes, int numVertices,
+		unsigned int* indices, int numIndices) {
+		//Specify vertex buffer will be in GPU memory heap
+		D3D12_HEAP_PROPERTIES heapprops = {};
+		heapprops.Type = D3D12_HEAP_TYPE_DEFAULT;
+		heapprops.CreationNodeMask = 1;
+		heapprops.VisibleNodeMask = 1;
+
+		//Create vertex buffer on heap
+		D3D12_RESOURCE_DESC vbDesc = {};
+		vbDesc.Width = numVertices * vertexSizeInBytes;
+		vbDesc.Height = 1;
+		vbDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		vbDesc.DepthOrArraySize = 1;
+		vbDesc.MipLevels = 1;
+		vbDesc.SampleDesc.Count = 1;
+		vbDesc.SampleDesc.Quality = 0;
+		vbDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+		//Allocate memory
+		core->device->CreateCommittedResource(&heapprops, D3D12_HEAP_FLAG_NONE, &vbDesc,
+			D3D12_RESOURCE_STATE_COMMON, NULL, IID_PPV_ARGS(&vertexBuffer));
+		//Copy vertices using our helper function
+		core->uploadResource(vertexBuffer, vertices, numVertices * vertexSizeInBytes,
+			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+		//Fill in view in helper function
+		vbView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+		vbView.StrideInBytes = vertexSizeInBytes;
+		vbView.SizeInBytes = numVertices * vertexSizeInBytes;
+
+		D3D12_RESOURCE_DESC ibDesc;
+		memset(&ibDesc, 0, sizeof(D3D12_RESOURCE_DESC));
+		ibDesc.Width = numIndices * sizeof(unsigned int);
+		ibDesc.Height = 1;
+		ibDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		ibDesc.DepthOrArraySize = 1;
+		ibDesc.MipLevels = 1;
+		ibDesc.SampleDesc.Count = 1;
+		ibDesc.SampleDesc.Quality = 0;
+		ibDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		HRESULT hr = core->device->CreateCommittedResource(&heapprops, D3D12_HEAP_FLAG_NONE, &ibDesc,
+			D3D12_RESOURCE_STATE_COMMON, NULL, IID_PPV_ARGS(&indexBuffer));
+		core->uploadResource(indexBuffer, indices, numIndices * sizeof(unsigned int),
+			D3D12_RESOURCE_STATE_INDEX_BUFFER);
+
+		ibView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+		ibView.Format = DXGI_FORMAT_R32_UINT;
+		ibView.SizeInBytes = numIndices * sizeof(unsigned int);
+		numMeshIndices = numIndices;
+	}
+	void init(Core* core, std::vector<STATIC_VERTEX> vertices, std::vector<unsigned int> indices)
+	{
+		init(core, &vertices[0], sizeof(STATIC_VERTEX), vertices.size(), &indices[0], indices.size());
+		inputLayoutDesc = VertexLayoutCache::getStaticLayout();
+	}
+	void draw(Core* core)
+	{
+		core->getCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		core->getCommandList()->IASetVertexBuffers(0, 1, &vbView);
+		core->getCommandList()->IASetIndexBuffer(&ibView);
+		core->getCommandList()->DrawIndexedInstanced(numMeshIndices, 1, 0, 0, 0);
+	}
+
+};
+
+
+
 class Mesh {
 public:
 	ID3D12Resource* vertexBuffer;
@@ -127,10 +221,24 @@ public:
 	//Update via a memcpy
 	void update(std::string name, void* data)
 	{
-		ConstantBufferVariable cbVariable = constantBufferData[name];
-		unsigned int offset = offsetIndex * cbSizeInBytes;
-		memcpy(&buffer[offset + cbVariable.offset], data, cbVariable.size);
+		for (const auto& pair : constantBufferData)
+		{
+			OutputDebugStringA((pair.first + "\n").c_str());
+		}
+		
+		if (constantBufferData.find(name) != constantBufferData.end())
+		{
+			ConstantBufferVariable cbVariable = constantBufferData[name];
+			unsigned int offset = offsetIndex * cbSizeInBytes;
+			memcpy(&buffer[offset + cbVariable.offset], data, cbVariable.size);
+		}
+		else
+		{
+			return;
+		}
+		
 	}
+	
 	
 	//Will need GPU address of contents
 
@@ -175,9 +283,9 @@ public:
 		HRESULT hr = D3DCompile(vertexShadersStr.c_str(), strlen(vertexShadersStr.c_str()), NULL,NULL, NULL, "VS", "vs_5_0", 0, 0, &vertexShader, &status);
 		string pixelShaderStr = ReadShader("ShaderPixel.hlsl");
 		hr = D3DCompile(pixelShaderStr.c_str(), strlen(pixelShaderStr.c_str()), NULL, NULL,NULL, "PS", "ps_5_0", 0, 0, &pixelShader, &status);
-		
+		//getConstantBuffer(pixelShader, ps_constantBuffer);
 		getConstantBuffer(vertexShader, vs_constantBuffer);
-		getConstantBuffer(pixelShader, ps_constantBuffer);
+		
 
 
 
@@ -186,16 +294,10 @@ public:
 
 		for (auto& pair : vs_constantBuffer)
 		{
-
-
-			//i.init_2(_core, 2);
 			pair.second.init(core, 2);
-
 		}
 		for (auto& pair : ps_constantBuffer)
 		{
-
-			//i.init_2(_core, 2);
 			pair.second.init(core, 2);
 		}
 
@@ -214,6 +316,7 @@ public:
 		
 	}
 	void init(Core* core) {
+
 		Compile(core);
 	
 		
@@ -238,12 +341,15 @@ public:
 				bufferVariable.offset = vDesc.StartOffset;
 				bufferVariable.size = vDesc.Size;
 				buffer.constantBufferData.insert({ vDesc.Name, bufferVariable });
+				scvvv.insert({ vDesc.Name, bufferVariable });
 				totalSize += bufferVariable.size;
 			}
 			//add
 			buffer.name = cbDesc.Name;
 			buffer.cbSizeInBytes = totalSize;
 			_constantbuffer.insert(std::pair<std::string, ConstantBuffer>(buffer.name, buffer));
+			
+			
 		}
 	}
 	
@@ -312,6 +418,96 @@ public:
 
 };
 
+class Cube {
+public:
+	
+
+	Shader shader;
+	PRIM_VERTEX vertices[3];
+	PSOManager psos;
+	GeneralMesh mesh;
+	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
+	{
+		STATIC_VERTEX v;
+		v.pos = p;
+		v.normal = n;
+		v.tangent = Vec3(0, 0, 0); // For now
+		v.tu = tu;
+		v.tv = tv;
+		return v;
+	}
+	void init(Core* core) {
+
+		std::vector<STATIC_VERTEX> vertices;
+		Vec3 p0 = Vec3(-1.0f, -1.0f, -1.0f);
+		Vec3 p1 = Vec3(1.0f, -1.0f, -1.0f);
+		Vec3 p2 = Vec3(1.0f, 1.0f, -1.0f);
+		Vec3 p3 = Vec3(-1.0f, 1.0f, -1.0f);
+		Vec3 p4 = Vec3(-1.0f, -1.0f, 1.0f);
+		Vec3 p5 = Vec3(1.0f, -1.0f, 1.0f);
+		Vec3 p6 = Vec3(1.0f, 1.0f, 1.0f);
+		Vec3 p7 = Vec3(-1.0f, 1.0f, 1.0f);
+
+		vertices.push_back(addVertex(p0, Vec3(0.0f, 0.0f, -1.0f), 0.0f, 1.0f));
+		vertices.push_back(addVertex(p1, Vec3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f));
+		vertices.push_back(addVertex(p2, Vec3(0.0f, 0.0f, -1.0f), 1.0f, 0.0f));
+		vertices.push_back(addVertex(p3, Vec3(0.0f, 0.0f, -1.0f), 0.0f, 0.0f));
+
+
+		std::vector<unsigned int> indices;
+		indices.push_back(0); indices.push_back(1); indices.push_back(2);
+		indices.push_back(0); indices.push_back(2); indices.push_back(3);
+		
+		mesh.init(core, vertices, indices);
+
+	
+		shader.init(core);
+
+		psos.createPSO(core, "Triangle", shader.vertexShader, shader.pixelShader, mesh.inputLayoutDesc);
+	}
+	void apply(Core* core) {
+		// Bind VS buffers
+		unsigned int slot = 0;
+
+
+
+		/*for (auto i : shader.ps_constantBuffer)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader.ps_constantBuffer[i.first].getGPUAddress());
+			shader.ps_constantBuffer[i.first].next();
+			slot++;
+
+		}*/
+
+		for (auto& pair : shader.vs_constantBuffer)
+		{
+
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, pair.second.getGPUAddress());
+			pair.second.next();
+			//core->rootSignature.
+			slot++;
+
+		}
+
+	}
+	void draw(Core* core, Matrix* w, Matrix* vp)
+	{
+
+
+		core->beginRenderPass();
+	
+		shader.ps_constantBuffer["staticMeshBuffer"].update("W", w);
+		shader.ps_constantBuffer["staticMeshBuffer"].update("VP",vp);
+		
+		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
+		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
+
+		apply(core);
+		psos.bind(core, "Triangle");
+		mesh.draw(core);
+	}
+
+};
 class Window;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 Window* window;
@@ -433,36 +629,45 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Core core;
 	core.init(window->hwnd, kuan, gao);
 	
-	ScreenSpaceTriangle scv;
-	scv.init(&core);
-	ConstantBuffer2 constBufferCPU2;
-	constBufferCPU2.time = 0;
+	Cube cube;
+	cube.init(&core);
+
+
+	Matrix prespection;
+	prespection = prespection.Perspective(M_PI / 3, 1920 / 1080, 0.1f, 100.0f);
+
+	ConstantBuffer3 constBufferCPU3;
+	
+	constBufferCPU3.VP= prespection.projectionMatrix(M_PI / 3, 1920 / 1080, 0.1f, 100.0f);
+	
 	GamesEngineeringBase::Timer timer;
 	
-	
 	win.create(kuan, gao, "My Window");
+	float dt=0;
 	
 	
-	
-	float dt;
+
 	while (1) {
-		dt = timer.dt();
+		dt += timer.dt();
 		//constBufferCPU1.time += dt;
-		constBufferCPU2.time += dt;
-		for (int i = 0; i < 4; i++)
-		{
-			float angle = constBufferCPU2.time + (i * M_PI / 2.0f);
-			constBufferCPU2.lights[i] = Vec4(kuan / 2.0f + (cosf(angle) * (kuan * 0.3f)),
-				gao / 2.0f + (sinf(angle) * (gao * 0.3f)),
-				0, 0);
-		}
+		Vec4 from = Vec4(11 * cos(dt), 5, 11 * sin(dt), 0);
+		Vec4 to = Vec4(0, 11, 0, 0);
+		Vec4 up = Vec4(0, 1, 0, 0);
+		
+		constBufferCPU3.w = constBufferCPU3.w.lookAtMatrix(from.TransToVec3(), to.TransToVec3(), up.TransToVec3());
 		core.beginFrame();
 		win.processMessages();
 		if (win.keys[VK_ESCAPE] == 1)
 		{
 			break;
 		}
-		scv.draw(&core,&constBufferCPU2);
+
+
+
+
+
+		cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP);
+		
 		core.finishFrame();
 	}
 	core.flushGraphicsQueue();
