@@ -34,7 +34,11 @@ struct alignas(16) ConstantBuffer2
 	Vec4 lights[4];
 
 };
-
+struct ConstantBufferVariable
+{
+	unsigned int offset;
+	unsigned int size;
+};
 class Mesh {
 public:
 	ID3D12Resource* vertexBuffer;
@@ -87,18 +91,28 @@ D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 };
 class ConstantBuffer {
 public:
+	std::string name;
+	std::map<std::string, ConstantBufferVariable> constantBufferData;
 	ID3D12Resource* constantBuffer;
 	unsigned char* buffer;
 	unsigned int cbSizeInBytes;
-	void init(Core* core, unsigned int sizeInBytes, int frames) {
-		cbSizeInBytes = (sizeInBytes + 255) & ~255;
+	unsigned int maxDrawCalls;
+	unsigned int offsetIndex;
+	
+	void init(Core* core,  unsigned int _maxDrawCalls = 1024)
+	{
+		cbSizeInBytes = (cbSizeInBytes + 255) & ~255;
+		maxDrawCalls = _maxDrawCalls;
+		unsigned int cbSizeInBytesAligned = cbSizeInBytes * maxDrawCalls;
+	
+		offsetIndex = 0;
 		HRESULT hr;
 		D3D12_HEAP_PROPERTIES heapprops = {};
 		heapprops.Type = D3D12_HEAP_TYPE_UPLOAD;
 		heapprops.CreationNodeMask = 1;
 		heapprops.VisibleNodeMask = 1;
 		D3D12_RESOURCE_DESC cbDesc = {};
-		cbDesc.Width = cbSizeInBytes * frames;
+		cbDesc.Width = cbSizeInBytesAligned;
 		cbDesc.Height = 1;
 		cbDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		cbDesc.DepthOrArraySize = 1;
@@ -106,20 +120,32 @@ public:
 		cbDesc.SampleDesc.Count = 1;
 		cbDesc.SampleDesc.Quality = 0;
 		cbDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-		hr = core->device->CreateCommittedResource(&heapprops, D3D12_HEAP_FLAG_NONE, &cbDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ, NULL, __uuidof(ID3D12Resource), (void**)&constantBuffer);
-		hr = constantBuffer->Map(0, NULL, (void**)&buffer);
+		core->device->CreateCommittedResource(&heapprops, D3D12_HEAP_FLAG_NONE, &cbDesc, D3D12_RESOURCE_STATE_GENERIC_READ, NULL,
+			IID_PPV_ARGS(&constantBuffer));
+		constantBuffer->Map(0, NULL, (void**)&buffer);
 	}
 	//Update via a memcpy
-	void update(void* data, unsigned int sizeInBytes, int frame)
+	void update(std::string name, void* data)
 	{
-		memcpy(buffer + (frame * cbSizeInBytes), data, sizeInBytes);
+		ConstantBufferVariable cbVariable = constantBufferData[name];
+		unsigned int offset = offsetIndex * cbSizeInBytes;
+		memcpy(&buffer[offset + cbVariable.offset], data, cbVariable.size);
 	}
+	
 	//Will need GPU address of contents
 
-	D3D12_GPU_VIRTUAL_ADDRESS getGPUAddress(int frame)
+	// Get address of constant buffer in use
+		D3D12_GPU_VIRTUAL_ADDRESS getGPUAddress() const
 	{
-		return (constantBuffer->GetGPUVirtualAddress() + (frame * cbSizeInBytes));
+		return (constantBuffer->GetGPUVirtualAddress() + (offsetIndex * cbSizeInBytes));
+	}
+	void next()
+	{
+		offsetIndex++;
+		if (offsetIndex >= maxDrawCalls)
+		{
+			offsetIndex = 0;
+		}
 	}
 };
 class Shader {
@@ -127,8 +153,11 @@ public:
 	ID3DBlob* vertexShader;
 	ID3DBlob* pixelShader;
 	
+	std::string name;
+	std::unordered_map<std::string, ConstantBuffer> vs_constantBuffer;
+	std::unordered_map<std::string, ConstantBuffer> ps_constantBuffer;
 
-	ConstantBuffer constantBuffer;
+	
 	int debug = 0;
 
 	string ReadShader(string filename) {
@@ -143,11 +172,35 @@ public:
 		//Compile vertex shader
 		ID3DBlob* status;
 		string vertexShadersStr = ReadShader("ShaderVertices.hlsl");
-		HRESULT hr = D3DCompile(vertexShadersStr.c_str(), strlen(vertexShadersStr.c_str()), NULL,
-			NULL, NULL, "VS", "vs_5_0", 0, 0, &vertexShader, &status);
+		HRESULT hr = D3DCompile(vertexShadersStr.c_str(), strlen(vertexShadersStr.c_str()), NULL,NULL, NULL, "VS", "vs_5_0", 0, 0, &vertexShader, &status);
 		string pixelShaderStr = ReadShader("ShaderPixel.hlsl");
-		hr = D3DCompile(pixelShaderStr.c_str(), strlen(pixelShaderStr.c_str()), NULL, NULL,
-			NULL, "PS", "ps_5_0", 0, 0, &pixelShader, &status);
+		hr = D3DCompile(pixelShaderStr.c_str(), strlen(pixelShaderStr.c_str()), NULL, NULL,NULL, "PS", "ps_5_0", 0, 0, &pixelShader, &status);
+		
+		getConstantBuffer(vertexShader, vs_constantBuffer);
+		getConstantBuffer(pixelShader, ps_constantBuffer);
+
+
+
+
+
+
+		for (auto& pair : vs_constantBuffer)
+		{
+
+
+			//i.init_2(_core, 2);
+			pair.second.init(core, 2);
+
+		}
+		for (auto& pair : ps_constantBuffer)
+		{
+
+			//i.init_2(_core, 2);
+			pair.second.init(core, 2);
+		}
+
+
+
 		if (FAILED(hr)) {
 			if (status) {
 				// Print the error to the Visual Studio Output window
@@ -161,16 +214,46 @@ public:
 		
 	}
 	void init(Core* core) {
-		
-		constantBuffer.init(core, sizeof(ConstantBuffer2), 2);
 		Compile(core);
-	}
 	
+		
+	}
+	void getConstantBuffer(ID3DBlob* shader, std::unordered_map<std::string, ConstantBuffer>& _constantbuffer) {
+		ID3D12ShaderReflection* reflection;
+		D3DReflect(shader->GetBufferPointer(), shader->GetBufferSize(), IID_PPV_ARGS(&reflection));
+		D3D12_SHADER_DESC desc;
+		reflection->GetDesc(&desc);
+		//read constant buffers in shader (may have more than 1 constant buffers)
+		for (int i = 0; i < desc.ConstantBuffers; i++) {
+			ConstantBuffer buffer;
+			ID3D12ShaderReflectionConstantBuffer* constantBuffer = reflection->GetConstantBufferByIndex(i);
+			D3D12_SHADER_BUFFER_DESC cbDesc;
+			constantBuffer->GetDesc(&cbDesc);
+			unsigned int totalSize = 0;
+			for (int j = 0; j < cbDesc.Variables; j++) {
+				ID3D12ShaderReflectionVariable* var = constantBuffer->GetVariableByIndex(j);
+				D3D12_SHADER_VARIABLE_DESC vDesc;
+				var->GetDesc(&vDesc);
+				ConstantBufferVariable bufferVariable;
+				bufferVariable.offset = vDesc.StartOffset;
+				bufferVariable.size = vDesc.Size;
+				buffer.constantBufferData.insert({ vDesc.Name, bufferVariable });
+				totalSize += bufferVariable.size;
+			}
+			//add
+			buffer.name = cbDesc.Name;
+			buffer.cbSizeInBytes = totalSize;
+			_constantbuffer.insert(std::pair<std::string, ConstantBuffer>(buffer.name, buffer));
+		}
+	}
 	
 };
 
 class ScreenSpaceTriangle {
 public:
+	std::vector<ConstantBuffer*> vsConstantBuffers; // Vertex Shader Buffers
+	std::vector<ConstantBuffer*> psConstantBuffers; // Pixel Shader Buffers
+
 	Shader shader;
 	PRIM_VERTEX vertices[3];
 	PSOManager psos;
@@ -187,11 +270,42 @@ public:
 		shader.init(core);
 		psos.createPSO(core, "Triangle", shader.vertexShader, shader.pixelShader, mesh.inputLayoutDesc);
 	}
+	void apply(Core* core) {
+		// Bind VS buffers
+		unsigned int slot = 0;
+
+
+
+		for (auto i : shader.ps_constantBuffer)
+		{
+
+
+
+			core->getCommandList()->SetGraphicsRootConstantBufferView(slot, shader.ps_constantBuffer[i.first].getGPUAddress());
+			shader.ps_constantBuffer[i.first].next();
+			slot++;
+
+		}
+
+		/*for (auto& pair : shader.vs_constantBuffer)
+		{
+
+			core->getCommandList()->SetGraphicsRootConstantBufferView(slot, pair.second.getGPUAddress());
+			pair.second.next();
+			//core->rootSignature.
+			slot++;
+
+		}*/
+		
+	}
 	void draw(Core* core, ConstantBuffer2* cb)
 	{
 		core->beginRenderPass();
-		shader.constantBuffer.update(cb, sizeof(ConstantBuffer2), core->frameIndex());
-		core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader.constantBuffer.getGPUAddress(core->frameIndex()));
+		
+		shader.ps_constantBuffer["bufferName"].update("time",&cb->time );
+		shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
+		
+		apply(core);
 		psos.bind(core, "Triangle");
 		mesh.draw(core);
 	}
