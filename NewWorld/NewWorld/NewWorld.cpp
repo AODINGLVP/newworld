@@ -274,14 +274,14 @@ public:
 		buffer << file.rdbuf();
 		return buffer.str();
 	}
-	void Compile(Core* core) {
+	void Compile(Core* core,string vs,string ps) {
 		debug = 1;
 		OutputDebugStringA(to_string(debug).c_str());
 		//Compile vertex shader
 		ID3DBlob* status;
-		string vertexShadersStr = ReadShader("ShaderVertices.hlsl");
+		string vertexShadersStr = ReadShader(vs);
 		HRESULT hr = D3DCompile(vertexShadersStr.c_str(), strlen(vertexShadersStr.c_str()), NULL,NULL, NULL, "VS", "vs_5_0", 0, 0, &vertexShader, &status);
-		string pixelShaderStr = ReadShader("ShaderPixel.hlsl");
+		string pixelShaderStr = ReadShader(ps);
 		hr = D3DCompile(pixelShaderStr.c_str(), strlen(pixelShaderStr.c_str()), NULL, NULL,NULL, "PS", "ps_5_0", 0, 0, &pixelShader, &status);
 		//getConstantBuffer(pixelShader, ps_constantBuffer);
 		getConstantBuffer(vertexShader, vs_constantBuffer);
@@ -315,9 +315,9 @@ public:
 
 		
 	}
-	void init(Core* core) {
+	void init(Core* core, string vs, string ps) {
 
-		Compile(core);
+		Compile(core,vs,ps);
 	
 		
 	}
@@ -355,67 +355,28 @@ public:
 	
 };
 
-class ScreenSpaceTriangle {
-public:
-	std::vector<ConstantBuffer*> vsConstantBuffers; // Vertex Shader Buffers
-	std::vector<ConstantBuffer*> psConstantBuffers; // Pixel Shader Buffers
 
-	Shader shader;
-	PRIM_VERTEX vertices[3];
-	PSOManager psos;
-	Mesh mesh;
-	void init(Core* core) {
-		
-		vertices[0].position = Vec3(0, 1.0f, 0);
-		vertices[0].colour = Colour(0, 1.0f, 0);
-		vertices[1].position = Vec3(-1.0f, -1.0f, 0);
-		vertices[1].colour = Colour(1.0f, 0, 0);
-		vertices[2].position = Vec3(1.0f, -1.0f, 0);
-		vertices[2].colour = Colour(0, 0, 1.0f);
-		mesh.init(core, &vertices[0], sizeof(PRIM_VERTEX), 3);
-		shader.init(core);
-		psos.createPSO(core, "Triangle", shader.vertexShader, shader.pixelShader, mesh.inputLayoutDesc);
-	}
-	void apply(Core* core) {
-		// Bind VS buffers
-		unsigned int slot = 0;
-
-
-
-		for (auto i : shader.ps_constantBuffer)
-		{
-
-
-
-			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader.ps_constantBuffer[i.first].getGPUAddress());
-			shader.ps_constantBuffer[i.first].next();
-			slot++;
-
-		}
-
-		/*for (auto& pair : shader.vs_constantBuffer)
-		{
-
-			core->getCommandList()->SetGraphicsRootConstantBufferView(slot, pair.second.getGPUAddress());
-			pair.second.next();
-			//core->rootSignature.
-			slot++;
-
-		}*/
-		
-	}
-	void draw(Core* core, ConstantBuffer2* cb)
+class shaders {
+	map<string, Shader>shaders;
+	std::string readFile(std::string filename)
 	{
-		core->beginRenderPass();
-		
-		shader.ps_constantBuffer["bufferName"].update("time",&cb->time );
-		shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
-		
-		apply(core);
-		psos.bind(core, "Triangle");
-		mesh.draw(core);
+		std::ifstream file(filename);
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		return buffer.str();
 	}
-
+	void load(Core* core, std::string shadername, std::string vsfilename, std::string psfilename)
+	{
+		std::map<std::string, Shader>::iterator it = shaders.find(shadername);
+		if (it != shaders.end())
+		{
+			return;
+		}
+		Shader shader;
+		shader.Compile(core, vsfilename, psfilename);
+		
+		shaders.insert({ shadername, shader });
+	}
 };
 
 class Cube {
@@ -491,7 +452,7 @@ public:
 		mesh.init(core, vertices, indices);
 
 	
-		shader->init(core);
+		shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
 
 		psos->createPSO(core, "Triangle", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
 	}
