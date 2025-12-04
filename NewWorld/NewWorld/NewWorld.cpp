@@ -497,7 +497,7 @@ public:
 	{
 
 
-		core->beginRenderPass();
+		
 	
 		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("VP",vp);
@@ -562,7 +562,7 @@ public:
 		
 		
 
-		core->beginRenderPass();
+		
 
 		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
@@ -663,7 +663,7 @@ public:
 	}
 	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance)
 	{
-		core->beginRenderPass();
+		
 	
 		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
@@ -815,8 +815,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	//Cube cube;
 	//cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
-	//StaticModle tree;
-	//tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos);
+	StaticModle tree;
+	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos);
 
 	AnimatedModel animatedModel;
 	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos);
@@ -858,10 +858,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			break;
 		}
 
+		core.beginRenderPass();
 
+		Matrix treemove;
+		treemove = Matrix::translation(Vec3(5, 0, 0))* Matrix::scaling(Vec3(0.01f, 0.01f, 0.01f));
 
-
-		//tree.draw(&core, &world, &vp, &shaders.shaders["shader1"], &psos);
+		tree.draw(&core, &treemove, &vp, &shaders.shaders["shader1"], &psos);
 		//cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP, &shaders.shaders["shader1"], &psos);
 		
 
