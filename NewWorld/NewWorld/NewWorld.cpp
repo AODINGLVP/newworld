@@ -356,7 +356,8 @@ public:
 };
 
 
-class shaders {
+class Shaders {
+public:
 	map<string, Shader>shaders;
 	std::string readFile(std::string filename)
 	{
@@ -452,7 +453,7 @@ public:
 		mesh.init(core, vertices, indices);
 
 	
-		shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
+		//shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
 
 		psos->createPSO(core, "Triangle", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
 	}
@@ -624,10 +625,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	
 	Shader shader;
 
+
+	Shaders shaders;
+	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderPixel.hlsl");
+
 	Cube cube;
-	cube.init(&core,&psos,&shader);
+	cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
-
+	
 	Matrix prespection;
 	prespection = prespection.Perspective(M_PI / 4, kuan / gao, 0.3f, 100.0f);
 
@@ -661,7 +666,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-		cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP,&shader,&psos);
+		cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP, &shaders.shaders["shader1"], &psos);
 		
 		core.finishFrame();
 	}
