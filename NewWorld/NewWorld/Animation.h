@@ -80,10 +80,10 @@ struct AnimationSequence // This holds rescaled times
 		Matrix scale = Matrix::scaling(interpolate(frames[baseFrame].scales[boneIndex], frames[nextFrame(baseFrame)].scales[boneIndex], interpolationFact));
 		Matrix rotation = interpolate(frames[baseFrame].rotations[boneIndex], frames[nextFrame(baseFrame)].rotations[boneIndex], interpolationFact).toMatrix();
 		Matrix translation = Matrix::translation(interpolate(frames[baseFrame].positions[boneIndex], frames[nextFrame(baseFrame)].positions[boneIndex], interpolationFact));
-		Matrix local = scale * rotation * translation;
+		Matrix local = translation * rotation * scale;// scale* rotation* translation;
 		if (skeleton->bones[boneIndex].parentIndex > -1)
 		{
-			Matrix global = local * matrices[skeleton->bones[boneIndex].parentIndex];
+			Matrix global = matrices[skeleton->bones[boneIndex].parentIndex] * local;//local * matrices[skeleton->bones[boneIndex].parentIndex];
 			return global;
 		}
 		return local;
@@ -111,7 +111,7 @@ public:
 	{
 		for (int i = 0; i < bonesSize(); i++)
 		{
-			matrices[i] = skeleton.bones[i].offset * matrices[i] * skeleton.globalInverse * coordTransform;
+			matrices[i] = coordTransform * skeleton.globalInverse * matrices[i] * skeleton.bones[i].offset;//skeleton.bones[i].offset * matrices[i] * skeleton.globalInverse * coordTransform;
 		}
 	}
 	bool hasAnimation(std::string name)
@@ -198,6 +198,6 @@ public:
 		{
 			matricesPose[boneChain[i]] = animation->interpolateBoneToGlobal(usingAnimation, matricesPose, frame, interpolationFact, boneChain[i]);
 		}
-		return (matricesPose[boneID] * coordTransform);
+		return coordTransform * matricesPose[boneID];//(matricesPose[boneID] * coordTransform);
 	}
 };

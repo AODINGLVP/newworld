@@ -837,11 +837,13 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	
 	win.create(kuan, gao, "My Window");
 	float dt=0;
-	
+	float rexdt;
 	
 
 	while (1) {
-		dt += timer.dt();
+		rexdt = timer.dt();
+		dt += rexdt;
+		
 		//constBufferCPU1.time += dt;
 		Vec4 from = Vec4(11 * cos(dt), 5, 11 * sin(dt), 0);
 		Vec4 to = Vec4(0, 1, 0, 0);
@@ -866,7 +868,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-		animatedInstance.update("run", dt);
+		animatedInstance.update("run", rexdt);
 		if (animatedInstance.animationFinished() == true)
 		{
 			animatedInstance.resetAnimationTime();
