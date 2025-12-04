@@ -19,7 +19,7 @@ public:
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
 		desc.InputLayout = layout;
 		desc.pRootSignature = core->rootSignature;
-		desc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
+		//desc.PS = { ps->GetBufferPointer(), ps->GetBufferSize() };
 		desc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
 		
 

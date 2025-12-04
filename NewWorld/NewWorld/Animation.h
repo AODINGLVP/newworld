@@ -3,11 +3,15 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
 #include "MathTool.h"
 using namespace MathTool;
+
+
 struct Bone
 {
 	std::string name;
+	Matrix scv;
 	Matrix offset;
 	int parentIndex;
 };
