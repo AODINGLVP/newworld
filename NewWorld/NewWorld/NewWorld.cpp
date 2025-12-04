@@ -13,7 +13,8 @@
 #include <sstream>
 #include "PSOManager.h"
 #include"VertexLayoutCache.h"
-
+#include <Vector>
+#include "GEMLoader.h"
 using namespace MathTool;
 using namespace std;
 extern "C" {
@@ -286,12 +287,6 @@ public:
 		//getConstantBuffer(pixelShader, ps_constantBuffer);
 		getConstantBuffer(vertexShader, vs_constantBuffer);
 		
-
-
-
-
-
-
 		for (auto& pair : vs_constantBuffer)
 		{
 			pair.second.init(core, 2);
@@ -455,7 +450,7 @@ public:
 	
 		//shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
 
-		psos->createPSO(core, "Triangle", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
+		psos->createPSO(core, "Cube", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
 	}
 	void apply(Core* core, Shader* shader) {
 		// Bind VS buffers
@@ -495,8 +490,93 @@ public:
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
 
 		apply(core,shader);
-		psos->bind(core, "Triangle");
+		psos->bind(core, "Cube");
 		mesh.draw(core);
+	}
+
+};
+class StaticModle {
+public:
+
+	PRIM_VERTEX vertices[3];
+	vector<GeneralMesh *> meshes;
+	//GeneralMesh mesh;
+
+
+
+	std::vector<std::string> textureFilenames;
+
+
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos)
+	{
+		GEMLoader::GEMModelLoader loader;
+		std::vector<GEMLoader::GEMMesh> gemmeshes;
+		loader.load(filename, gemmeshes);
+		for (int i = 0; i < gemmeshes.size(); i++)
+		{
+			GeneralMesh* mesh = new GeneralMesh();
+			std::vector<STATIC_VERTEX> vertices;
+			for (int j = 0; j < gemmeshes[i].verticesStatic.size(); j++)
+			{
+				STATIC_VERTEX v;
+				memcpy(&v, &gemmeshes[i].verticesStatic[j], sizeof(STATIC_VERTEX));
+				vertices.push_back(v);
+			}
+			mesh->init(core, vertices, gemmeshes[i].indices);
+			meshes.push_back(mesh);
+		}
+
+		
+		psos->createPSO(core, "StaticModelPSO", shaders->shaders["shader1"].vertexShader, shaders->shaders["shader1"].pixelShader, VertexLayoutCache::getStaticLayout());
+	}
+
+
+
+	void updateWorld(Shaders* shaders, Matrix& w)
+	{
+		//shaders->shaders["shader1"].vs_constantBuffer["staticMeshBuffer"].update("W", &w);
+		//shaders->updateConstantVS("StaticModelUntextured", "staticMeshBuffer", "W", &w);
+	}
+	
+
+
+	void apply(Core* core, Shader* shader) {
+		// Bind VS buffers
+		unsigned int slot = 0;
+
+		for (auto& pair : shader->vs_constantBuffer)
+		{
+
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, pair.second.getGPUAddress());
+			pair.second.next();
+			//core->rootSignature.
+			slot++;
+
+		}
+
+	}
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos)
+	{
+		
+		
+		
+		
+
+		core->beginRenderPass();
+
+		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
+		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
+
+		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
+		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
+
+		apply(core, shader);
+		psos->bind(core, "StaticModelPSO");
+		for (int i = 0; i < meshes.size(); i++)
+		{
+			meshes[i]->draw(core);
+		}
+
 	}
 
 };
@@ -629,15 +709,21 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Shaders shaders;
 	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderPixel.hlsl");
 
-	Cube cube;
-	cube.init(&core,&psos, &shaders.shaders["shader1"]);
+	//Cube cube;
+	//cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
-	
+	StaticModle tree;
+	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos);
+
+
+
+	Matrix world;
+	world = world.scale(0.01f, 0.01f, 0.01f);
 	Matrix prespection;
 	prespection = prespection.Perspective(M_PI / 4, kuan / gao, 0.3f, 100.0f);
-
+	Matrix lookat;
 	ConstantBuffer3 constBufferCPU3;
-	
+	Matrix vp;
 	constBufferCPU3.VP= prespection.Perspective(M_PI / 4, kuan / gao, 0.3f, 100.0f);
 	
 	GamesEngineeringBase::Timer timer;
@@ -653,7 +739,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Vec4 from = Vec4(11 * cos(dt), 5, 11 * sin(dt), 0);
 		Vec4 to = Vec4(0, 1, 0, 0);
 		Vec4 up = Vec4(0, 1, 0, 0);
-		constBufferCPU3.w = constBufferCPU3.w.LookatMatrix(from, to, up);
+		lookat=lookat.LookatMatrix(from, to, up);
+		vp = prespection.mul(lookat);
 		//constBufferCPU3.w = constBufferCPU3.w.lookAtMatrix(from.TransToVec3(), to.TransToVec3(), up.TransToVec3());
 		core.beginFrame();
 		win.processMessages();
@@ -665,8 +752,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-
-		cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP, &shaders.shaders["shader1"], &psos);
+		tree.draw(&core, &world, &vp, &shaders.shaders["shader1"], &psos);
+		//cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP, &shaders.shaders["shader1"], &psos);
 		
 		core.finishFrame();
 	}
