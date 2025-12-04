@@ -7,8 +7,15 @@
 #define height 768.f
 #include <cmath>
 #include <vector>
+#undef min
+#undef max
+#include <algorithm>
 using namespace std;
-
+template<typename T>
+static T clamp(const T value, const T minValue, const T maxValue)
+{
+	return std::max(std::min(value, maxValue), minValue);
+}
 namespace MathTool
 {
 
@@ -384,12 +391,7 @@ namespace MathTool
 		return (((p.x - v0.x) * (v1.y - v0.y)) - ((v1.x - v0.x) * (p.y - v0.y)));
 	}
 
-	inline void findBounds(const Vec4& v0, const Vec4& v1, const Vec4& v2, Vec4& tr, Vec4& bl) {
-		tr.x = min(max(max(v0.x, v1.x), v2.x), width - 1);
-		tr.y = min(max(max(v0.y, v1.y), v2.y), height - 1);
-		bl.x = max(min(min(v0.x, v1.x), v2.x), 0);
-		bl.y = max(min(min(v0.y, v1.y), v2.y), 0);
-	}
+
 	inline float bary(const Vec4& v0, const Vec4& v1, const Vec4& v2)
 	{
 		return (v1.x - v0.x) * (v2.y - v0.y) -
@@ -496,6 +498,7 @@ namespace MathTool
 			float a[4][4];
 			float m[16];
 		};
+
 		Matrix(
 			float m00, float m01, float m02, float m03,
 			float m10, float m11, float m12, float m13,
@@ -598,7 +601,18 @@ namespace MathTool
 
 			return mat;
 		}
-
+		static Matrix perspective(const float n, const float f, float aspect, const float fov) // FOV in degrees, outputs transposed Matrix for DX
+		{
+			Matrix pers;
+			memset(pers.m, 0, sizeof(float) * 16);
+			float t = 1.0f / (tanf(fov * 0.5f * 3.141592654f / 180.0f));
+			pers.a[0][0] = t / aspect;
+			pers.a[1][1] = t;
+			pers.a[2][2] = f / (f - n);
+			pers.a[2][3] = -(f * n) / (f - n);
+			pers.a[3][2] = 1.0f;
+			return pers;
+		}
 		Vec4 mul(const Vec4& v)
 		{
 			return Vec4(v.x * m[0] + v.y * m[1] + v.z * m[2] + v.w * m[3], v.x * m[4] + v.y * m[5] + v.z * m[6] + v.w * m[7], v.x * m[8] + v.y * m[9] + v.z * m[10] + v.w * m[11], v.x * m[12] + v.y * m[13] + v.z * m[14] + v.w * m[15]);
@@ -607,6 +621,7 @@ namespace MathTool
 		{
 			Matrix ret;
 			ret.m[0] = m[0] * matrix.m[0] + m[1] * matrix.m[4] + m[2] * matrix.m[8] + m[3] * matrix.m[12];  ret.m[1] = m[0] * matrix.m[1] + m[1] * matrix.m[5] + m[2] * matrix.m[9] + m[3] * matrix.m[13];  ret.m[2] = m[0] * matrix.m[2] + m[1] * matrix.m[6] + m[2] * matrix.m[10] + m[3] * matrix.m[14];  ret.m[3] = m[0] * matrix.m[3] + m[1] * matrix.m[7] + m[2] * matrix.m[11] + m[3] * matrix.m[15];  ret.m[4] = m[4] * matrix.m[0] + m[5] * matrix.m[4] + m[6] * matrix.m[8] + m[7] * matrix.m[12];  ret.m[5] = m[4] * matrix.m[1] + m[5] * matrix.m[5] + m[6] * matrix.m[9] + m[7] * matrix.m[13];  ret.m[6] = m[4] * matrix.m[2] + m[5] * matrix.m[6] + m[6] * matrix.m[10] + m[7] * matrix.m[14];  ret.m[7] = m[4] * matrix.m[3] + m[5] * matrix.m[7] + m[6] * matrix.m[11] + m[7] * matrix.m[15];  ret.m[8] = m[8] * matrix.m[0] + m[9] * matrix.m[4] + m[10] * matrix.m[8] + m[11] * matrix.m[12];  ret.m[9] = m[8] * matrix.m[1] + m[9] * matrix.m[5] + m[10] * matrix.m[9] + m[11] * matrix.m[13];  ret.m[10] = m[8] * matrix.m[2] + m[9] * matrix.m[6] + m[10] * matrix.m[10] + m[11] * matrix.m[14];  ret.m[11] = m[8] * matrix.m[3] + m[9] * matrix.m[7] + m[10] * matrix.m[11] + m[11] * matrix.m[15];  ret.m[12] = m[12] * matrix.m[0] + m[13] * matrix.m[4] + m[14] * matrix.m[8] + m[15] * matrix.m[12]; ret.m[13] = m[12] * matrix.m[1] + m[13] * matrix.m[5] + m[14] * matrix.m[9] + m[15] * matrix.m[13]; ret.m[14] = m[12] * matrix.m[2] + m[13] * matrix.m[6] + m[14] * matrix.m[10] + m[15] * matrix.m[14]; ret.m[15] = m[12] * matrix.m[3] + m[13] * matrix.m[7] + m[14] * matrix.m[11] + m[15] * matrix.m[15]; return ret;
+			return ret;
 		}
 		Matrix operator*(const Matrix& matrix)
 		{
@@ -684,7 +699,7 @@ namespace MathTool
 				0, 0, 0, 1
 			));
 		}
-		Matrix translation(float x, float y, float z) {
+		Matrix translation(float x, float y, float z) {//执行计算
 			return Multiplyreference(Matrix(
 				1, 0, 0, x,
 				0, 1, 0, y,
@@ -692,7 +707,15 @@ namespace MathTool
 				0, 0, 0, 1
 			));
 		}
-		Matrix scale(float x, float y, float z) {
+		static Matrix translation(const Vec3& v)//单独返回转换矩阵
+		{
+			Matrix mat;
+			mat.a[0][3] = v.x;
+			mat.a[1][3] = v.y;
+			mat.a[2][3] = v.z;
+			return mat;
+		}
+		Matrix  scale(float x, float y, float z) {//进行变化
 			return Multiplyreference(Matrix(
 				x, 0, 0, 0,
 				0, y, 0, 0,
@@ -700,6 +723,14 @@ namespace MathTool
 				0, 0, 0, 1
 			));
 
+		}
+		static Matrix scaling(const Vec3& v)//单纯的变换矩阵
+		{
+			Matrix mat;
+			mat.m[0] = v.x;
+			mat.m[5] = v.y;
+			mat.m[10] = v.z;
+			return mat;
 		}
 		Matrix Transpose() {
 			Matrix transposed;
@@ -752,7 +783,9 @@ namespace MathTool
 				0.0f, 0.0f, 0.0f, 1.0f
 			);
 		}
+
 	};
+
 	class Matric3 {
 	public:
 		union {
@@ -932,7 +965,7 @@ namespace MathTool
 			d = _d;
 		}
 		Quaternion() {
-			a = 1.0f;
+			a = 0.0f;
 			b = 0.0f;
 			c = 0.0f;
 			d = 0.0f;
@@ -976,7 +1009,10 @@ namespace MathTool
 				d - rhs.d
 			);
 		}
-
+		Quaternion operator-()
+		{
+			return Quaternion(-a, -b, -c, -d);
+		}
 		float Dot(const Quaternion& rhs) const {
 			return a * rhs.a + b * rhs.b + c * rhs.c + d * rhs.d;
 		}
@@ -1006,6 +1042,29 @@ namespace MathTool
 			float s = sin(half);
 
 			return Quaternion(cos(half), axis1 * s, axis2 * s, axis3 * s);
+		}
+		static Quaternion slerp(Quaternion q1, Quaternion q2, float t)
+		{
+			Quaternion qr;
+			float dp = q1.a * q2.a + q1.b * q2.b + q1.c * q2.c + q1.d * q2.d;
+			Quaternion q11 = dp < 0 ? -q1 : q1;
+			dp = dp > 0 ? dp : -dp;
+			float theta = acosf(clamp(dp, -1.0f, 1.0f));
+			if (theta == 0)
+			{
+				return q1;
+			}
+			float d = sinf(theta);
+			float a = sinf((1 - t) * theta);
+			float b = sinf(t * theta);
+			float coeff1 = a / d;
+			float coeff2 = b / d;
+			qr.a = coeff1 * q11.a + coeff2 * q2.a;
+			qr.b = coeff1 * q11.b + coeff2 * q2.b;
+			qr.c = coeff1 * q11.c + coeff2 * q2.c;
+			qr.d = coeff1 * q11.d + coeff2 * q2.d;
+			qr = qr.Normalization();
+			return qr;
 		}
 
 

@@ -15,6 +15,7 @@
 #include"VertexLayoutCache.h"
 #include <Vector>
 #include "GEMLoader.h"
+#include "Animation.h"
 using namespace MathTool;
 using namespace std;
 extern "C" {
@@ -53,6 +54,16 @@ struct ConstantBufferVariable
 {
 	unsigned int offset;
 	unsigned int size;
+};
+struct ANIMATED_VERTEX
+{
+	Vec3 pos;
+	Vec3 normal;
+	Vec3 tangent;
+	float tu;
+	float tv;
+	unsigned int bonesIDs[4];
+	float boneWeights[4];
 };
 std::map<std::string, ConstantBufferVariable> scvvv;
 
@@ -121,6 +132,11 @@ public:
 	{
 		init(core, &vertices[0], sizeof(STATIC_VERTEX), vertices.size(), &indices[0], indices.size());
 		inputLayoutDesc = VertexLayoutCache::getStaticLayout();
+	}
+	void init(Core* core, std::vector<ANIMATED_VERTEX> vertices, std::vector<unsigned int> indices)
+	{
+		init(core, &vertices[0], sizeof(ANIMATED_VERTEX), vertices.size(), &indices[0], indices.size());
+		inputLayoutDesc = VertexLayoutCache::getAnimatedLayout();
 	}
 	void draw(Core* core)
 	{
@@ -501,12 +517,7 @@ public:
 	PRIM_VERTEX vertices[3];
 	vector<GeneralMesh *> meshes;
 	//GeneralMesh mesh;
-
-
-
 	std::vector<std::string> textureFilenames;
-
-
 	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos)
 	{
 		GEMLoader::GEMModelLoader loader;
@@ -526,19 +537,8 @@ public:
 			meshes.push_back(mesh);
 		}
 
-		
 		psos->createPSO(core, "StaticModelPSO", shaders->shaders["shader1"].vertexShader, shaders->shaders["shader1"].pixelShader, VertexLayoutCache::getStaticLayout());
 	}
-
-
-
-	void updateWorld(Shaders* shaders, Matrix& w)
-	{
-		//shaders->shaders["shader1"].vs_constantBuffer["staticMeshBuffer"].update("W", &w);
-		//shaders->updateConstantVS("StaticModelUntextured", "staticMeshBuffer", "W", &w);
-	}
-	
-
 
 	void apply(Core* core, Shader* shader) {
 		// Bind VS buffers
@@ -572,6 +572,108 @@ public:
 
 		apply(core, shader);
 		psos->bind(core, "StaticModelPSO");
+		for (int i = 0; i < meshes.size(); i++)
+		{
+			meshes[i]->draw(core);
+		}
+
+	}
+
+};
+class AnimatedModel {
+public:
+
+	
+	vector<GeneralMesh*> meshes;
+	Animation animation;
+	//GeneralMesh mesh;
+	std::vector<std::string> textureFilenames;
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos)
+	{
+		GEMLoader::GEMModelLoader loader;
+		std::vector<GEMLoader::GEMMesh> gemmeshes;
+		GEMLoader::GEMAnimation gemanimation;
+		loader.load(filename, gemmeshes, gemanimation);
+		for (int i = 0; i < gemmeshes.size(); i++)
+		{
+			GeneralMesh* mesh = new GeneralMesh();
+			std::vector<ANIMATED_VERTEX> vertices;
+			for (int j = 0; j < gemmeshes[i].verticesAnimated.size(); j++)
+			{
+				ANIMATED_VERTEX v;
+				memcpy(&v, &gemmeshes[i].verticesAnimated[j], sizeof(ANIMATED_VERTEX));
+				vertices.push_back(v);
+			}
+			mesh->init(core, vertices, gemmeshes[i].indices);
+		
+			meshes.push_back(mesh);
+		}
+
+		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderAnim"].vertexShader, shaders->shaders["shaderAnim"].pixelShader, VertexLayoutCache::getAnimatedLayout());
+		memcpy(&animation.skeleton.globalInverse, &gemanimation.globalInverse, 16 * sizeof(float));
+		for (int i = 0; i < gemanimation.bones.size(); i++)
+		{
+			Bone bone;
+			bone.name = gemanimation.bones[i].name;
+			memcpy(&bone.offset, &gemanimation.bones[i].offset, 16 * sizeof(float));
+			bone.parentIndex = gemanimation.bones[i].parentIndex;
+			animation.skeleton.bones.push_back(bone);
+		}
+		for (int i = 0; i < gemanimation.animations.size(); i++)
+		{
+			std::string name = gemanimation.animations[i].name;
+			AnimationSequence aseq;
+			aseq.ticksPerSecond = gemanimation.animations[i].ticksPerSecond;
+			for (int j = 0; j < gemanimation.animations[i].frames.size(); j++)
+			{
+				AnimationFrame frame;
+				for (int index = 0; index < gemanimation.animations[i].frames[j].positions.size(); index++)
+				{
+					Vec3 p;
+					Quaternion q;
+					Vec3 s;
+					memcpy(&p, &gemanimation.animations[i].frames[j].positions[index], sizeof(Vec3));
+					frame.positions.push_back(p);
+					memcpy(&q, &gemanimation.animations[i].frames[j].rotations[index], sizeof(Quaternion));
+					frame.rotations.push_back(q);
+					memcpy(&s, &gemanimation.animations[i].frames[j].scales[index], sizeof(Vec3));
+					frame.scales.push_back(s);
+				}
+				aseq.frames.push_back(frame);
+			}
+			animation.animations.insert({ name, aseq });
+		}
+		
+	}
+
+	void apply(Core* core, Shader* shader) {
+		// Bind VS buffers
+		unsigned int slot = 0;
+
+		for (auto& pair : shader->vs_constantBuffer)
+		{
+
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, pair.second.getGPUAddress());
+			pair.second.next();
+			//core->rootSignature.
+			slot++;
+
+		}
+
+	}
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance)
+	{
+		core->beginRenderPass();
+	
+		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
+		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
+		shader->vs_constantBuffer["staticMeshBuffer"].update("bones", instance->matrices);
+
+		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
+		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
+
+		apply(core, shader);
+		psos->bind(core, "AnimatedModelPSO");
 		for (int i = 0; i < meshes.size(); i++)
 		{
 			meshes[i]->draw(core);
@@ -708,13 +810,18 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	Shaders shaders;
 	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderPixel.hlsl");
+	shaders.load(&core, "shaderAnim", "ShaderVerticesAnim.hlsl", "ShaderPixel.hlsl");
 
 	//Cube cube;
 	//cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
-	StaticModle tree;
-	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos);
+	//StaticModle tree;
+	//tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos);
 
+	AnimatedModel animatedModel;
+	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos);
+	AnimationInstance animatedInstance;
+	animatedInstance.init(&animatedModel.animation, 0);
 
 
 	Matrix world;
@@ -752,9 +859,26 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-		tree.draw(&core, &world, &vp, &shaders.shaders["shader1"], &psos);
+		//tree.draw(&core, &world, &vp, &shaders.shaders["shader1"], &psos);
 		//cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP, &shaders.shaders["shader1"], &psos);
 		
+
+
+
+
+		animatedInstance.update("run", dt);
+		if (animatedInstance.animationFinished() == true)
+		{
+			animatedInstance.resetAnimationTime();
+		}
+		
+		
+		animatedModel.draw(&core, &world, &vp,&shaders.shaders["shaderAnim"],&psos,&animatedInstance);
+
+
+
+
+
 		core.finishFrame();
 	}
 	core.flushGraphicsQueue();
