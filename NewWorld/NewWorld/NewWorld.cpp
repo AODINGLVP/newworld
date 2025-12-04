@@ -422,9 +422,9 @@ class Cube {
 public:
 	
 
-	Shader shader;
+	
 	PRIM_VERTEX vertices[3];
-	PSOManager psos;
+	
 	GeneralMesh mesh;
 	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
 	{
@@ -436,7 +436,7 @@ public:
 		v.tv = tv;
 		return v;
 	}
-	void init(Core* core) {
+	void init(Core* core, PSOManager* psos, Shader* shader) {
 
 		std::vector<STATIC_VERTEX> vertices;
 		Vec3 p0 = Vec3(-1.0f, -1.0f, -1.0f);
@@ -491,11 +491,11 @@ public:
 		mesh.init(core, vertices, indices);
 
 	
-		shader.init(core);
+		shader->init(core);
 
-		psos.createPSO(core, "Triangle", shader.vertexShader, shader.pixelShader, mesh.inputLayoutDesc);
+		psos->createPSO(core, "Triangle", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
 	}
-	void apply(Core* core) {
+	void apply(Core* core, Shader* shader) {
 		// Bind VS buffers
 		unsigned int slot = 0;
 
@@ -509,7 +509,7 @@ public:
 
 		}*/
 
-		for (auto& pair : shader.vs_constantBuffer)
+		for (auto& pair : shader->vs_constantBuffer)
 		{
 
 			core->getCommandList()->SetGraphicsRootConstantBufferView(0, pair.second.getGPUAddress());
@@ -520,20 +520,20 @@ public:
 		}
 
 	}
-	void draw(Core* core, Matrix* w, Matrix* vp)
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader,PSOManager* psos)
 	{
 
 
 		core->beginRenderPass();
 	
-		shader.vs_constantBuffer["staticMeshBuffer"].update("W", w);
-		shader.vs_constantBuffer["staticMeshBuffer"].update("VP",vp);
+		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
+		shader->vs_constantBuffer["staticMeshBuffer"].update("VP",vp);
 		
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
 
-		apply(core);
-		psos.bind(core, "Triangle");
+		apply(core,shader);
+		psos->bind(core, "Triangle");
 		mesh.draw(core);
 	}
 
@@ -655,12 +655,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	PSTR lpCmdLine, int nCmdShow) {
+	PSOManager psos;
+
 	Window win;
 	Core core;
 	core.init(window->hwnd, kuan, gao);
 	
+	Shader shader;
+
 	Cube cube;
-	cube.init(&core);
+	cube.init(&core,&psos,&shader);
 
 
 	Matrix prespection;
@@ -696,7 +700,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-		cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP);
+		cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP,&shader,&psos);
 		
 		core.finishFrame();
 	}
