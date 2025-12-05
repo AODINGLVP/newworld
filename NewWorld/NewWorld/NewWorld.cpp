@@ -818,10 +818,16 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	StaticModle tree;
 	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos);
 
+
 	AnimatedModel animatedModel;
 	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos);
 	AnimationInstance animatedInstance;
 	animatedInstance.init(&animatedModel.animation, 0);
+
+	AnimatedModel UZI;
+	UZI.load(&core, "../Resources/UZI/Uzi.gem", &shaders, &psos);
+	AnimationInstance UZIInstance;
+	UZIInstance.init(&UZI.animation, 0);
 
 
 	Matrix world;
@@ -928,11 +934,16 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		{
 			animatedInstance.resetAnimationTime();
 		}
-		
-		
 		animatedModel.draw(&core, &world, &vp,&shaders.shaders["shaderAnim"],&psos,&animatedInstance);
 
-
+		Matrix uzimove;
+		uzimove = Matrix::translation(Vec3(10, 0, 0)) * Matrix::scaling(Vec3(0.01f, 0.01f, 0.01f));
+		UZIInstance.update("08 fire",rexdt);
+		if (UZIInstance.animationFinished() == true)
+		{
+			UZIInstance.resetAnimationTime();
+		}
+		UZI.draw(&core, &uzimove, &vp, &shaders.shaders["shaderAnim"], &psos, &UZIInstance);
 
 
 
