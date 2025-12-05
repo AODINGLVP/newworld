@@ -347,6 +347,9 @@ namespace MathTool
 		{
 			return Vec3(v[0] / w, v[1] / w, v[2] / w);
 		}
+		Vec3 TransToVec3RemoveW() {
+			return Vec3(v[0], v[1], v[2]);
+		}
 		Vec4 Cross(const Vec4& v1) const
 		{
 			return Vec4(
@@ -799,6 +802,22 @@ namespace MathTool
 				0.0f, 0.0f, 0.0f, 1.0f
 			);
 		}
+		Matrix LookRotation(Vec3 _forward,Vec3 up_world )
+		{
+			Vec3 forward =_forward.normalize();
+			Vec3 right = up_world * forward;
+			right = right.normalize();
+			Vec3 up = forward * right;
+			up = up.normalize();
+	
+
+			return Matrix(
+				right.x, right.y, right.z, 0,
+				up.x, up.y, up.z, 0,
+				forward.x, forward.y, forward.z, 0,
+				0, 0, 0, 1
+			);
+		}
 
 	};
 
@@ -1082,7 +1101,7 @@ namespace MathTool
 			qr = qr.Normalization();
 			return qr;
 		}
-
+		
 
 	};
 	class Fragment {

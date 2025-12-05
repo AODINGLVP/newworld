@@ -544,9 +544,13 @@ public:
 		realmaxpoint = maxpoint + _position;
 	}
 	void hero(Vec3 position) {
-		minpoint = position;
+		minpoint =Vec3(0,0,0);
 		maxpoint = minpoint + 1;
+		realminpoint = position+ minpoint;
+		realmaxpoint = maxpoint + position;
+
 	}
+	
 
 	void staticcalculateBox() {
 		for (int i = 0; i < staticbox.size(); i++) {
@@ -573,7 +577,7 @@ public:
 		minpoint = minpoint * 0.01f;
 		maxpoint = maxpoint * 0.01f;
 	}
-	void updatestatic(Vec3 position) {
+	void update(Vec3 position) {
 		realminpoint =minpoint+ position;
 		realmaxpoint = maxpoint+position;
 	}
@@ -606,11 +610,11 @@ public:
 	bool AABBtest(const Vec3& minB, const Vec3& maxB)
 	{
 
-		if (maxpoint.x < minB.x || minpoint.x > maxB.x)
+		if (realmaxpoint.x < minB.x || realminpoint.x > maxB.x)
 			return false;
-		if (maxpoint.y < minB.y || minpoint.y > maxB.y)
+		if (realmaxpoint.y < minB.y || realminpoint.y > maxB.y)
 			return false;
-		if (maxpoint.z < minB.z || minpoint.z > maxB.z)
+		if (realmaxpoint.z < minB.z || realminpoint.z > maxB.z)
 			return false;
 
 		return true;
@@ -792,10 +796,11 @@ public:
 		}
 
 	}
-	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance)
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance,Matrix &roation)
 	{
 		
-		realshow = Matrix::translation(position) * Matrix::scaling(scale);
+		realshow =  Matrix::translation(position)* roation * Matrix::scaling(scale);
+	
 		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("bones", instance->matrices);
@@ -812,6 +817,23 @@ public:
 
 	}
 
+};
+class Hero {
+public:
+	AnimatedModel heromodel;
+	AnimationInstance heromodelinstace;
+	float movespeed = 10.f;
+	Vec3 position;
+	Vec3 forward;
+	Vec3 right;
+	Vec3 to;
+	float cooldown = 0.2f;
+	float timecount = 0.f;
+	void init(Core* core, Shaders* shaders, PSOManager* psos, Vec3 position) {
+		heromodel.load(core, "../Resources/UZI/Uzi.gem", shaders, psos, Animatemodels::UZI, position);
+		heromodelinstace.init(&heromodel.animation, 0);
+	}
+	
 };
 
 class Enemies {
@@ -966,6 +988,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	//Cube cube;
 	//cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
+
+
 	StaticModle tree;
 	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree,Vec3(0,0,0));
 	staticmodles.push_back(tree);
@@ -989,13 +1013,16 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	animationinstances.push_back(UZIInstance);
 
 
+	Hero hero;
+	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0));
+	hero.heromodel.collision.hero(hero.position);
 
 	Enemies enemy;
 	enemy.init(&core, &shaders, &psos, Vec3(0, 0, 10));
 	enemies.push_back(enemy);
-
-	Collider hero;
-	hero.hero(Vec3(16, 0, 4));
+	
+	//Collider hero;
+	//hero.hero(Vec3(16, 0, 4));
 
 
 
@@ -1059,71 +1086,104 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		}
 		if (win.keys['A']) {
 			from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-			hero.hero(Vec3(from.x, from.y, from.z));
-			for (int i = 0; i < animateModels.size(); i++) {
-				if (hero.AABBtest(animateModels[i].collision.realminpoint, animateModels[i].collision.realmaxpoint)) {
+			hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+			
+			for (int i = 0; i < enemies.size(); i++) {
+				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
 					from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.hero(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
 				}
 			}
 			for (int i = 0; i < staticmodles.size(); i++) {
-				if (hero.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
+				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
 					from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.hero(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
 				}
 			}
 		}
 		if (win.keys['D']) {
 			from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-			hero.hero(Vec3(from.x, from.y, from.z));
-			for (int i = 0; i < animateModels.size(); i++) {
-				if (hero.AABBtest(animateModels[i].collision.realminpoint, animateModels[i].collision.realmaxpoint)) {
+			hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+			for (int i = 0; i < enemies.size(); i++) {
+				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
 					from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.hero(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
 				}
 			}
 			for (int i = 0; i < staticmodles.size(); i++) {
-				if (hero.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
+				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
 					from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.hero(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
 				}
 			}
 		}
 		if (win.keys['W']) {
 			from = from+Vec4(forward.x,0, forward.z,0) * cameramovespeed * rexdt;
-			hero.hero(Vec3(from.x, from.y, from.z));
-			for (int i = 0; i < animateModels.size(); i++) {
-				if (hero.AABBtest(animateModels[i].collision.realminpoint, animateModels[i].collision.realmaxpoint)) {
+			hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+			for (int i = 0; i < enemies.size(); i++) {
+				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
 					from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.hero(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
 					
 				}
 			}
 			for (int i = 0; i < staticmodles.size(); i++) {
-				if (hero.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
+				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
 					from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.hero(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
 
 				}
 			}
+
+
+
+
+			OutputDebugStringA(to_string(hero.heromodel.position.x).c_str());
+		OutputDebugStringA("\n");
+		//OutputDebugStringA(to_string(hero.heromodel.collision.realmaxpoint.y).c_str());
+		//OutputDebugStringA("\n");
+		OutputDebugStringA("x::");
+		OutputDebugStringA(to_string(to.x).c_str());
+		OutputDebugStringA("\n");
+		//OutputDebugStringA("z::");
+		//OutputDebugStringA(to_string(to.z).c_str());
+		//OutputDebugStringA("\n");
+		//OutputDebugStringA(to_string(to.y).c_str());
+		//OutputDebugStringA("\n");
+
+
+
+
+
+
+
+
+
+
+
 		}
 		if (win.keys['S']) {
 			from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-			hero.hero(Vec3(from.x, from.y, from.z));
-			for (int i = 0; i < animateModels.size(); i++) {
-				if (hero.AABBtest(animateModels[i].collision.realminpoint, animateModels[i].collision.realmaxpoint)) {
+			hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+			for (int i = 0; i < enemies.size(); i++) {
+				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
 					from = from + Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.hero(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
 				}
 			}
 			for (int i = 0; i < staticmodles.size(); i++) {
-				if (hero.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
+				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
 					from = from + Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.hero(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
 				}
 			}
 		}
-		hero.hero(Vec3(from.x,from.y,from.z));
+		hero.heromodel.position = Vec3(from.x,from.y,from.z);
+
+
+
+
+
 		//OutputDebugStringA(to_string(from.x).c_str());
 		//OutputDebugStringA("\n");
 		//OutputDebugStringA(to_string(from.z).c_str());
@@ -1163,31 +1223,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		//cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP, &shaders.shaders["shader1"], &psos);
 		
 
-		for (int i = 0; i < animateModels.size(); i++) {
-			switch (animateModels[i].scv) {
-			case Animatemodels::TRex:
-				
-			
-				animationinstances[i].update("run", rexdt);
-				if (animationinstances[i].animationFinished() == true)
-				{
-					animationinstances[i].resetAnimationTime();
-				}
-				animateModels[i].draw(&core, &animateModels[i].realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &animationinstances[i]);
-				break;
-			case Animatemodels::UZI:
-				
-				animationinstances[i].update("08 fire", rexdt);
-				if (animationinstances[i].animationFinished() == true)
-				{
-					animationinstances[i].resetAnimationTime();
-				}
-				animateModels[i].draw(&core, &animateModels[i].realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &animationinstances[i]);
-				break;
-
-			}
-			
-		}
+		
 
 		for (int i = 0; i < enemies.size(); i++) {
 			
@@ -1195,12 +1231,40 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			if (enemies[i].enemymodelinstace.animationFinished()) {
 				enemies[i].enemymodelinstace.resetAnimationTime();
 			}
-			//enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &enemies[i].enemymodelinstace);
+
+			Matrix RY;
+			Matrix RX;
+
+			float yaw = atan2f(forward.x, forward.z);
+			float pitch = -asinf(forward.y);
+			RY = RY.rotationY(yaw);
+			RX = RX.rotationX(pitch);
+			Matrix R = RY * RX;
+			
+
+			Matrix scv;
+			scv = scv.rotationY(111.f);
+			
+			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &enemies[i].enemymodelinstace, R);
 				
 			
 		}
+		Matrix RY;
+		Matrix RX;
+		hero.heromodelinstace.update("08 fire", rexdt);
+		if (hero.heromodelinstace.animationFinished()) {
+			hero.heromodelinstace.resetAnimationTime();
+		}
 
-
+		float yaw = atan2f(forward.x, forward.z);
+		float pitch = -asinf(forward.y);
+		RY = RY.rotationY(yaw+M_PI);
+		RX = RX.rotationX(-pitch);
+		Matrix R = RY * RX;
+		Matrix scv;
+		scv = scv.rotationY(12.f);
+		
+		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &hero.heromodelinstace,R);
 	/*	animatedInstance.update("run", rexdt);
 		if (animatedInstance.animationFinished() == true)
 		{
