@@ -16,6 +16,7 @@
 #include <Vector>
 #include "GEMLoader.h"
 #include "Animation.h"
+#include "Enums.h"
 using namespace MathTool;
 using namespace std;
 extern "C" {
@@ -65,7 +66,7 @@ struct ANIMATED_VERTEX
 	unsigned int bonesIDs[4];
 	float boneWeights[4];
 };
-std::map<std::string, ConstantBufferVariable> scvvv;
+map<std::string, ConstantBufferVariable> scvvv;
 
 class GeneralMesh {
 public:
@@ -513,13 +514,20 @@ public:
 };
 class StaticModle {
 public:
-
+	Staticmodels scv;
+	Vec3 position;
+	Vec3 scale;
+	Matrix realshow;
 	PRIM_VERTEX vertices[3];
 	vector<GeneralMesh *> meshes;
 	//GeneralMesh mesh;
 	std::vector<std::string> textureFilenames;
-	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos)
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name)
 	{
+		scv = _name;
+		position = Vec3(0, 0, 0);
+		scale = Vec3(0.01f, 0.01f, 0.01f);
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
 		GEMLoader::GEMModelLoader loader;
 		std::vector<GEMLoader::GEMMesh> gemmeshes;
 		loader.load(filename, gemmeshes);
@@ -563,7 +571,7 @@ public:
 		
 
 		
-
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
 
@@ -582,14 +590,25 @@ public:
 };
 class AnimatedModel {
 public:
-
+	Animatemodels scv;
+	
+	Vec3 position;
+	Vec3 scale;
+	Matrix realshow;
+	
 	
 	vector<GeneralMesh*> meshes;
 	Animation animation;
 	//GeneralMesh mesh;
 	std::vector<std::string> textureFilenames;
-	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos)
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum)
 	{
+		scv = _enum;
+	
+		position = Vec3(0, 0, 0);
+		scale = Vec3(0.01f, 0.01f, 0.01f);
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
+
 		GEMLoader::GEMModelLoader loader;
 		std::vector<GEMLoader::GEMMesh> gemmeshes;
 		GEMLoader::GEMAnimation gemanimation;
@@ -664,7 +683,7 @@ public:
 	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance)
 	{
 		
-	
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("bones", instance->matrices);
@@ -681,6 +700,21 @@ public:
 
 	}
 
+};
+class Enemies {
+public:
+	AnimatedModel enemymodel;
+	AnimationInstance enemymodelinstace;
+	float health = 100.f;
+	Vec3 forward;
+	Vec3 position;
+	float cooldown = 5.f;
+	float timecount = 0.f;
+	void init(Core* core, Shaders* shaders, PSOManager* psos) {
+		enemymodel.load(core, "../Resources/TRex.gem", shaders, psos, Animatemodels::TRex);
+		enemymodelinstace.init(&enemymodel.animation, 0);
+	}
+	
 };
 class Window;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -800,7 +834,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	PSTR lpCmdLine, int nCmdShow) {
 	PSOManager psos;
-
+	vector<StaticModle> staticmodles;
+	vector<AnimatedModel>animateModels;
+	vector<AnimationInstance>animationinstances;
+	vector<Enemies> enemies;
 	Window win;
 	Core core;
 	core.init(window->hwnd, kuan, gao);
@@ -812,22 +849,39 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderPixel.hlsl");
 	shaders.load(&core, "shaderAnim", "ShaderVerticesAnim.hlsl", "ShaderPixel.hlsl");
 
+
 	//Cube cube;
 	//cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
 	StaticModle tree;
-	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos);
+	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree);
+	staticmodles.push_back(tree);
+	StaticModle tree1;
+	tree1.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree);
+	staticmodles.push_back(tree1);
 
 
 	AnimatedModel animatedModel;
-	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos);
+	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos,Animatemodels::TRex);
+	//animateModels.push_back(animatedModel);
 	AnimationInstance animatedInstance;
 	animatedInstance.init(&animatedModel.animation, 0);
+	//animationinstances.push_back(animatedInstance);
 
 	AnimatedModel UZI;
-	UZI.load(&core, "../Resources/UZI/Uzi.gem", &shaders, &psos);
+	UZI.load(&core, "../Resources/UZI/Uzi.gem", &shaders, &psos, Animatemodels::UZI);
 	AnimationInstance UZIInstance;
 	UZIInstance.init(&UZI.animation, 0);
+	animateModels.push_back(UZI);
+	animationinstances.push_back(UZIInstance);
+
+
+
+	Enemies enemy;
+	enemy.init(&core, &shaders, &psos);
+	enemies.push_back(enemy);
+
+
 
 
 	Matrix world;
@@ -919,33 +973,77 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 		core.beginRenderPass();
 
-		Matrix treemove;
-		treemove = Matrix::translation(Vec3(5, 0, 0))* Matrix::scaling(Vec3(0.01f, 0.01f, 0.01f));
 
-		tree.draw(&core, &treemove, &vp, &shaders.shaders["shader1"], &psos);
+
+		for (int i = 0; i < staticmodles.size(); i++) {
+			staticmodles[i].position = Vec3(5 + 5 * i, 0, 0);
+			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &shaders.shaders["shader1"], &psos);
+		}
+
+	
+		//tree.position = Vec3(10, 0, 0);
+		
+		//tree.draw(&core, &tree.realshow, &vp, &shaders.shaders["shader1"], &psos);
 		//cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP, &shaders.shaders["shader1"], &psos);
 		
 
+		for (int i = 0; i < animateModels.size(); i++) {
+			switch (animateModels[i].scv) {
+			case Animatemodels::TRex:
+				animateModels[i].position = Vec3(5 + 5 * i, 0, 0);
+
+				animationinstances[i].update("run", rexdt);
+				if (animationinstances[i].animationFinished() == true)
+				{
+					animationinstances[i].resetAnimationTime();
+				}
+				animateModels[i].draw(&core, &animateModels[i].realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &animationinstances[i]);
+				break;
+			case Animatemodels::UZI:
+				animateModels[i].position = Vec3(5 + 5 * i, 0, 0);
+
+				animationinstances[i].update("08 fire", rexdt);
+				if (animationinstances[i].animationFinished() == true)
+				{
+					animationinstances[i].resetAnimationTime();
+				}
+				animateModels[i].draw(&core, &animateModels[i].realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &animationinstances[i]);
+				break;
+
+			}
+			
+		}
+
+		for (int i = 0; i < enemies.size(); i++) {
+			enemies[i].enemymodel.position= Vec3(5 + 5 * i, 0, 0);
+			enemies[i].enemymodelinstace.update("run", rexdt);
+			if (enemies[i].enemymodelinstace.animationFinished()) {
+				enemies[i].enemymodelinstace.resetAnimationTime();
+			}
+			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &enemies[i].enemymodelinstace);
+				
+			
+		}
 
 
-
-		animatedInstance.update("run", rexdt);
+	/*	animatedInstance.update("run", rexdt);
 		if (animatedInstance.animationFinished() == true)
 		{
 			animatedInstance.resetAnimationTime();
 		}
-		animatedModel.draw(&core, &world, &vp,&shaders.shaders["shaderAnim"],&psos,&animatedInstance);
+		animatedModel.draw(&core, &animatedModel.realshow, &vp,&shaders.shaders["shaderAnim"],&psos,&animatedInstance);
 
-		Matrix uzimove;
-		uzimove = Matrix::translation(Vec3(10, 0, 0)) * Matrix::scaling(Vec3(0.01f, 0.01f, 0.01f));
+	*/
+		/*UZI.position = Vec3(0, 0, 20);
+		
 		UZIInstance.update("08 fire",rexdt);
 		if (UZIInstance.animationFinished() == true)
 		{
 			UZIInstance.resetAnimationTime();
 		}
-		UZI.draw(&core, &uzimove, &vp, &shaders.shaders["shaderAnim"], &psos, &UZIInstance);
+		UZI.draw(&core, &UZI.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &UZIInstance);
 
-
+		*/
 
 		core.finishFrame();
 	}

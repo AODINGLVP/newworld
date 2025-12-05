@@ -129,6 +129,7 @@
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Core.cpp" />
+    <ClCompile Include="Enums.cpp" />
     <ClCompile Include="MathTool.cpp" />
     <ClCompile Include="NewWorld.cpp" />
     <ClCompile Include="PSOManager.cpp" />
@@ -137,6 +138,7 @@
   <ItemGroup>
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Core.h" />
+    <ClInclude Include="Enums.h" />
     <ClInclude Include="MathTool.h" />
     <ClInclude Include="PSOManager.h" />
     <ClInclude Include="VertexLayoutCache.h" />
