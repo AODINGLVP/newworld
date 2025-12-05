@@ -316,7 +316,7 @@ public:
             D3D12_RESOURCE_STATE_PRESENT, getCommandList());
         runCommandList();
         graphicsQueueFence[frameIndex].signal(graphicsQueue);
-        swapchain->Present(1, 0);
+        swapchain->Present(0, 0);
     }
     void uploadResource(ID3D12Resource* dstResource, const void* data, unsigned int size,
         D3D12_RESOURCE_STATES targetState, D3D12_PLACED_SUBRESOURCE_FOOTPRINT* texFootprint = NULL) {

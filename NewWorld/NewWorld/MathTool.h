@@ -3,8 +3,8 @@
 #include <iostream>
 
 #include "GamesEngineeringBase.h"
-#define width 1024.f
-#define height 768.f
+#define width 1920.f
+#define height 1080.f
 #include <cmath>
 #include <vector>
 #undef min
