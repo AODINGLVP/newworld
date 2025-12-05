@@ -66,6 +66,7 @@ struct ANIMATED_VERTEX
 	unsigned int bonesIDs[4];
 	float boneWeights[4];
 };
+class collider;
 map<std::string, ConstantBufferVariable> scvvv;
 
 class GeneralMesh {
@@ -512,20 +513,127 @@ public:
 	}
 
 };
+
+
+
+
+class Collider {
+public:
+	vector<ANIMATED_VERTEX> animatebox;
+	vector<STATIC_VERTEX> staticbox;
+	Vec3 realminpoint;
+	Vec3 realmaxpoint;
+	Vec3 minpoint;
+	Vec3 maxpoint;
+	void staticinit(vector<STATIC_VERTEX> _staticbox,Vec3 _position) {
+		staticbox = _staticbox;
+
+		minpoint = Vec3(11111, 11111, 11111);
+		maxpoint = Vec3(-11111, -11111, -11111);
+		staticcalculateBox();
+		realminpoint = minpoint + _position;
+		realmaxpoint = maxpoint + _position;
+
+	}
+	void animateinit(vector<ANIMATED_VERTEX> _animatebox, Vec3 _position) {
+		animatebox = _animatebox;
+		minpoint = Vec3(11111, 11111, 11111);
+		maxpoint = Vec3(-11111, -11111, -11111);
+		animatecalculateBox();
+		realminpoint = minpoint + _position;
+		realmaxpoint = maxpoint + _position;
+	}
+	void hero(Vec3 position) {
+		minpoint = position;
+		maxpoint = minpoint + 1;
+	}
+
+	void staticcalculateBox() {
+		for (int i = 0; i < staticbox.size(); i++) {
+
+			if (staticbox[i].pos.x > maxpoint.x) {
+				maxpoint.x = staticbox[i].pos.x;
+			}
+			if (staticbox[i].pos.y > maxpoint.y) {
+				maxpoint.y = staticbox[i].pos.y;
+			}
+			if (staticbox[i].pos.z > maxpoint.z) {
+				maxpoint.z = staticbox[i].pos.z;
+			}
+			if (staticbox[i].pos.x < minpoint.x) {
+				minpoint.x = staticbox[i].pos.x;
+			}
+			if (staticbox[i].pos.y < minpoint.y) {
+				minpoint.y = staticbox[i].pos.y;
+			}
+			if (staticbox[i].pos.z < minpoint.z) {
+				minpoint.z = staticbox[i].pos.z;
+			}
+		}
+		minpoint = minpoint * 0.01f;
+		maxpoint = maxpoint * 0.01f;
+	}
+	void updatestatic(Vec3 position) {
+		realminpoint =minpoint+ position;
+		realmaxpoint = maxpoint+position;
+	}
+	void animatecalculateBox() {
+		for (int i = 0; i < animatebox.size(); i++) {
+
+			if (animatebox[i].pos.x > maxpoint.x) {
+				maxpoint.x = animatebox[i].pos.x;
+			}
+			if (animatebox[i].pos.y > maxpoint.y) {
+				maxpoint.y = animatebox[i].pos.y;
+			}
+			if (animatebox[i].pos.z > maxpoint.z) {
+				maxpoint.z = animatebox[i].pos.z;
+			}
+			if (animatebox[i].pos.x < minpoint.x) {
+				minpoint.x = animatebox[i].pos.x;
+			}
+			if (animatebox[i].pos.y < minpoint.y) {
+				minpoint.y = animatebox[i].pos.y;
+			}
+			if (animatebox[i].pos.z < minpoint.z) {
+				minpoint.z = animatebox[i].pos.z;
+			}
+		}
+		minpoint = minpoint * 0.01f;
+		maxpoint = maxpoint * 0.01f;
+	}
+
+	bool AABBtest(const Vec3& minB, const Vec3& maxB)
+	{
+
+		if (maxpoint.x < minB.x || minpoint.x > maxB.x)
+			return false;
+		if (maxpoint.y < minB.y || minpoint.y > maxB.y)
+			return false;
+		if (maxpoint.z < minB.z || minpoint.z > maxB.z)
+			return false;
+
+		return true;
+	}
+
+};
+
 class StaticModle {
 public:
+	Collider collision;
 	Staticmodels scv;
 	Vec3 position;
 	Vec3 scale;
 	Matrix realshow;
-	PRIM_VERTEX vertices[3];
+	vector<STATIC_VERTEX> verticescout;
 	vector<GeneralMesh *> meshes;
 	//GeneralMesh mesh;
 	std::vector<std::string> textureFilenames;
-	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name)
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name,Vec3 _position)
 	{
+		
 		scv = _name;
-		position = Vec3(0, 0, 0);
+		position = _position;
 		scale = Vec3(0.01f, 0.01f, 0.01f);
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
 		GEMLoader::GEMModelLoader loader;
@@ -540,12 +648,14 @@ public:
 				STATIC_VERTEX v;
 				memcpy(&v, &gemmeshes[i].verticesStatic[j], sizeof(STATIC_VERTEX));
 				vertices.push_back(v);
+				verticescout.push_back(v);
 			}
 			mesh->init(core, vertices, gemmeshes[i].indices);
 			meshes.push_back(mesh);
 		}
 
 		psos->createPSO(core, "StaticModelPSO", shaders->shaders["shader1"].vertexShader, shaders->shaders["shader1"].pixelShader, VertexLayoutCache::getStaticLayout());
+		collision.staticinit(verticescout,position);
 	}
 
 	void apply(Core* core, Shader* shader) {
@@ -591,21 +701,22 @@ public:
 class AnimatedModel {
 public:
 	Animatemodels scv;
-	
+	Collider collision;
 	Vec3 position;
 	Vec3 scale;
 	Matrix realshow;
 	
 	
 	vector<GeneralMesh*> meshes;
+	vector<ANIMATED_VERTEX> verticescout;
 	Animation animation;
 	//GeneralMesh mesh;
 	std::vector<std::string> textureFilenames;
-	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum)
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum,Vec3 _position)
 	{
 		scv = _enum;
 	
-		position = Vec3(0, 0, 0);
+		position = _position;
 		scale = Vec3(0.01f, 0.01f, 0.01f);
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
 
@@ -622,6 +733,7 @@ public:
 				ANIMATED_VERTEX v;
 				memcpy(&v, &gemmeshes[i].verticesAnimated[j], sizeof(ANIMATED_VERTEX));
 				vertices.push_back(v);
+				verticescout.push_back(v);
 			}
 			mesh->init(core, vertices, gemmeshes[i].indices);
 		
@@ -662,7 +774,7 @@ public:
 			}
 			animation.animations.insert({ name, aseq });
 		}
-		
+		collision.animateinit(verticescout,position);
 	}
 
 	void apply(Core* core, Shader* shader) {
@@ -690,7 +802,7 @@ public:
 
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
-
+		
 		apply(core, shader);
 		psos->bind(core, "AnimatedModelPSO");
 		for (int i = 0; i < meshes.size(); i++)
@@ -701,6 +813,7 @@ public:
 	}
 
 };
+
 class Enemies {
 public:
 	AnimatedModel enemymodel;
@@ -710,8 +823,8 @@ public:
 	Vec3 position;
 	float cooldown = 5.f;
 	float timecount = 0.f;
-	void init(Core* core, Shaders* shaders, PSOManager* psos) {
-		enemymodel.load(core, "../Resources/TRex.gem", shaders, psos, Animatemodels::TRex);
+	void init(Core* core, Shaders* shaders, PSOManager* psos,Vec3 position) {
+		enemymodel.load(core, "../Resources/TRex.gem", shaders, psos, Animatemodels::TRex, position);
 		enemymodelinstace.init(&enemymodel.animation, 0);
 	}
 	
@@ -854,22 +967,22 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	//cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
 	StaticModle tree;
-	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree);
+	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree,Vec3(0,0,0));
 	staticmodles.push_back(tree);
 	StaticModle tree1;
-	tree1.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree);
+	tree1.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 5));
 	staticmodles.push_back(tree1);
 
 
 	AnimatedModel animatedModel;
-	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos,Animatemodels::TRex);
-	//animateModels.push_back(animatedModel);
+	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos,Animatemodels::TRex, Vec3(10, 0, 0));
+	animateModels.push_back(animatedModel);
 	AnimationInstance animatedInstance;
 	animatedInstance.init(&animatedModel.animation, 0);
-	//animationinstances.push_back(animatedInstance);
+	animationinstances.push_back(animatedInstance);
 
 	AnimatedModel UZI;
-	UZI.load(&core, "../Resources/UZI/Uzi.gem", &shaders, &psos, Animatemodels::UZI);
+	UZI.load(&core, "../Resources/UZI/Uzi.gem", &shaders, &psos, Animatemodels::UZI, Vec3(0, 0, 10));
 	AnimationInstance UZIInstance;
 	UZIInstance.init(&UZI.animation, 0);
 	animateModels.push_back(UZI);
@@ -878,8 +991,15 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 	Enemies enemy;
-	enemy.init(&core, &shaders, &psos);
+	enemy.init(&core, &shaders, &psos, Vec3(0, 0, 10));
 	enemies.push_back(enemy);
+
+	Collider hero;
+	hero.hero(Vec3(16, 0, 4));
+
+
+
+
 
 
 
@@ -887,11 +1007,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Matrix world;
 	world = world.scale(0.01f, 0.01f, 0.01f);
 	Matrix prespection;
-	prespection = prespection.Perspective(M_PI / 4, kuan / gao, 0.3f, 100.0f);
+	prespection = prespection.Perspective(M_PI / 4, kuan / gao, 0.1f, 100.0f);
 	Matrix lookat;
 	ConstantBuffer3 constBufferCPU3;
 	Matrix vp;
-	constBufferCPU3.VP= prespection.Perspective(M_PI / 4, kuan / gao, 0.3f, 100.0f);
+	constBufferCPU3.VP= prespection.Perspective(M_PI / 4, kuan / gao, 0.1f, 100.0f);
 	
 	GamesEngineeringBase::Timer timer;
 	
@@ -899,9 +1019,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	float dt=0;
 	float rexdt;
 	float cameramovespeed = 5.f;
-	Vec4 to = Vec4(0, 1, 0, 0);
+	Vec4 to = Vec4(0, 0, 0, 0);
 	Vec4 up = Vec4(0, 1, 0, 0);
-	Vec4 from = Vec4(10,0,0, 0);
+	Vec4 from = Vec4(16,0,4, 0);
 	Vec4 forward = Vec4(0, 0,1, 0);
 	Vec4 right;
 	float yaw = 0.0f;    // ÈÆYÖáÐý×ª
@@ -939,27 +1059,83 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		}
 		if (win.keys['A']) {
 			from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
+			hero.hero(Vec3(from.x, from.y, from.z));
+			for (int i = 0; i < animateModels.size(); i++) {
+				if (hero.AABBtest(animateModels[i].collision.realminpoint, animateModels[i].collision.realmaxpoint)) {
+					from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
+					hero.hero(Vec3(from.x, from.y, from.z));
+				}
+			}
+			for (int i = 0; i < staticmodles.size(); i++) {
+				if (hero.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
+					from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
+					hero.hero(Vec3(from.x, from.y, from.z));
+				}
+			}
 		}
 		if (win.keys['D']) {
 			from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
+			hero.hero(Vec3(from.x, from.y, from.z));
+			for (int i = 0; i < animateModels.size(); i++) {
+				if (hero.AABBtest(animateModels[i].collision.realminpoint, animateModels[i].collision.realmaxpoint)) {
+					from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
+					hero.hero(Vec3(from.x, from.y, from.z));
+				}
+			}
+			for (int i = 0; i < staticmodles.size(); i++) {
+				if (hero.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
+					from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
+					hero.hero(Vec3(from.x, from.y, from.z));
+				}
+			}
 		}
 		if (win.keys['W']) {
 			from = from+Vec4(forward.x,0, forward.z,0) * cameramovespeed * rexdt;
+			hero.hero(Vec3(from.x, from.y, from.z));
+			for (int i = 0; i < animateModels.size(); i++) {
+				if (hero.AABBtest(animateModels[i].collision.realminpoint, animateModels[i].collision.realmaxpoint)) {
+					from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
+					hero.hero(Vec3(from.x, from.y, from.z));
+					
+				}
+			}
+			for (int i = 0; i < staticmodles.size(); i++) {
+				if (hero.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
+					from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
+					hero.hero(Vec3(from.x, from.y, from.z));
+
+				}
+			}
 		}
 		if (win.keys['S']) {
 			from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
+			hero.hero(Vec3(from.x, from.y, from.z));
+			for (int i = 0; i < animateModels.size(); i++) {
+				if (hero.AABBtest(animateModels[i].collision.realminpoint, animateModels[i].collision.realmaxpoint)) {
+					from = from + Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
+					hero.hero(Vec3(from.x, from.y, from.z));
+				}
+			}
+			for (int i = 0; i < staticmodles.size(); i++) {
+				if (hero.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
+					from = from + Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
+					hero.hero(Vec3(from.x, from.y, from.z));
+				}
+			}
 		}
-		
+		hero.hero(Vec3(from.x,from.y,from.z));
 		//OutputDebugStringA(to_string(from.x).c_str());
 		//OutputDebugStringA("\n");
 		//OutputDebugStringA(to_string(from.z).c_str());
 		//OutputDebugStringA("\n");
-		OutputDebugStringA(to_string(to.x).c_str());
-		OutputDebugStringA("\n");
-		OutputDebugStringA(to_string(to.z).c_str());
-		OutputDebugStringA("\n");
-		OutputDebugStringA(to_string(to.y).c_str());
-		OutputDebugStringA("\n");
+		//OutputDebugStringA("x::");
+		//OutputDebugStringA(to_string(to.x).c_str());
+		//OutputDebugStringA("\n");
+		//OutputDebugStringA("z::");
+		//OutputDebugStringA(to_string(to.z).c_str());
+		//OutputDebugStringA("\n");
+		//OutputDebugStringA(to_string(to.y).c_str());
+		//OutputDebugStringA("\n");
 
 		//Vec4 from = Vec4(11 * cos(dt), 5, 11 * sin(dt), 0);
 		//constBufferCPU1.time += dt;
@@ -976,7 +1152,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 		for (int i = 0; i < staticmodles.size(); i++) {
-			staticmodles[i].position = Vec3(5 + 5 * i, 0, 0);
+			
 			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &shaders.shaders["shader1"], &psos);
 		}
 
@@ -990,8 +1166,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		for (int i = 0; i < animateModels.size(); i++) {
 			switch (animateModels[i].scv) {
 			case Animatemodels::TRex:
-				animateModels[i].position = Vec3(5 + 5 * i, 0, 0);
-
+				
+			
 				animationinstances[i].update("run", rexdt);
 				if (animationinstances[i].animationFinished() == true)
 				{
@@ -1000,8 +1176,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				animateModels[i].draw(&core, &animateModels[i].realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &animationinstances[i]);
 				break;
 			case Animatemodels::UZI:
-				animateModels[i].position = Vec3(5 + 5 * i, 0, 0);
-
+				
 				animationinstances[i].update("08 fire", rexdt);
 				if (animationinstances[i].animationFinished() == true)
 				{
@@ -1015,12 +1190,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		}
 
 		for (int i = 0; i < enemies.size(); i++) {
-			enemies[i].enemymodel.position= Vec3(5 + 5 * i, 0, 0);
+			
 			enemies[i].enemymodelinstace.update("run", rexdt);
 			if (enemies[i].enemymodelinstace.animationFinished()) {
 				enemies[i].enemymodelinstace.resetAnimationTime();
 			}
-			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &enemies[i].enemymodelinstace);
+			//enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &enemies[i].enemymodelinstace);
 				
 			
 		}
