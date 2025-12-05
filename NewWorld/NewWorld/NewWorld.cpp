@@ -240,7 +240,7 @@ public:
 	{
 		for (const auto& pair : constantBufferData)
 		{
-			OutputDebugStringA((pair.first + "\n").c_str());
+			//OutputDebugStringA((pair.first + "\n").c_str());
 		}
 		
 		if (constantBufferData.find(name) != constantBufferData.end())
@@ -838,25 +838,78 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	win.create(kuan, gao, "My Window");
 	float dt=0;
 	float rexdt;
-	
+	float cameramovespeed = 5.f;
+	Vec4 to = Vec4(0, 1, 0, 0);
+	Vec4 up = Vec4(0, 1, 0, 0);
+	Vec4 from = Vec4(10,0,0, 0);
+	Vec4 forward = Vec4(0, 0,1, 0);
+	Vec4 right;
+	float yaw = 0.0f;    // ÈÆYÖáÐý×ª
+	float pitch = 0.0f;
+	static int lastMouseX = window->mousex;
+	static int lastMouseY = window->mousey;
 
+	int deltaX = window->mousex - lastMouseX;
+	int deltaY = window->mousey - lastMouseY;
+	float mouseSensitivity = 0.01f;
 	while (1) {
 		rexdt = timer.dt();
 		dt += rexdt;
 		
+		deltaX = window->mousex - lastMouseX;
+		deltaY = window->mousey - lastMouseY;
+		yaw -= deltaX * mouseSensitivity;
+		pitch -= deltaY * mouseSensitivity;
+
+		float limit = 1.5f; 
+		if (pitch > limit) pitch = limit;
+		if (pitch < -limit) pitch = -limit;
+
+		forward.x = cosf(pitch) * cosf(yaw);
+		forward.y = sinf(pitch);
+		forward.z = cosf(pitch) * sinf(yaw);
+		forward.w = 0;
+		lastMouseX = window->mousex;
+		lastMouseY = window->mousey;
+		to = forward + from;
+		right = forward.Cross(Vec4(0, 1, 0, 0));
+		if (win.keys[VK_ESCAPE] == 1)
+		{
+			break;
+		}
+		if (win.keys['A']) {
+			from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
+		}
+		if (win.keys['D']) {
+			from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
+		}
+		if (win.keys['W']) {
+			from = from+Vec4(forward.x,0, forward.z,0) * cameramovespeed * rexdt;
+		}
+		if (win.keys['S']) {
+			from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
+		}
+		
+		//OutputDebugStringA(to_string(from.x).c_str());
+		//OutputDebugStringA("\n");
+		//OutputDebugStringA(to_string(from.z).c_str());
+		//OutputDebugStringA("\n");
+		OutputDebugStringA(to_string(to.x).c_str());
+		OutputDebugStringA("\n");
+		OutputDebugStringA(to_string(to.z).c_str());
+		OutputDebugStringA("\n");
+		OutputDebugStringA(to_string(to.y).c_str());
+		OutputDebugStringA("\n");
+
+		//Vec4 from = Vec4(11 * cos(dt), 5, 11 * sin(dt), 0);
 		//constBufferCPU1.time += dt;
-		Vec4 from = Vec4(11 * cos(dt), 5, 11 * sin(dt), 0);
-		Vec4 to = Vec4(0, 1, 0, 0);
-		Vec4 up = Vec4(0, 1, 0, 0);
+		
 		lookat=lookat.LookatMatrix(from, to, up);
 		vp = prespection.mul(lookat);
 		//constBufferCPU3.w = constBufferCPU3.w.lookAtMatrix(from.TransToVec3(), to.TransToVec3(), up.TransToVec3());
 		core.beginFrame();
 		win.processMessages();
-		if (win.keys[VK_ESCAPE] == 1)
-		{
-			break;
-		}
+		
 
 		core.beginRenderPass();
 

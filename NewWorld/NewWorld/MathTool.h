@@ -216,6 +216,7 @@ namespace MathTool
 			}
 
 		}
+		
 		Vec4& operator+=(const Vec4& pVec)
 		{
 			v[0] += pVec.v[0];
