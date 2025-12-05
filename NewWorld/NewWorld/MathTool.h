@@ -818,7 +818,13 @@ namespace MathTool
 				0, 0, 0, 1
 			);
 		}
-
+		Vec3 MulVec3(const Matrix& M, const Vec3& p)
+		{
+			float x = p.x * M.m[0] + p.y * M.m[4] + p.z * M.m[8] + M.m[12];
+			float y = p.x * M.m[1] + p.y * M.m[5] + p.z * M.m[9] + M.m[13];
+			float z = p.x * M.m[2] + p.y * M.m[6] + p.z * M.m[10] + M.m[14];
+			return Vec3(x, y, z);
+		}
 	};
 
 	class Matric3 {

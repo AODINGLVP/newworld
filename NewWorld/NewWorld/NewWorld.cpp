@@ -542,6 +542,7 @@ public:
 		animatecalculateBox();
 		realminpoint = minpoint + _position;
 		realmaxpoint = maxpoint + _position;
+		
 	}
 	void hero(Vec3 position) {
 		minpoint =Vec3(0,0,0);
@@ -577,9 +578,60 @@ public:
 		minpoint = minpoint * 0.01f;
 		maxpoint = maxpoint * 0.01f;
 	}
-	void update(Vec3 position) {
-		realminpoint =minpoint+ position;
-		realmaxpoint = maxpoint+position;
+	void update(Vec3 position,Matrix scv) {
+		vector<Vec3>corner;
+		corner.push_back(Vec3(minpoint.x, minpoint.y, minpoint.z));
+		corner.push_back(Vec3(minpoint.x, minpoint.y, maxpoint.z));
+		corner.push_back(Vec3(minpoint.x, maxpoint.y, minpoint.z));
+		corner.push_back(Vec3(minpoint.x, maxpoint.y, maxpoint.z));
+		corner.push_back(Vec3(maxpoint.x, minpoint.y, minpoint.z));
+		corner.push_back(Vec3(maxpoint.x, minpoint.y, maxpoint.z));
+		corner.push_back(Vec3(maxpoint.x, maxpoint.y, minpoint.z));
+		corner.push_back(Vec3(maxpoint.x, maxpoint.y, maxpoint.z));
+		for (int i = 0; i < 8; i++) {
+			corner[i] = scv.MulVec3(scv, corner[i]);
+		}
+		realminpoint = Vec3(11111, 11111, 11111);
+		realmaxpoint = Vec3(-11111, -11111, -11111);
+		for (int i = 0; i < 8; i++) {
+			if (realmaxpoint.x < corner[i].x) {
+				realmaxpoint.x = corner[i].x;
+			}
+			if (realmaxpoint.y < corner[i].y) {
+				realmaxpoint.y = corner[i].y;
+			}
+			if (realmaxpoint.z < corner[i].z) {
+				realmaxpoint.z = corner[i].z;
+			}
+			if (realminpoint.x > corner[i].x) {
+				realminpoint.x = corner[i].x;
+			}
+			if (realminpoint.y > corner[i].y) {
+				realminpoint.y = corner[i].y;
+			}
+			if (realminpoint.z > corner[i].z) {
+				realminpoint.z = corner[i].z;
+			}
+		}
+		realminpoint += position;
+		realmaxpoint += position;
+
+		OutputDebugStringA(to_string(realminpoint.x).c_str());
+		OutputDebugStringA("      ");
+		OutputDebugStringA(to_string(realminpoint.y).c_str());
+		OutputDebugStringA("      ");
+		OutputDebugStringA(to_string(realminpoint.z).c_str());
+		OutputDebugStringA("\n");
+		OutputDebugStringA(to_string(realmaxpoint.x).c_str());
+		OutputDebugStringA("      ");
+		OutputDebugStringA(to_string(realmaxpoint.y).c_str());
+		OutputDebugStringA("      ");
+		OutputDebugStringA(to_string(realmaxpoint.z).c_str());
+		OutputDebugStringA("\n");
+	}
+	void updatehero(Vec3 position) {
+		realminpoint = position+minpoint;
+		realmaxpoint = position +maxpoint;
 	}
 	void animatecalculateBox() {
 		for (int i = 0; i < animatebox.size(); i++) {
@@ -984,33 +1036,33 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderPixel.hlsl");
 	shaders.load(&core, "shaderAnim", "ShaderVerticesAnim.hlsl", "ShaderPixel.hlsl");
 
+	
+	Cube cube;
+	cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
-	//Cube cube;
-	//cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
-
-
+	/*
 	StaticModle tree;
 	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree,Vec3(0,0,0));
 	staticmodles.push_back(tree);
 	StaticModle tree1;
 	tree1.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 5));
 	staticmodles.push_back(tree1);
-
+	*/
 
 	AnimatedModel animatedModel;
-	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos,Animatemodels::TRex, Vec3(10, 0, 0));
+	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos,Animatemodels::TRex, Vec3(0, 0, 0));
 	animateModels.push_back(animatedModel);
 	AnimationInstance animatedInstance;
 	animatedInstance.init(&animatedModel.animation, 0);
 	animationinstances.push_back(animatedInstance);
 
-	AnimatedModel UZI;
-	UZI.load(&core, "../Resources/UZI/Uzi.gem", &shaders, &psos, Animatemodels::UZI, Vec3(0, 0, 10));
-	AnimationInstance UZIInstance;
-	UZIInstance.init(&UZI.animation, 0);
-	animateModels.push_back(UZI);
-	animationinstances.push_back(UZIInstance);
+	//AnimatedModel UZI;
+	//UZI.load(&core, "../Resources/UZI/Uzi.gem", &shaders, &psos, Animatemodels::UZI, Vec3(0, 0, 10));
+	//AnimationInstance UZIInstance;
+	//UZIInstance.init(&UZI.animation, 0);
+	//animateModels.push_back(UZI);
+	//animationinstances.push_back(UZIInstance);
 
 
 	Hero hero;
@@ -1086,51 +1138,51 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		}
 		if (win.keys['A']) {
 			from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-			hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+			hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 			
 			for (int i = 0; i < enemies.size(); i++) {
 				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
 					from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 				}
 			}
 			for (int i = 0; i < staticmodles.size(); i++) {
 				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
 					from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 				}
 			}
 		}
 		if (win.keys['D']) {
 			from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-			hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+			hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 			for (int i = 0; i < enemies.size(); i++) {
 				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
 					from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 				}
 			}
 			for (int i = 0; i < staticmodles.size(); i++) {
 				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
 					from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 				}
 			}
 		}
 		if (win.keys['W']) {
 			from = from+Vec4(forward.x,0, forward.z,0) * cameramovespeed * rexdt;
-			hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+			hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 			for (int i = 0; i < enemies.size(); i++) {
 				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
 					from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 					
 				}
 			}
 			for (int i = 0; i < staticmodles.size(); i++) {
 				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
 					from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 
 				}
 			}
@@ -1138,13 +1190,13 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-			OutputDebugStringA(to_string(hero.heromodel.position.x).c_str());
-		OutputDebugStringA("\n");
+		//OutputDebugStringA(to_string(hero.heromodel.position.x).c_str());
+		//OutputDebugStringA("\n");
 		//OutputDebugStringA(to_string(hero.heromodel.collision.realmaxpoint.y).c_str());
 		//OutputDebugStringA("\n");
-		OutputDebugStringA("x::");
-		OutputDebugStringA(to_string(to.x).c_str());
-		OutputDebugStringA("\n");
+		//OutputDebugStringA("x::");
+		//OutputDebugStringA(to_string(to.x).c_str());
+		//OutputDebugStringA("\n");
 		//OutputDebugStringA("z::");
 		//OutputDebugStringA(to_string(to.z).c_str());
 		//OutputDebugStringA("\n");
@@ -1164,17 +1216,17 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		}
 		if (win.keys['S']) {
 			from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-			hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+			hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 			for (int i = 0; i < enemies.size(); i++) {
 				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
 					from = from + Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 				}
 			}
 			for (int i = 0; i < staticmodles.size(); i++) {
 				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
 					from = from + Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.update(Vec3(from.x, from.y, from.z));
+					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 				}
 			}
 		}
@@ -1237,14 +1289,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 			float yaw = atan2f(forward.x, forward.z);
 			float pitch = -asinf(forward.y);
-			RY = RY.rotationY(yaw);
-			RX = RX.rotationX(pitch);
+			RY = RY.rotationY(dt);
+			RX = RX.rotationX(0);
 			Matrix R = RY * RX;
 			
 
 			Matrix scv;
 			scv = scv.rotationY(111.f);
-			
+			enemies[i].enemymodel.collision.update(enemies[i].enemymodel.position, R);
 			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &enemies[i].enemymodelinstace, R);
 				
 			
