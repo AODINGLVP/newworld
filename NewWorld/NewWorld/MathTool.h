@@ -825,6 +825,18 @@ namespace MathTool
 			float z = p.x * M.m[2] + p.y * M.m[6] + p.z * M.m[10] + M.m[14];
 			return Vec3(x, y, z);
 		}
+		Matrix static ForwardtoTRex(Vec3 forward) {
+			Matrix RY;
+			Matrix RX;
+			
+			float yaw = atan2f(forward.x, forward.z);
+			float pitch = -asinf(forward.y);
+			RY = RY.rotationY(yaw);
+			RX = RX.rotationX(0);
+			Matrix R = RY * RX;
+			return R;
+
+		}
 	};
 
 	class Matric3 {

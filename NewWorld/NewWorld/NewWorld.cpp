@@ -1284,18 +1284,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				enemies[i].enemymodelinstace.resetAnimationTime();
 			}
 
-			Matrix RY;
-			Matrix RX;
-
-			float yaw = atan2f(forward.x, forward.z);
-			float pitch = -asinf(forward.y);
-			RY = RY.rotationY(dt);
-			RX = RX.rotationX(0);
-			Matrix R = RY * RX;
+			
 			
 
-			Matrix scv;
-			scv = scv.rotationY(111.f);
+			Matrix R = Matrix::ForwardtoTRex(forward.TransToVec3RemoveW());
 			enemies[i].enemymodel.collision.update(enemies[i].enemymodel.position, R);
 			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &enemies[i].enemymodelinstace, R);
 				
