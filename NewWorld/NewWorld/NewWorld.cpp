@@ -760,6 +760,7 @@ public:
 	Collider collision;
 	Vec3 position;
 	Vec3 scale;
+	Vec3 forward;
 	Matrix realshow;
 	
 	
@@ -897,6 +898,7 @@ public:
 	Vec3 position;
 	float cooldown = 5.f;
 	float timecount = 0.f;
+	float movespeed = 0.5f;
 	void init(Core* core, Shaders* shaders, PSOManager* psos,Vec3 position) {
 		enemymodel.load(core, "../Resources/TRex.gem", shaders, psos, Animatemodels::TRex, position);
 		enemymodelinstace.init(&enemymodel.animation, 0);
@@ -1285,28 +1287,25 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}
 
 			
-			
-
-			Matrix R = Matrix::ForwardtoTRex(forward.TransToVec3RemoveW());
+			Vec3 scv;
+			enemies[i].enemymodel.position = enemies[i].enemymodel.position + enemies[i].enemymodel.forward * enemies[i].movespeed * rexdt;
+			scv =  hero.heromodel.position- enemies[i].enemymodel.position;
+			scv = scv.normalize();
+			enemies[i].enemymodel.forward = scv;
+			Matrix R = Matrix::ForwardtoOnlyTRex(scv);
 			enemies[i].enemymodel.collision.update(enemies[i].enemymodel.position, R);
 			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &enemies[i].enemymodelinstace, R);
 				
 			
 		}
-		Matrix RY;
-		Matrix RX;
+		
 		hero.heromodelinstace.update("08 fire", rexdt);
 		if (hero.heromodelinstace.animationFinished()) {
 			hero.heromodelinstace.resetAnimationTime();
 		}
-
-		float yaw = atan2f(forward.x, forward.z);
-		float pitch = -asinf(forward.y);
-		RY = RY.rotationY(yaw+M_PI);
-		RX = RX.rotationX(-pitch);
-		Matrix R = RY * RX;
-		Matrix scv;
-		scv = scv.rotationY(12.f);
+		
+		Matrix R;
+		R = Matrix::ForwardtoTOnlyHero(forward.TransToVec3RemoveW());
 		
 		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &hero.heromodelinstace,R);
 	/*	animatedInstance.update("run", rexdt);

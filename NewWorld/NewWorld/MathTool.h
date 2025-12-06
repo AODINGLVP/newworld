@@ -825,7 +825,8 @@ namespace MathTool
 			float z = p.x * M.m[2] + p.y * M.m[6] + p.z * M.m[10] + M.m[14];
 			return Vec3(x, y, z);
 		}
-		Matrix static ForwardtoTRex(Vec3 forward) {
+		Matrix static ForwardtoOnlyTRex(Vec3 forward) {//rotation  the collider box and the Trex
+			//models have different basic forward,so only use in TRex
 			Matrix RY;
 			Matrix RX;
 			
@@ -833,6 +834,17 @@ namespace MathTool
 			float pitch = -asinf(forward.y);
 			RY = RY.rotationY(yaw);
 			RX = RX.rotationX(0);
+			Matrix R = RY * RX;
+			return R;
+
+		}
+		Matrix static ForwardtoTOnlyHero(Vec3 forward) {//only for hero
+			Matrix RY;
+			Matrix RX;
+			float yaw = atan2f(forward.x, forward.z);
+			float pitch = -asinf(forward.y);
+			RY = RY.rotationY(yaw + M_PI);
+			RX = RX.rotationX(-pitch);
 			Matrix R = RY * RX;
 			return R;
 
