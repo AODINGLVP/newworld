@@ -891,6 +891,7 @@ public:
 
 class Enemies {
 public:
+	string Animatestatus;
 	AnimatedModel enemymodel;
 	AnimationInstance enemymodelinstace;
 	float health = 100.f;
@@ -900,6 +901,7 @@ public:
 	float timecount = 0.f;
 	float movespeed = 0.5f;
 	void init(Core* core, Shaders* shaders, PSOManager* psos,Vec3 position) {
+		Animatestatus = "run";
 		enemymodel.load(core, "../Resources/TRex.gem", shaders, psos, Animatemodels::TRex, position);
 		enemymodelinstace.init(&enemymodel.animation, 0);
 	}
@@ -1281,17 +1283,22 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 		for (int i = 0; i < enemies.size(); i++) {
 			
-			enemies[i].enemymodelinstace.update("run", rexdt);
-			if (enemies[i].enemymodelinstace.animationFinished()) {
-				enemies[i].enemymodelinstace.resetAnimationTime();
-			}
-
+			enemies[i].enemymodelinstace.updatewithControl(enemies[i].Animatestatus, rexdt);
+			
 			
 			Vec3 scv;
-			enemies[i].enemymodel.position = enemies[i].enemymodel.position + enemies[i].enemymodel.forward * enemies[i].movespeed * rexdt;
-			scv =  hero.heromodel.position- enemies[i].enemymodel.position;
+			enemies[i].enemymodel.position = enemies[i].enemymodel.position + enemies[i].enemymodel.forward * enemies[i].movespeed * rexdt;//move
+			if (enemies[i].enemymodel.collision.AABBtest(hero.heromodel.collision.realminpoint, hero.heromodel.collision.realmaxpoint)) {
+				enemies[i].enemymodel.position = enemies[i].enemymodel.position - enemies[i].enemymodel.forward * enemies[i].movespeed * rexdt;
+				enemies[i].Animatestatus = "attack";
+			}
+			else {
+				enemies[i].Animatestatus = "run";
+			}
+			scv =  hero.heromodel.position- enemies[i].enemymodel.position;//calculate the new forward
 			scv = scv.normalize();
 			enemies[i].enemymodel.forward = scv;
+
 			Matrix R = Matrix::ForwardtoOnlyTRex(scv);
 			enemies[i].enemymodel.collision.update(enemies[i].enemymodel.position, R);
 			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &enemies[i].enemymodelinstace, R);

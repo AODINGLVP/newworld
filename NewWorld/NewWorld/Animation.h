@@ -141,11 +141,18 @@ public:
 			coordTransform.a[3][3] = 1.0f;
 		}
 	}
+	void updatewithControl(std::string name, float dt) {
+		update(name, dt);
+		if (animationFinished()) {
+			resetAnimationTime();
+		}
+	}
 	void update(std::string name, float dt)
 	{
 		if (name == usingAnimation)
 		{
 			t += dt;
+			
 		}
 		else
 		{
@@ -164,6 +171,10 @@ public:
 			matrices[i] = animation->interpolateBoneToGlobal(name, matrices, frame, interpolationFact, i);
 		}
 		animation->calcTransforms(matrices, coordTransform);
+
+
+
+
 	}
 	void resetAnimationTime()
 	{
