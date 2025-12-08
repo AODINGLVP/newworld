@@ -307,11 +307,11 @@ public:
 		
 		for (auto& pair : vs_constantBuffer)
 		{
-			pair.second.init(core, 2);
+			pair.second.init(core);
 		}
 		for (auto& pair : ps_constantBuffer)
 		{
-			pair.second.init(core, 2);
+			pair.second.init(core);
 		}
 
 
@@ -907,6 +907,86 @@ public:
 	}
 	
 };
+
+class LoadControl
+{
+public:
+	string type;
+	string name;
+	Vec3 position;
+	Vec3 rotation;
+
+
+	map<string, Animatemodels> Aniname;
+	map<string, Staticmodels> Staticname;
+	LoadControl() {
+
+	}
+
+
+
+
+
+	void Loadgame(vector<Enemies>* enemies, vector<StaticModle>* staticmodles, Core* core, PSOManager* psos, Shaders* shaders) {
+		ifstream file("../Resources/loadfile1.csv");
+
+		string line;
+
+		getline(file, line);
+
+		while (getline(file, line)) {
+			std::stringstream theline(line);
+			std::string word;
+
+			getline(theline, word, ';');
+			type = word;
+			getline(theline, word, ';');
+			name = word;
+			getline(theline, word, ';');
+			position.x = stof(word);
+			getline(theline, word, ';');
+			position.y = stof(word);
+			getline(theline, word, ';');
+			position.z = stof(word);
+			getline(theline, word, ';');
+			rotation.x = stof(word);
+			getline(theline, word, ';');
+			rotation.y = stof(word);
+			getline(theline, word, ';');
+			rotation.z = stof(word);
+
+
+			if (type == "static") {
+				if (name == "tree") {
+					StaticModle tree;
+					staticmodles->push_back(tree);
+					staticmodles->back().load(core, "../Resources/acacia_003.gem", shaders, psos, Staticmodels::Tree, position);
+
+				}
+
+			}
+			else if (type == "anim") {
+
+				if (name == "trex") {
+					Enemies enemy;
+					enemy.init(core, shaders, psos, position);
+					enemies->push_back(enemy);
+				}
+			}
+
+		}
+
+
+		file.close();
+	}
+
+};
+
+
+
+
+
+
 class Window;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 Window* window;
@@ -1045,14 +1125,20 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
 
-	/*
+	
 	StaticModle tree;
 	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree,Vec3(0,0,0));
 	staticmodles.push_back(tree);
 	StaticModle tree1;
 	tree1.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 5));
 	staticmodles.push_back(tree1);
-	*/
+	StaticModle tree2;
+	tree2.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 10));
+	staticmodles.push_back(tree2);
+	StaticModle tree3;
+	tree3.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 15));
+	staticmodles.push_back(tree3);
+
 
 	AnimatedModel animatedModel;
 	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos,Animatemodels::TRex, Vec3(0, 0, 0));
@@ -1076,6 +1162,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Enemies enemy;
 	enemy.init(&core, &shaders, &psos, Vec3(0, 0, 10));
 	enemies.push_back(enemy);
+	Enemies enemy1;
+	enemy1.init(&core, &shaders, &psos, Vec3(0, 0, 20));
+	enemies.push_back(enemy1);
+	Enemies enemy2;
+	enemy2.init(&core, &shaders, &psos, Vec3(0, 0, 30));
+	enemies.push_back(enemy2);
 	
 	//Collider hero;
 	//hero.hero(Vec3(16, 0, 4));
