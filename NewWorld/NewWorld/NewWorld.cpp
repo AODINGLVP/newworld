@@ -1109,6 +1109,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	vector<AnimatedModel>animateModels;
 	vector<AnimationInstance>animationinstances;
 	vector<Enemies> enemies;
+	vector<StaticModle> test;
+	LoadControl loadcontrol;
 	Window win;
 	Core core;
 	core.init(window->hwnd, kuan, gao);
@@ -1125,6 +1127,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
 
+	loadcontrol.Loadgame(&enemies, &test, &core, &psos, &shaders);
+
+
+
 	
 	StaticModle tree;
 	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree,Vec3(0,0,0));
@@ -1138,15 +1144,15 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	StaticModle tree3;
 	tree3.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 15));
 	staticmodles.push_back(tree3);
-
-
+	
+	/*
 	AnimatedModel animatedModel;
 	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos,Animatemodels::TRex, Vec3(0, 0, 0));
 	animateModels.push_back(animatedModel);
 	AnimationInstance animatedInstance;
 	animatedInstance.init(&animatedModel.animation, 0);
 	animationinstances.push_back(animatedInstance);
-
+	*/
 	//AnimatedModel UZI;
 	//UZI.load(&core, "../Resources/UZI/Uzi.gem", &shaders, &psos, Animatemodels::UZI, Vec3(0, 0, 10));
 	//AnimationInstance UZIInstance;
@@ -1158,7 +1164,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Hero hero;
 	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0));
 	hero.heromodel.collision.hero(hero.position);
-
+	
 	Enemies enemy;
 	enemy.init(&core, &shaders, &psos, Vec3(0, 0, 10));
 	enemies.push_back(enemy);
@@ -1199,6 +1205,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Vec4 from = Vec4(16,0,4, 0);
 	Vec4 forward = Vec4(0, 0,1, 0);
 	Vec4 right;
+	to = forward + from;
+	right = forward.Cross(Vec4(0, 1, 0, 0));
 	float yaw = 0.0f;    // ÈÆYÖáÐý×ª
 	float pitch = 0.0f;
 	static int lastMouseX = window->mousex;
@@ -1226,8 +1234,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		forward.w = 0;
 		lastMouseX = window->mousex;
 		lastMouseY = window->mousey;
-		to = forward + from;
-		right = forward.Cross(Vec4(0, 1, 0, 0));
+		
 		if (win.keys[VK_ESCAPE] == 1)
 		{
 			break;
@@ -1347,7 +1354,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 		//Vec4 from = Vec4(11 * cos(dt), 5, 11 * sin(dt), 0);
 		//constBufferCPU1.time += dt;
-		
+		to = forward + from;
+		right = forward.Cross(Vec4(0, 1, 0, 0));
 		lookat=lookat.LookatMatrix(from, to, up);
 		vp = prespection.mul(lookat);
 		//constBufferCPU3.w = constBufferCPU3.w.lookAtMatrix(from.TransToVec3(), to.TransToVec3(), up.TransToVec3());
