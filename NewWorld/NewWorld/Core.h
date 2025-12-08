@@ -8,8 +8,40 @@ using namespace MathTool;
 #pragma comment(lib, "d3d12")
 #pragma comment(lib, "dxgi")
 #pragma comment(lib, "d3dcompiler.lib")
+
+class DescriptorHeap {
+public:
+    ID3D12DescriptorHeap* heap;
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+    unsigned int incrementSize;
+    int used;
+    void init(ID3D12Device5* device, int num)
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC uavcbvHeapDesc = {};
+        uavcbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        uavcbvHeapDesc.NumDescriptors = num;
+        uavcbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        device->CreateDescriptorHeap(&uavcbvHeapDesc, IID_PPV_ARGS(&heap));
+        cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
+        gpuHandle = heap->GetGPUDescriptorHandleForHeapStart();
+        incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        used = 0;
+    }
+    D3D12_CPU_DESCRIPTOR_HANDLE getNextCPUHandle()
+    {
+        if (used > 0)
+        {
+            cpuHandle.ptr += incrementSize;
+        }
+        used++;
+        return cpuHandle;
+    }
+};
+
 class GPUFence {
 public:
+   
     ID3D12Fence* fence;
     HANDLE eventHandle;
     UINT64 value = 0;
@@ -47,6 +79,7 @@ public:
 class Core
 {
 public:
+     DescriptorHeap srvHeap;
     IDXGIAdapter1* adapter;
 
     //Core interfaces
@@ -256,7 +289,38 @@ public:
         device->CreateRootSignature(0, serialized->GetBufferPointer(), serialized->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
         serialized->Release();
 
-       
+       // Add range of textures
+        D3D12_DESCRIPTOR_RANGE srvRange = {};
+        srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        srvRange.NumDescriptors = 8; // number of SRVs (t0¨Ct7)
+        srvRange.BaseShaderRegister = 0; // starting at t0
+        srvRange.RegisterSpace = 0;
+        srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+        D3D12_ROOT_PARAMETER rootParameterTex;
+        rootParameterTex.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameterTex.DescriptorTable.NumDescriptorRanges = 1;
+        rootParameterTex.DescriptorTable.pDescriptorRanges = &srvRange;
+        rootParameterTex.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        parameters.push_back(rootParameterTex);
+        //Add sampler
+        D3D12_STATIC_SAMPLER_DESC staticSampler = {};
+        staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        staticSampler.MipLODBias = 0;
+        staticSampler.MaxAnisotropy = 1;
+        staticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        staticSampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+        staticSampler.MinLOD = 0.0f;
+        staticSampler.MaxLOD = D3D12_FLOAT32_MAX;
+        staticSampler.ShaderRegister = 0;
+        staticSampler.RegisterSpace = 0;
+        staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+        //Add sampler
+        desc.NumStaticSamplers = 1;
+        desc.pStaticSamplers = &staticSampler;
+        srvHeap.init(device, 16384);
 
 
 
@@ -377,6 +441,7 @@ public:
     }
     void beginRenderPass()
     {
+        getCommandList()->SetDescriptorHeaps(1, &srvHeap.heap);
         getCommandList()->RSSetViewports(1, &viewport);
         getCommandList()->RSSetScissorRects(1, &scissorRect);
         getCommandList()->SetGraphicsRootSignature(rootSignature);

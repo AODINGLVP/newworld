@@ -16,6 +16,8 @@
 #include <Vector>
 #include "GEMLoader.h"
 #include "Animation.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 using namespace MathTool;
 using namespace std;
 extern "C" {
@@ -511,6 +513,197 @@ public:
 	}
 
 };
+class Texture {
+public:
+public:
+	unsigned int width;
+	unsigned int height;
+	unsigned int channels;
+	unsigned char* data;
+	size_t pixelSize;
+
+	ID3D12Resource* texture;
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
+
+	void uploadImage(Core* core) {
+		// Create a texture resource in GPU memory
+		D3D12_RESOURCE_DESC texDesc = {};
+		texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		texDesc.Width = width;
+		texDesc.Height = height;
+		texDesc.DepthOrArraySize = 1;
+		texDesc.MipLevels = 1;
+		texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		texDesc.SampleDesc.Count = 1;
+		texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+		texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+		texture = nullptr;
+		D3D12_HEAP_PROPERTIES defaultHeap = {};
+		defaultHeap.Type = D3D12_HEAP_TYPE_DEFAULT;
+		core->device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &texDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&texture));
+
+		// get footprint size
+		D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+		UINT numRows;
+		UINT64 rowSizeInBytes;
+		UINT64 totalBytes;
+		core->device->GetCopyableFootprints(&texDesc,
+			0,                  // First subresource
+			1,                  // Num subresources
+			0,                  // Base offset
+			&footprint, &numRows, &rowSizeInBytes, &totalBytes);
+
+		// copy data into upload buffer with proper row pitch
+		std::vector<BYTE> uploadData(totalBytes);
+		BYTE* dst = uploadData.data();
+		BYTE* src = data;
+		for (UINT row = 0; row < numRows; row++)
+		{
+			memcpy(dst, src, rowSizeInBytes);
+			dst += footprint.Footprint.RowPitch;
+			src += rowSizeInBytes;
+		}
+		core->uploadResource(texture, uploadData.data(), (unsigned int)uploadData.size(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &footprint);
+	}
+
+	void apply(Core* core) {
+		core->getCommandList()->SetGraphicsRootDescriptorTable(2, gpuHandle);
+	}
+
+	bool load(const std::string& filename) {
+		Microsoft::WRL::ComPtr<IWICImagingFactory> factory;
+		HRESULT hr = ::CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&factory));
+		if (FAILED(hr))
+		{
+			return false;
+		}
+
+		Microsoft::WRL::ComPtr<IWICBitmapDecoder> decoder;
+		IWICStream* stream = NULL;
+		factory->CreateStream(&stream);
+
+		std::wstring wFilename = std::wstring(filename.begin(), filename.end());
+		stream->InitializeFromFilename(wFilename.c_str(), GENERIC_READ);
+		factory->CreateDecoderFromStream(stream, 0, WICDecodeMetadataCacheOnDemand, &decoder);
+
+		Microsoft::WRL::ComPtr<IWICBitmapFrameDecode> frame;
+		decoder->GetFrame(0, &frame);
+
+		frame->GetSize(&width, &height);
+		WICPixelFormatGUID pixelFormat = { 0 };
+		frame->GetPixelFormat(&pixelFormat);
+
+		channels = 0;
+		int isRGB = 0;
+		pixelSize = width * height * 4;
+
+		// Determine the number of channels based on the pixel format
+		if (pixelFormat == GUID_WICPixelFormat24bppBGR)
+		{
+			channels = 3;
+		}
+		if (pixelFormat == GUID_WICPixelFormat32bppBGRA)
+		{
+			channels = 4;
+		}
+		if (pixelFormat == GUID_WICPixelFormat24bppRGB)
+		{
+			channels = 3;
+			isRGB = 1;
+		}
+		if (pixelFormat == GUID_WICPixelFormat32bppRGBA)
+		{
+			channels = 4;
+			isRGB = 1;
+		}
+		if (channels == 0)
+		{
+			return false;
+		}
+
+		data = new unsigned char[width * height * channels];
+		unsigned int stride = (width * channels + 3) & ~3; // Align stride to 4 bytes
+
+		if (stride == (width * channels))
+		{
+			// Copy pixels directly if stride matches
+			frame->CopyPixels(0, stride, width * height * channels, data);
+		}
+		else
+		{
+			// Handle images with padded stride
+			unsigned char* strideData = new unsigned char[stride * height];
+			frame->CopyPixels(0, stride, width * height * channels, strideData);
+			for (unsigned int i = 0; i < height; i++)
+			{
+				memcpy(&data[i * width * channels], &strideData[i * stride], width * channels * sizeof(unsigned char));
+			}
+			delete[] strideData;
+		}
+
+		if (isRGB == 0)
+		{
+			// Swap red and blue channels for BGR formats
+			for (unsigned int i = 0; i < width * height; i++)
+			{
+				unsigned char p = data[i * channels];
+				data[i * channels] = data[(i * channels) + 2];
+				data[(i * channels) + 2] = p;
+			}
+		}
+		return true;
+	}
+
+	// Returns a pointer to the pixel data at (x, y)
+		// Note, the bounds are handled via clamping
+	unsigned char* at(const unsigned int x, const unsigned int y) const
+	{
+		return &data[((min(y, height - 1) * width) + min(x, width - 1)) * channels];
+	}
+
+	// Returns the alpha value of the pixel at (x, y)
+	// Note, the bounds are handled via clamping
+	unsigned char alphaAt(const unsigned int x, const unsigned int y) const
+	{
+		if (channels == 4)
+		{
+			return data[((min(y, height - 1) * width) + min(x, width - 1)) * channels + 3];
+		}
+		return 255;
+	}
+
+	// Returns a the colour specified by index at (x, y)
+	// Note, the image bounds are handled via clamping, but the index is not checked
+	unsigned char at(const unsigned int x, const unsigned int y, const unsigned int index) const
+	{
+		return data[(((min(y, height - 1) * width) + min(x, width - 1)) * channels) + index];
+	}
+
+	// Returns a pointer to the pixel data at (x, y)
+	// Note, no checks performed on x and y coordinates
+	unsigned char* atUnchecked(const unsigned int x, const unsigned int y) const
+	{
+		return &data[((y * width) + x) * channels];
+	}
+
+	// Returns the alpha value of the pixel at (x, y)
+	// Note, no checks performed on x and y coordinates
+	unsigned char alphaAtUnchecked(const unsigned int x, const unsigned int y) const
+	{
+		if (channels == 4)
+		{
+			return data[(((y * width) + x) * channels) + 3];
+		}
+		return 255;
+	}
+
+	// Checks if the image has an alpha channel
+	bool hasAlpha() const
+	{
+		return channels == 4;
+	}
+};
 class StaticModle {
 public:
 
@@ -682,6 +875,7 @@ public:
 	}
 
 };
+
 class Window;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 Window* window;
@@ -808,9 +1002,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Shader shader;
 
 
-	Shaders shaders;
+	Shaders shaders; 
 	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderPixel.hlsl");
 	shaders.load(&core, "shaderAnim", "ShaderVerticesAnim.hlsl", "ShaderPixel.hlsl");
+	//shaders.load(&core, "shaderTexture", "ShaderTexture.hlsl", "ShaderPixel.hlsl");
 
 	//Cube cube;
 	//cube.init(&core,&psos, &shaders.shaders["shader1"]);
