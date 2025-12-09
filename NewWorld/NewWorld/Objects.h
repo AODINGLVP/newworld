@@ -247,18 +247,7 @@ public:
 		psos->createPSO(core, "Sphere", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
 	}
 	void apply(Core* core, Shader* shader) {
-		// Bind VS buffers
-		unsigned int slot = 0;
-
-
-
-		/*for (auto i : shader.ps_constantBuffer)
-		{
-			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader.ps_constantBuffer[i.first].getGPUAddress());
-			shader.ps_constantBuffer[i.first].next();
-			slot++;
-
-		}*/
+		
 
 		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
 		{
@@ -369,21 +358,16 @@ public:
 		psos->createPSO(core,"cube", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
 	}
 	void apply(Core* core, Shader* shader) {
-		// Bind VS buffers
-		unsigned int slot = 0;
-	
-
 		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
 		{
 			core->getCommandList()->SetGraphicsRootConstantBufferView(0, shader->vsConstantBuffers[i].getGPUAddress());
 			shader->vsConstantBuffers[i].next();
 		}
-		/*
 		for (int i = 0; i < shader->psConstantBuffers.size(); i++)
 		{
 			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader->psConstantBuffers[i].getGPUAddress());
 			shader->psConstantBuffers[i].next();
-		}*/
+		}
 
 		
 
@@ -423,10 +407,10 @@ public:
 	vector<STATIC_VERTEX> verticescout;
 	vector<GeneralMesh*> meshes;
 	//GeneralMesh mesh;
-	std::vector<std::string> textureFilenames;
+	vector<string> textureFilenames;
 	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position)
 	{
-
+		
 		scv = _name;
 		position = _position;
 		scale = Vec3(0.01f, 0.01f, 0.01f);
@@ -445,10 +429,15 @@ public:
 				vertices.push_back(v);
 				verticescout.push_back(v);
 			}
+			std::string tex_root = gemmeshes[i].material.find("albedo").getValue();
+			textureFilenames.push_back(tex_root);
+
+			
+
 			mesh->init(core, vertices, gemmeshes[i].indices);
 			meshes.push_back(mesh);
 		}
-
+		//textures.load(core, textureFilenames, "tex_root");
 		psos->createPSO(core, "StaticModelPSO", shaders->shaders["shader1"].vertexShader, shaders->shaders["shader1"].pixelShader, VertexLayoutCache::getStaticLayout());
 		collision.staticinit(verticescout, position);
 	}
@@ -487,8 +476,15 @@ public:
 		psos->bind(core, "StaticModelPSO");
 		for (int i = 0; i < meshes.size(); i++)
 		{
-			shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
-			meshes[i]->draw(core);
+			if (i >= texture.size()) {
+				shader->updateTexturePS(core, "tex", texture[texture.size()-1]->heapOffset);
+				meshes[i]->draw(core);
+			}
+			else {
+				shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
+				meshes[i]->draw(core);
+			}
+			
 		}
 
 	}
@@ -586,6 +582,7 @@ public:
 		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
 		{
 			core->getCommandList()->SetGraphicsRootConstantBufferView(0, shader->vsConstantBuffers[i].getGPUAddress());
+
 			shader->vsConstantBuffers[i].next();
 		}
 		for (int i = 0; i < shader->psConstantBuffers.size(); i++)
@@ -612,8 +609,14 @@ public:
 		psos->bind(core, "AnimatedModelPSO");
 		for (int i = 0; i < meshes.size(); i++)
 		{
-			shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
-			meshes[i]->draw(core);
+			if (i >= texture.size()) {
+				shader->updateTexturePS(core, "tex", texture[texture.size() - 1]->heapOffset);
+				meshes[i]->draw(core);
+			}
+			else {
+				shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
+				meshes[i]->draw(core);
+			}
 		}
 
 	}

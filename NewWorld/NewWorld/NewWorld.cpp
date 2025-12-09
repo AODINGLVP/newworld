@@ -75,27 +75,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	textures.load(&core, texturenames, "Grass");
 	
 
-	StaticModle tree;
-	tree.load(&core, "../Resources/Tree/acacia_003.gem", &shaders, &psos, Staticmodels::Tree,Vec3(0,0,0));
-	staticmodles.push_back(tree);
-	StaticModle tree1;
-	tree1.load(&core, "../Resources/Tree/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 5));
-	staticmodles.push_back(tree1);
-	StaticModle tree2;
-	tree2.load(&core, "../Resources/Tree/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 10));
-	staticmodles.push_back(tree2);
-	StaticModle tree3;
-	tree3.load(&core, "../Resources/Tree/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 15));
-	staticmodles.push_back(tree3);
-	
+	texturenames.clear();
+	texturenames.push_back("../Resources/OtherTree/Textures/bark02_ALB.png");
+	texturenames.push_back("../Resources/OtherTree/Textures/pine branch_ALB.png");
+	textures.load(&core, texturenames, "PineTree");
 
-	
-	//AnimatedModel UZI;
-	//UZI.load(&core, "../Resources/UZI/Uzi.gem", &shaders, &psos, Animatemodels::UZI, Vec3(0, 0, 10));
-	//AnimationInstance UZIInstance;
-	//UZIInstance.init(&UZI.animation, 0);
-	//animateModels.push_back(UZI);
-	//animationinstances.push_back(UZIInstance);
+
 
 
 	Hero hero;
@@ -112,15 +97,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	enemy2.init(&core, &shaders, &psos, Vec3(0, 0, 30));
 	enemies.push_back(enemy2);
 	
-	//Collider hero;
-	//hero.hero(Vec3(16, 0, 4));
+
+
+	StaticModle othertree;
+	othertree.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 15));
+	//staticmodles.push_back(tree3);
 
 
 
-
-
-
-	
 
 	Matrix world;
 	world = world.scale(0.01f, 0.01f, 0.01f);
@@ -252,7 +236,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		lookat=lookat.LookatMatrix(from, to, up);
 
 		vp = prespection.mul(lookat);
-		//constBufferCPU3.w = constBufferCPU3.w.lookAtMatrix(from.TransToVec3(), to.TransToVec3(), up.TransToVec3());
+	
 		core.beginFrame();
 		win.processMessages();
 		
@@ -268,7 +252,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	
 		
-
+		othertree.draw(&core, &othertree.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("PineTree"));
 		
 		
 		for (int i = 0; i < enemies.size(); i++) {
@@ -298,13 +282,13 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		
 		hero.heromodelinstace.update("08 fire", rexdt);
 		if (hero.heromodelinstace.animationFinished()) {
-			//hero.heromodelinstace.resetAnimationTime();
+			hero.heromodelinstace.resetAnimationTime();
 		}
 		
 		Matrix R;
 		R = Matrix::ForwardtoTOnlyHero(forward.TransToVec3RemoveW());
 		
-		//hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &hero.heromodelinstace,R, textures.find("UZIalb"));
+		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &hero.heromodelinstace,R, textures.find("UZIalb"));
 		
 		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 		Matrix C;

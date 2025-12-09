@@ -13,7 +13,8 @@ struct ConstantBufferVariable
 class ShadersManager
 {
 };
-class ConstantBuffer {
+class ConstantBuffer
+{
 public:
 	std::string name;
 	std::map<std::string, ConstantBufferVariable> constantBufferData;
@@ -22,7 +23,6 @@ public:
 	unsigned int cbSizeInBytes;
 	unsigned int numInstances;
 	unsigned int offsetIndex;
-
 	void init(Core* core, unsigned int sizeInBytes, unsigned int maxDrawCalls = 1024)
 	{
 		cbSizeInBytes = (sizeInBytes + 255) & ~255;
@@ -49,31 +49,12 @@ public:
 		D3D12_RANGE readRange = { 0, 0 };
 		hr = constantBuffer->Map(0, &readRange, (void**)&buffer);
 	}
-	//Update via a memcpy
-	void update(std::string name, void* data)
+	void update(std::string name, void* data) // Data is immediatly visible
 	{
-		for (const auto& pair : constantBufferData)
-		{
-			//OutputDebugStringA((pair.first + "\n").c_str());
-		}
-
-		if (constantBufferData.find(name) != constantBufferData.end())
-		{
-			ConstantBufferVariable cbVariable = constantBufferData[name];
-			unsigned int offset = offsetIndex * cbSizeInBytes;
-			memcpy(&buffer[offset + cbVariable.offset], data, cbVariable.size);
-		}
-		else
-		{
-			return;
-		}
-
+		ConstantBufferVariable cbVariable = constantBufferData[name];
+		unsigned int offset = offsetIndex * cbSizeInBytes;
+		memcpy(&buffer[offset + cbVariable.offset], data, cbVariable.size);
 	}
-
-
-	//Will need GPU address of contents
-
-	// Get address of constant buffer in use
 	D3D12_GPU_VIRTUAL_ADDRESS getGPUAddress() const
 	{
 		return (constantBuffer->GetGPUVirtualAddress() + (offsetIndex * cbSizeInBytes));
@@ -86,7 +67,13 @@ public:
 			offsetIndex = 0;
 		}
 	}
+	void free()
+	{
+		constantBuffer->Unmap(0, NULL);
+		constantBuffer->Release();
+	}
 };
+
 class Shader {
 public:
 	ID3DBlob* vertexShader;
@@ -143,29 +130,26 @@ public:
 		D3DReflect(shader->GetBufferPointer(), shader->GetBufferSize(), IID_PPV_ARGS(&reflection));
 		D3D12_SHADER_DESC desc;
 		reflection->GetDesc(&desc);
-		//read constant buffers in shader (may have more than 1 constant buffers)
-		for (int i = 0; i < desc.ConstantBuffers; i++) {
+		for (int i = 0; i < desc.ConstantBuffers; i++)
+		{
 			ConstantBuffer buffer;
 			ID3D12ShaderReflectionConstantBuffer* constantBuffer = reflection->GetConstantBufferByIndex(i);
 			D3D12_SHADER_BUFFER_DESC cbDesc;
 			constantBuffer->GetDesc(&cbDesc);
 			buffer.name = cbDesc.Name;
 			unsigned int totalSize = 0;
-			for (int j = 0; j < cbDesc.Variables; j++) {
-				ID3D12ShaderReflectionVariable* var = constantBuffer->GetVariableByIndex(j);
+			for (int n = 0; n < cbDesc.Variables; n++)
+			{
+				ID3D12ShaderReflectionVariable* var = constantBuffer->GetVariableByIndex(n);
 				D3D12_SHADER_VARIABLE_DESC vDesc;
 				var->GetDesc(&vDesc);
 				ConstantBufferVariable bufferVariable;
 				bufferVariable.offset = vDesc.StartOffset;
 				bufferVariable.size = vDesc.Size;
 				buffer.constantBufferData.insert({ vDesc.Name, bufferVariable });
-				
 				totalSize += bufferVariable.size;
 			}
-			//add
-			buffer.name = cbDesc.Name;
 			buffer.init(core, totalSize);
-			buffer.cbSizeInBytes = totalSize;
 			_constantbuffer.push_back(buffer);
 
 
@@ -179,6 +163,7 @@ public:
 				textureBindPoints.insert({ bindDesc.Name, bindDesc.BindPoint });
 			}
 		}
+		reflection->Release();
 	}
 	void updateTexturePS(Core* core, std::string name, int heapOffset) {
 
