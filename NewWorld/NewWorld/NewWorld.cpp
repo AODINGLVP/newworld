@@ -100,10 +100,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 	StaticModle othertree;
-	othertree.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 15));
+	othertree.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 0),&textures,"Othertree");
 	//staticmodles.push_back(tree3);
 
+	StaticModle othertree2;
 
+	othertree2.load(&core, "../Resources/OtherTree/bamboo.gem", &shaders, &psos, Staticmodels::Tree, Vec3(15, 0, 15), &textures, "Othertree2");
 
 
 	Matrix world;
@@ -252,8 +254,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	
 		
-		othertree.draw(&core, &othertree.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("PineTree"));
-		
+		othertree.draw(&core, &othertree.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Othertree"));
+		othertree2.draw(&core, &othertree2.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Othertree2"));
 		
 		for (int i = 0; i < enemies.size(); i++) {
 			

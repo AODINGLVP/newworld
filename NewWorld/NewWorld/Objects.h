@@ -406,9 +406,10 @@ public:
 	Matrix realshow;
 	vector<STATIC_VERTEX> verticescout;
 	vector<GeneralMesh*> meshes;
+	
 	//GeneralMesh mesh;
 	vector<string> textureFilenames;
-	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position)
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position,TextureManager *textures,string selftexturename)
 	{
 		
 		scv = _name;
@@ -430,14 +431,16 @@ public:
 				verticescout.push_back(v);
 			}
 			std::string tex_root = gemmeshes[i].material.find("albedo").getValue();
+			tex_root = "../Resources/" + tex_root;
 			textureFilenames.push_back(tex_root);
 
 			
 
 			mesh->init(core, vertices, gemmeshes[i].indices);
 			meshes.push_back(mesh);
+		
 		}
-		//textures.load(core, textureFilenames, "tex_root");
+		textures->load(core, textureFilenames, selftexturename);
 		psos->createPSO(core, "StaticModelPSO", shaders->shaders["shader1"].vertexShader, shaders->shaders["shader1"].pixelShader, VertexLayoutCache::getStaticLayout());
 		collision.staticinit(verticescout, position);
 	}

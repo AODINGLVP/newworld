@@ -14,7 +14,7 @@ public:
 
 	}
 
-	void Loadgame(vector<Enemies>* enemies, vector<StaticModle>* staticmodles, Core* core, PSOManager* psos, Shaders* shaders) {
+	void Loadgame(vector<Enemies>* enemies, vector<StaticModle>* staticmodles, Core* core, PSOManager* psos, Shaders* shaders,TextureManager* textures) {
 		ifstream file("../Resources/loadfile1.csv");
 
 		string line;
@@ -47,7 +47,7 @@ public:
 				if (name == "tree") {
 					StaticModle tree;
 					staticmodles->push_back(tree);
-					staticmodles->back().load(core, "../Resources/acacia_003.gem", shaders, psos, Staticmodels::Tree, position);
+					staticmodles->back().load(core, "../Resources/acacia_003.gem", shaders, psos, Staticmodels::Tree, position,textures,"OtherTree");
 
 				}
 
