@@ -68,8 +68,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	texturenames.push_back("../Resources/Tree/Textures/Textures1_NH.png");
 	textures.load(&core, texturenames, "Tressalb");
 	texturenames.clear();
-	texturenames.push_back("../Resources/sky_37_2k.png");
+	texturenames.push_back("../Resources/NightSkyHDRI009_12K_TONEMAPPED.jpg");
 	textures.load(&core, texturenames, "SkyBox");
+	texturenames.clear();
+	texturenames.push_back("../Resources/Grass/Grass01_2K_BaseColor.png");
+	textures.load(&core, texturenames, "Grass");
 
 
 	StaticModle tree;
@@ -312,7 +315,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		
 		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &hero.heromodelinstace,R, textures.find("UZIalb"));
 		
-		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("SkyBox"));
+		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 		Matrix C;
 		C=C.translation(Vec3(from.x,0,from.z));
 		

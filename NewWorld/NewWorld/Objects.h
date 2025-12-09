@@ -320,24 +320,40 @@ public:
 		return v;
 	}
 	void init(Core* core, PSOManager* psos, Shader* shader,Vec3 _position) {
+		float tilling = 50.f;
+
 		position = _position;
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
-		int width = 1000;
-		int height = 1000;
+		int width = 25;
+		int height = 25;
 		std::vector<STATIC_VERTEX> vertices;
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
-				vertices.push_back(addVertex(Vec3(i/500,0,j/500), Vec3(0.0f, 1.0f, 0.0f), i/ height, j/ width));
+				float fi = i / 1.f;
+				float fj = j / 1.f;
+				vertices.push_back(addVertex(Vec3(fi, -5, fj), Vec3(0.0f, 1.0f, 0.0f), (float)i / height, (float)j / width));
+
 			}
 		}
 		
 
 		std::vector<unsigned int> indices;
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				int current = i;
-				indices.push_back(j); indices.push_back(j+1); indices.push_back(j+height);
-				indices.push_back(j + height); indices.push_back(j + 1); indices.push_back(j + height + 1);
+		for (int i = 0; i < height - 1; i++) {
+			for (int j = 0; j < width - 1; j++) {
+
+				int current = i * width + j;
+				int right = current + 1;
+				int down = current + width;
+				int downR = down + 1;
+
+				indices.push_back(current);
+				indices.push_back(down);
+				indices.push_back(right);
+
+				
+				indices.push_back(right);
+				indices.push_back(down);
+				indices.push_back(downR);
 			}
 		}
 		
