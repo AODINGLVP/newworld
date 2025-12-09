@@ -130,12 +130,15 @@
     <ClCompile Include="Enums.cpp" />
     <ClCompile Include="GameObjects.cpp" />
     <ClCompile Include="GeneralMesh.cpp" />
+    <ClCompile Include="LoadControl.cpp" />
     <ClCompile Include="MathTool.cpp" />
     <ClCompile Include="NewWorld.cpp" />
     <ClCompile Include="PSOManager.cpp" />
     <ClCompile Include="ShadersManager.cpp" />
+    <ClCompile Include="stb_image_impl.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VertexLayoutCache.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
@@ -143,12 +146,15 @@
     <ClInclude Include="Enums.h" />
     <ClInclude Include="GameObjects.h" />
     <ClInclude Include="GeneralMesh.h" />
+    <ClInclude Include="LoadControl.h" />
     <ClInclude Include="MathTool.h" />
     <ClInclude Include="Objects.h" />
     <ClInclude Include="PSOManager.h" />
     <ClInclude Include="ShadersManager.h" />
+    <ClInclude Include="stb_image_impl.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="VertexLayoutCache.h" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

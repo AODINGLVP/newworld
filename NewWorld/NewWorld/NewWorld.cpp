@@ -1,292 +1,24 @@
 // NewWorld.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#define WINDOW_GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define WINDOW_GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
-#include "Objects.h"
-#include <Windows.h>
+#include"Window.h"
+#include "LoadControl.h"
+
 #include <iostream>
-#include <string>
-
-
-
-
-#include <Vector>
 
 
 
 
 
-using namespace MathTool;
-using namespace std;
+
+
+
+
+
+
 extern "C" {
 	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
-}
-using namespace std;
-
-struct alignas(16) ConstantBuffer3 {
-	Matrix w;
-	Matrix VP;
-};
-struct alignas(16) ConstantBuffer1
-{
-	float time;
-};
-
-struct alignas(16) ConstantBuffer2
-{
-	float time;
-	float padding[3];
-	Vec4 lights[4];
-
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class Hero {
-public:
-	AnimatedModel heromodel;
-	AnimationInstance heromodelinstace;
-	float movespeed = 10.f;
-	Vec3 position;
-	Vec3 forward;
-	Vec3 right;
-	Vec3 to;
-	float cooldown = 0.2f;
-	float timecount = 0.f;
-	void init(Core* core, Shaders* shaders, PSOManager* psos, Vec3 position) {
-		heromodel.load(core, "../Resources/UZI/Uzi.gem", shaders, psos, Animatemodels::UZI, position);
-		heromodelinstace.init(&heromodel.animation, 0);
-	}
-	
-};
-
-class Enemies {
-public:
-	string Animatestatus;
-	AnimatedModel enemymodel;
-	AnimationInstance enemymodelinstace;
-	float health = 100.f;
-	Vec3 forward;
-	Vec3 position;
-	float cooldown = 5.f;
-	float timecount = 0.f;
-	float movespeed = 0.5f;
-	void init(Core* core, Shaders* shaders, PSOManager* psos,Vec3 position) {
-		Animatestatus = "run";
-		enemymodel.load(core, "../Resources/Trex/TRex.gem", shaders, psos, Animatemodels::TRex, position);
-		enemymodelinstace.init(&enemymodel.animation, 0);
-	}
-	
-};
-
-class LoadControl
-{
-public:
-	string type;
-	string name;
-	Vec3 position;
-	Vec3 rotation;
-
-
-	map<string, Animatemodels> Aniname;
-	map<string, Staticmodels> Staticname;
-	LoadControl() {
-
-	}
-
-
-
-
-
-	void Loadgame(vector<Enemies>* enemies, vector<StaticModle>* staticmodles, Core* core, PSOManager* psos, Shaders* shaders) {
-		ifstream file("../Resources/loadfile1.csv");
-
-		string line;
-
-		getline(file, line);
-
-		while (getline(file, line)) {
-			std::stringstream theline(line);
-			std::string word;
-
-			getline(theline, word, ';');
-			type = word;
-			getline(theline, word, ';');
-			name = word;
-			getline(theline, word, ';');
-			position.x = stof(word);
-			getline(theline, word, ';');
-			position.y = stof(word);
-			getline(theline, word, ';');
-			position.z = stof(word);
-			getline(theline, word, ';');
-			rotation.x = stof(word);
-			getline(theline, word, ';');
-			rotation.y = stof(word);
-			getline(theline, word, ';');
-			rotation.z = stof(word);
-
-
-			if (type == "static") {
-				if (name == "tree") {
-					StaticModle tree;
-					staticmodles->push_back(tree);
-					staticmodles->back().load(core, "../Resources/acacia_003.gem", shaders, psos, Staticmodels::Tree, position);
-
-				}
-
-			}
-			else if (type == "anim") {
-
-				if (name == "trex") {
-					Enemies enemy;
-					enemy.init(core, shaders, psos, position);
-					enemies->push_back(enemy);
-				}
-			}
-
-		}
-
-
-		file.close();
-	}
-
-};
-
-
-
-
-
-
-class Window;
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-Window* window;
-class Window
-{
-public:
-	bool keys[256];
-	int mousex;
-	int mousey;
-	bool mouseButtons[3];
-	std::wstring wname;
-	HWND hwnd;
-	HINSTANCE hinstance;
-	string name;
-	int __width = 800;
-	int __height = 600;
-	DWORD style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-
-	Window() {
-		__width = kuan;
-		__height = gao;
-
-		WNDCLASSEX wc = {};
-		hinstance = GetModuleHandle(NULL);
-		name = "window_name";
-		wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-		wc.lpfnWndProc = WndProc;
-		wc.cbClsExtra = 0;
-		wc.cbWndExtra = 0;
-		wc.hInstance = hinstance;
-		wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
-		wc.hIconSm = wc.hIcon;
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-		wc.lpszMenuName = NULL;
-		wname = std::wstring(name.begin(), name.end());
-		wc.lpszClassName = wname.c_str();
-		wc.cbSize = sizeof(WNDCLASSEX);
-		RegisterClassEx(&wc);
-
-
-		hwnd = CreateWindowEx(WS_EX_APPWINDOW, wname.c_str(), wname.c_str(), style,
-			0, 0, __width, __height, NULL, NULL, hinstance, this);
-		window = this;
-	}
-
-	void updateMouse(int x, int y)
-	{
-		mousex = x;
-		mousey = y;
-	}
-	void processMessages() {
-		MSG msg;
-		ZeroMemory(&msg, sizeof(MSG));
-		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}
-
-	void create(int w, int h, string n) {
-		__width = w;
-		__height = h;
-		name = n;
-		SetWindowTextA(hwnd, name.c_str());
-		SetWindowPos(hwnd, 0, 0, 0, __width, __height, SWP_NOMOVE | SWP_NOZORDER);
-	}
-};
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-
-	switch (msg)
-	{
-	case WM_CLOSE:
-		PostQuitMessage(0);
-		exit(0);
-		return 0;
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		exit(0);
-		return 0;
-
-
-	case WM_KEYDOWN:
-	{
-		window->keys[(unsigned int)wParam] = true;
-		return 0;
-	}
-	case WM_KEYUP:
-	{
-		window->keys[(unsigned int)wParam] = false;
-		return 0;
-	}
-	case WM_LBUTTONDOWN:
-	{
-		window->updateMouse(WINDOW_GET_X_LPARAM(lParam), WINDOW_GET_Y_LPARAM(lParam));
-		window->mouseButtons[0] = true;
-		return 0;
-	}
-	case WM_LBUTTONUP:
-	{
-		window->updateMouse(WINDOW_GET_X_LPARAM(lParam), WINDOW_GET_Y_LPARAM(lParam));
-		window->mouseButtons[0] = false;
-		return 0;
-	}
-	case WM_MOUSEMOVE:
-	{
-		window->updateMouse(WINDOW_GET_X_LPARAM(lParam), WINDOW_GET_Y_LPARAM(lParam));
-		return 0;
-	}
-	default:
-		return DefWindowProc(hwnd, msg, wParam, lParam);
-	}
 }
 
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
@@ -380,9 +112,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Matrix prespection;
 	prespection = prespection.Perspective(M_PI / 4, kuan / gao, 0.1f, 100.0f);
 	Matrix lookat;
-	ConstantBuffer3 constBufferCPU3;
+	
 	Matrix vp;
-	constBufferCPU3.VP= prespection.Perspective(M_PI / 4, kuan / gao, 0.1f, 100.0f);
 	
 	GamesEngineeringBase::Timer timer;
 	
