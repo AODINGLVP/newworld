@@ -3,8 +3,8 @@
 #include <iostream>
 
 #include "GamesEngineeringBase.h"
-#define width 1920.f
-#define height 1080.f
+#define kuan 1920.f
+#define gao 1080.f
 #include <cmath>
 #include <vector>
 #undef min
@@ -1184,7 +1184,7 @@ namespace MathTool
 
 
 		Matrix scv1;
-		scv1 = scv1.Perspective(M_PI / 3, (float)width / (float)height, 0.1f, 100.0f);
+		scv1 = scv1.Perspective(M_PI / 3, (float)kuan / (float)gao, 0.1f, 100.0f);
 		screen = view.mul(screen);
 		screen = scv1.mul(screen);
 		return screen;
@@ -1197,7 +1197,7 @@ namespace MathTool
 		Vec4 up(0, 1, 0, 1);
 		view = view.LookatMatrix(position, to, up);
 		Matrix scv1;
-		scv1 = scv1.Perspective(M_PI / 3, (float)width / (float)height, 0.1f, 100.0f);
+		scv1 = scv1.Perspective(M_PI / 3, (float)kuan / (float)gao, 0.1f, 100.0f);
 		screen = view.mul(screen);
 		screen = scv1.mul(screen);
 		return screen;
@@ -1281,8 +1281,8 @@ namespace MathTool
 
 
 		screen.DivideByW();
-		screen.x = (screen.x + 1.0f) * 0.5f * width;
-		screen.y = (1 - ((screen.y + 1.0f) * 0.5f)) * height;
+		screen.x = (screen.x + 1.0f) * 0.5f * kuan;
+		screen.y = (1 - ((screen.y + 1.0f) * 0.5f)) * gao;
 		return screen;
 	}
 	inline vector<Vec3> CaculateNormal(vector<Triangle>& triangles, vector<vector<int>>& vertictoTriangle, vector<Vec3>& vertixnormals) {

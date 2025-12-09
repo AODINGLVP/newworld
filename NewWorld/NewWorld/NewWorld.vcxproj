@@ -102,8 +102,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AODINGLV\Desktop\course pdf\WM9M2 computer graphic\practice\NewWorld\NewWorld\stb\stb-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -118,8 +117,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\AODINGLV\Desktop\course pdf\WM9M2 computer graphic\practice\NewWorld\NewWorld\stb\stb-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -133,6 +131,7 @@
     <ClCompile Include="MathTool.cpp" />
     <ClCompile Include="NewWorld.cpp" />
     <ClCompile Include="PSOManager.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VertexLayoutCache.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -141,6 +140,7 @@
     <ClInclude Include="Enums.h" />
     <ClInclude Include="MathTool.h" />
     <ClInclude Include="PSOManager.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="VertexLayoutCache.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

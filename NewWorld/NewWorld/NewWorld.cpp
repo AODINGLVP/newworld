@@ -1,9 +1,9 @@
 // NewWorld.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-#define kuan 1920.f
-#define gao 1080.f
+
 #define WINDOW_GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define WINDOW_GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+
 #include <Windows.h>
 #include <iostream>
 #include <string>
@@ -17,6 +17,9 @@
 #include "GEMLoader.h"
 #include "Animation.h"
 #include "Enums.h"
+#include "Texture.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 using namespace MathTool;
 using namespace std;
 extern "C" {
@@ -279,7 +282,7 @@ class Shader {
 public:
 	ID3DBlob* vertexShader;
 	ID3DBlob* pixelShader;
-	
+	map<string, int> textureBindPoints;
 	std::string name;
 	std::unordered_map<std::string, ConstantBuffer> vs_constantBuffer;
 	std::unordered_map<std::string, ConstantBuffer> ps_constantBuffer;
@@ -302,7 +305,7 @@ public:
 		HRESULT hr = D3DCompile(vertexShadersStr.c_str(), strlen(vertexShadersStr.c_str()), NULL,NULL, NULL, "VS", "vs_5_0", 0, 0, &vertexShader, &status);
 		string pixelShaderStr = ReadShader(ps);
 		hr = D3DCompile(pixelShaderStr.c_str(), strlen(pixelShaderStr.c_str()), NULL, NULL,NULL, "PS", "ps_5_0", 0, 0, &pixelShader, &status);
-		//getConstantBuffer(pixelShader, ps_constantBuffer);
+		getConstantBuffer(pixelShader, ps_constantBuffer);
 		getConstantBuffer(vertexShader, vs_constantBuffer);
 		
 		for (auto& pair : vs_constantBuffer)
@@ -364,6 +367,22 @@ public:
 			
 			
 		}
+		for (int i = 0; i < desc.BoundResources; i++)
+		{
+			D3D12_SHADER_INPUT_BIND_DESC bindDesc;
+			reflection->GetResourceBindingDesc(i, &bindDesc);
+			if (bindDesc.Type == D3D_SIT_TEXTURE)
+			{
+				textureBindPoints.insert({ bindDesc.Name, bindDesc.BindPoint });
+			}
+		}
+	}
+	void updateTexturePS(Core* core, std::string name, int heapOffset) {
+
+		UINT bindPoint = textureBindPoints[name];
+		D3D12_GPU_DESCRIPTOR_HANDLE handle = core->srvHeap.gpuHandle;
+		handle.ptr = handle.ptr + (UINT64)(heapOffset - bindPoint) * (UINT64)core->srvHeap.incrementSize;
+		core->getCommandList()->SetGraphicsRootDescriptorTable(2, handle);
 	}
 	
 };
@@ -764,11 +783,14 @@ public:
 	Matrix realshow;
 	
 	
+	std::vector<std::string> textureFilenames;
+	TextureManager textures;
+
 	vector<GeneralMesh*> meshes;
 	vector<ANIMATED_VERTEX> verticescout;
 	Animation animation;
 	//GeneralMesh mesh;
-	std::vector<std::string> textureFilenames;
+
 	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum,Vec3 _position)
 	{
 		scv = _enum;
@@ -792,12 +814,18 @@ public:
 				vertices.push_back(v);
 				verticescout.push_back(v);
 			}
+
+			std::string tex_root = "../" + gemmeshes[i].material.find("albedo").getValue();
+			textureFilenames.push_back("../Resources/Textures/T-rex_Base_Color_alb.png");
+			// Load texture with filename: gemmeshes[i].material.find("albedo").getValue()
+			textures.load(core, "../Resources/Textures/T-rex_Base_Color_alb.png");
+
 			mesh->init(core, vertices, gemmeshes[i].indices);
 		
 			meshes.push_back(mesh);
 		}
 
-		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderAnim"].vertexShader, shaders->shaders["shaderAnim"].pixelShader, VertexLayoutCache::getAnimatedLayout());
+		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderTexture"].vertexShader, shaders->shaders["shaderTexture"].pixelShader, VertexLayoutCache::getAnimatedLayout());
 		memcpy(&animation.skeleton.globalInverse, &gemanimation.globalInverse, 16 * sizeof(float));
 		for (int i = 0; i < gemanimation.bones.size(); i++)
 		{
@@ -865,6 +893,7 @@ public:
 		psos->bind(core, "AnimatedModelPSO");
 		for (int i = 0; i < meshes.size(); i++)
 		{
+			shader->updateTexturePS(core, "tex", textures.find(textureFilenames[i])->heapOffset);
 			meshes[i]->draw(core);
 		}
 
@@ -1121,7 +1150,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Shaders shaders;
 	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderPixel.hlsl");
 	shaders.load(&core, "shaderAnim", "ShaderVerticesAnim.hlsl", "ShaderPixel.hlsl");
-
+	shaders.load(&core, "shaderTexture", "ShaderVerticesAnim.hlsl", "ShaderTexture.hlsl");
 	
 	Cube cube;
 	cube.init(&core,&psos, &shaders.shaders["shader1"]);
