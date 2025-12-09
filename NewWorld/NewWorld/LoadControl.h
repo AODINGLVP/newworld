@@ -56,7 +56,7 @@ public:
 
 				if (name == "trex") {
 					Enemies enemy;
-					enemy.init(core, shaders, psos, position);
+					enemy.init(core, shaders, psos, position,textures,"enemy");
 					enemies->push_back(enemy);
 				}
 			}

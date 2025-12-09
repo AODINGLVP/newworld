@@ -15,8 +15,8 @@ public:
 	Vec3 to;
 	float cooldown = 0.2f;
 	float timecount = 0.f;
-	void init(Core* core, Shaders* shaders, PSOManager* psos, Vec3 position) {
-		heromodel.load(core, "../Resources/UZI/Uzi.gem", shaders, psos, Animatemodels::UZI, position);
+	void init(Core* core, Shaders* shaders, PSOManager* psos, Vec3 position, TextureManager* textures, string selftexturename) {
+		heromodel.load(core, "../Resources/UZI/Uzi.gem", shaders, psos, Animatemodels::UZI, position,textures,selftexturename);
 		heromodelinstace.init(&heromodel.animation, 0);
 	}
 
@@ -33,9 +33,9 @@ public:
 	float cooldown = 5.f;
 	float timecount = 0.f;
 	float movespeed = 0.5f;
-	void init(Core* core, Shaders* shaders, PSOManager* psos, Vec3 position) {
+	void init(Core* core, Shaders* shaders, PSOManager* psos, Vec3 position, TextureManager* textures, string selftexturename) {
 		Animatestatus = "run";
-		enemymodel.load(core, "../Resources/Trex/TRex.gem", shaders, psos, Animatemodels::TRex, position);
+		enemymodel.load(core, "../Resources/Trex/TRex.gem", shaders, psos, Animatemodels::TRex, position,textures,selftexturename);
 		enemymodelinstace.init(&enemymodel.animation, 0);
 	}
 

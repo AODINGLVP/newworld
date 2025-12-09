@@ -84,23 +84,26 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 	Hero hero;
-	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0));
+	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0),&textures,"hero");
 	hero.heromodel.collision.hero(hero.position);
 	
 	Enemies enemy;
-	enemy.init(&core, &shaders, &psos, Vec3(0, 0, 10));
+	enemy.init(&core, &shaders, &psos, Vec3(0, 0, 10),&textures,"enemy");
 	enemies.push_back(enemy);
 	Enemies enemy1;
-	enemy1.init(&core, &shaders, &psos, Vec3(0, 0, 20));
+	enemy1.init(&core, &shaders, &psos, Vec3(0, 0, 20), & textures, "enemy");
 	enemies.push_back(enemy1);
 	Enemies enemy2;
-	enemy2.init(&core, &shaders, &psos, Vec3(0, 0, 30));
+	enemy2.init(&core, &shaders, &psos, Vec3(0, 0, 30), & textures, "enemy");
 	enemies.push_back(enemy2);
 	
 
 
 	StaticModle othertree;
 	othertree.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 0),&textures,"Othertree");
+
+	StaticModle othertree3;
+	othertree3.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(30, 0, 0), &textures, "Othertree");
 	//staticmodles.push_back(tree3);
 
 	StaticModle othertree2;
@@ -256,6 +259,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		
 		othertree.draw(&core, &othertree.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Othertree"));
 		othertree2.draw(&core, &othertree2.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Othertree2"));
+		othertree3.draw(&core, &othertree3.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Othertree"));
 		
 		for (int i = 0; i < enemies.size(); i++) {
 			
@@ -277,7 +281,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 			Matrix R = Matrix::ForwardtoOnlyTRex(scv);
 			enemies[i].enemymodel.collision.update(enemies[i].enemymodel.position, R);
-			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &enemies[i].enemymodelinstace, R,textures.find("Trexalb"));
+			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &enemies[i].enemymodelinstace, R,textures.find(enemies[i].enemymodel.texturename));
 				
 			
 		}
@@ -290,7 +294,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Matrix R;
 		R = Matrix::ForwardtoTOnlyHero(forward.TransToVec3RemoveW());
 		
-		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &hero.heromodelinstace,R, textures.find("UZIalb"));
+		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &hero.heromodelinstace,R, textures.find(hero.heromodel.texturename));
 		
 		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 		Matrix C;

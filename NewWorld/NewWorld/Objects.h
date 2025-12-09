@@ -406,12 +406,12 @@ public:
 	Matrix realshow;
 	vector<STATIC_VERTEX> verticescout;
 	vector<GeneralMesh*> meshes;
-	
+	string texturename;
 	//GeneralMesh mesh;
 	vector<string> textureFilenames;
 	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position,TextureManager *textures,string selftexturename)
 	{
-		
+		texturename = selftexturename;
 		scv = _name;
 		position = _position;
 		scale = Vec3(0.01f, 0.01f, 0.01f);
@@ -501,17 +501,19 @@ public:
 	Vec3 scale;
 	Vec3 forward;
 	Matrix realshow;
-
+	string texturename;
 
 
 
 	vector<GeneralMesh*> meshes;
 	vector<ANIMATED_VERTEX> verticescout;
 	Animation animation;
+	vector<string>textureFilenames;
 	//GeneralMesh mesh;
 
-	void load(Core* core, string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum, Vec3 _position)
+	void load(Core* core, string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum, Vec3 _position,TextureManager* textures, string selftexturename)
 	{
+		texturename = selftexturename;
 		scv = _enum;
 
 		position = _position;
@@ -542,8 +544,11 @@ public:
 			mesh->init(core, vertices, gemmeshes[i].indices);
 
 			meshes.push_back(mesh);
+			std::string tex_root = gemmeshes[i].material.find("albedo").getValue();
+			tex_root = "../Resources/" + tex_root;
+			textureFilenames.push_back(tex_root);
 		}
-
+		textures->load(core, textureFilenames, selftexturename);
 		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderTexture"].vertexShader, shaders->shaders["shaderTexture"].pixelShader, VertexLayoutCache::getAnimatedLayout());
 		memcpy(&animation.skeleton.globalInverse, &gemanimation.globalInverse, 16 * sizeof(float));
 		for (int i = 0; i < gemanimation.bones.size(); i++)
