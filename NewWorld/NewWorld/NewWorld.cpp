@@ -783,15 +783,14 @@ public:
 	Matrix realshow;
 	
 	
-	std::vector<std::string> textureFilenames;
-	TextureManager textures;
+	
 
 	vector<GeneralMesh*> meshes;
 	vector<ANIMATED_VERTEX> verticescout;
 	Animation animation;
 	//GeneralMesh mesh;
 
-	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum,Vec3 _position)
+	void load(Core* core, string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum,Vec3 _position)
 	{
 		scv = _enum;
 	
@@ -815,10 +814,10 @@ public:
 				verticescout.push_back(v);
 			}
 
-			std::string tex_root = "../" + gemmeshes[i].material.find("albedo").getValue();
-			textureFilenames.push_back("../Resources/Textures/T-rex_Base_Color_alb.png");
+			//std::string tex_root = "../" + gemmeshes[i].material.find("albedo").getValue();
+			//textureFilenames.push_back("../Resources/Textures/T-rex_Base_Color_alb.png");
 			// Load texture with filename: gemmeshes[i].material.find("albedo").getValue()
-			textures.load(core, "../Resources/Textures/T-rex_Base_Color_alb.png");
+			//textures.load(core, "../Resources/Textures/T-rex_Base_Color_alb.png");
 
 			mesh->init(core, vertices, gemmeshes[i].indices);
 		
@@ -877,7 +876,7 @@ public:
 		}
 
 	}
-	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance,Matrix &roation)
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance,Matrix &roation,Texture *texture)
 	{
 		
 		realshow =  Matrix::translation(position)* roation * Matrix::scaling(scale);
@@ -893,7 +892,7 @@ public:
 		psos->bind(core, "AnimatedModelPSO");
 		for (int i = 0; i < meshes.size(); i++)
 		{
-			shader->updateTexturePS(core, "tex", textures.find(textureFilenames[i])->heapOffset);
+			shader->updateTexturePS(core, "tex", texture->heapOffset);
 			meshes[i]->draw(core);
 		}
 
@@ -931,7 +930,7 @@ public:
 	float movespeed = 0.5f;
 	void init(Core* core, Shaders* shaders, PSOManager* psos,Vec3 position) {
 		Animatestatus = "run";
-		enemymodel.load(core, "../Resources/TRex.gem", shaders, psos, Animatemodels::TRex, position);
+		enemymodel.load(core, "../Resources/Trex/TRex.gem", shaders, psos, Animatemodels::TRex, position);
 		enemymodelinstace.init(&enemymodel.animation, 0);
 	}
 	
@@ -1156,9 +1155,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	cube.init(&core,&psos, &shaders.shaders["shader1"]);
 
 
-	loadcontrol.Loadgame(&enemies, &test, &core, &psos, &shaders);
+	//loadcontrol.Loadgame(&enemies, &test, &core, &psos, &shaders);
 
-
+	TextureManager textures;
+	textures.load(&core, "../Resources/Trex/Textures/T-rex_Base_Color_alb.png","Trexalb");
+	textures.load(&core, "../Resources/Trex/Textures/T-rex_Base_Color_rmax.png","Trexrmax");
+	textures.load(&core, "../Resources/UZI/Textures/Uzi_Albedo_alb.png", "UZIalb");
 
 	
 	StaticModle tree;
@@ -1430,7 +1432,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 			Matrix R = Matrix::ForwardtoOnlyTRex(scv);
 			enemies[i].enemymodel.collision.update(enemies[i].enemymodel.position, R);
-			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &enemies[i].enemymodelinstace, R);
+			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &enemies[i].enemymodelinstace, R,textures.find("Trexalb"));
 				
 			
 		}
@@ -1443,7 +1445,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Matrix R;
 		R = Matrix::ForwardtoTOnlyHero(forward.TransToVec3RemoveW());
 		
-		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &hero.heromodelinstace,R);
+		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &hero.heromodelinstace,R, textures.find("UZIalb"));
 	/*	animatedInstance.update("run", rexdt);
 		if (animatedInstance.animationFinished() == true)
 		{

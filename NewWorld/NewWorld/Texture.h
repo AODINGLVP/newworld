@@ -92,9 +92,9 @@ public:
 
 class TextureManager {
 public:
-	std::map<std::string, Texture* > textures;
+	map<string, Texture* > textures;
 
-	void load(Core* core, std::string name)
+	void load(Core* core, string name,string texturename)
 	{
 		if (textures.find(name) != textures.end())
 			return;
@@ -102,10 +102,10 @@ public:
 		Texture* texture = new Texture;
 
 		texture->load(core, name);
-		textures.insert({ name, texture });
+		textures.insert({ texturename, texture });
 	}
 
-	Texture* find(std::string name)
+	Texture* find(string name)
 	{
 		if (textures.find(name) != textures.end())
 			return textures[name];
