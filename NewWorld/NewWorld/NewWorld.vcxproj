@@ -130,6 +130,7 @@
     <ClCompile Include="MathTool.cpp" />
     <ClCompile Include="NewWorld.cpp" />
     <ClCompile Include="PSOManager.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VertexLayoutCache.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +138,7 @@
     <ClInclude Include="Core.h" />
     <ClInclude Include="MathTool.h" />
     <ClInclude Include="PSOManager.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="VertexLayoutCache.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

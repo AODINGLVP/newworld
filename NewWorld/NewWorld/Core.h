@@ -9,13 +9,16 @@ using namespace MathTool;
 #pragma comment(lib, "dxgi")
 #pragma comment(lib, "d3dcompiler.lib")
 
-class DescriptorHeap {
+class DescriptorHeap
+{
 public:
+
     ID3D12DescriptorHeap* heap;
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
     D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
     unsigned int incrementSize;
     int used;
+
     void init(ID3D12Device5* device, int num)
     {
         D3D12_DESCRIPTOR_HEAP_DESC uavcbvHeapDesc = {};
@@ -28,6 +31,8 @@ public:
         incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         used = 0;
     }
+
+    //Get and increment index into heap
     D3D12_CPU_DESCRIPTOR_HANDLE getNextCPUHandle()
     {
         if (used > 0)
@@ -37,6 +42,7 @@ public:
         used++;
         return cpuHandle;
     }
+
 };
 
 class GPUFence {
@@ -79,7 +85,7 @@ public:
 class Core
 {
 public:
-     DescriptorHeap srvHeap;
+   
     IDXGIAdapter1* adapter;
 
     //Core interfaces
@@ -111,6 +117,9 @@ public:
 
     //Add Root Signature member variable
     ID3D12RootSignature* rootSignature;
+
+
+    DescriptorHeap srvHeap;
 
     void init(HWND hwnd, int _width, int _height)
     {
@@ -278,18 +287,8 @@ public:
         rootParameterCBPS.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
         parameters.push_back(rootParameterCBPS);
 
-        // Create/Update Root Signature Descrpition
-        D3D12_ROOT_SIGNATURE_DESC desc = {};
-        desc.NumParameters = parameters.size();
-        desc.pParameters = &parameters[0];
-        desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-        ID3DBlob* serialized;
-        ID3DBlob* error;
-        D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &serialized, &error);
-        device->CreateRootSignature(0, serialized->GetBufferPointer(), serialized->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
-        serialized->Release();
 
-       // Add range of textures
+        // Add range of textures
         D3D12_DESCRIPTOR_RANGE srvRange = {};
         srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
         srvRange.NumDescriptors = 8; // number of SRVs (t0¨Ct7)
@@ -317,9 +316,26 @@ public:
         staticSampler.ShaderRegister = 0;
         staticSampler.RegisterSpace = 0;
         staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-        //Add sampler
+
+
+
+        // Create/Update Root Signature Descrpition
+        D3D12_ROOT_SIGNATURE_DESC desc = {};
+        desc.NumParameters = parameters.size();
+        desc.pParameters = &parameters[0];
+        desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
         desc.NumStaticSamplers = 1;
         desc.pStaticSamplers = &staticSampler;
+
+        ID3DBlob* serialized;
+        ID3DBlob* error;
+        D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &serialized, &error);
+        device->CreateRootSignature(0, serialized->GetBufferPointer(), serialized->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+        serialized->Release();
+
+    
+     
         srvHeap.init(device, 16384);
 
 
@@ -446,4 +462,5 @@ public:
         getCommandList()->RSSetScissorRects(1, &scissorRect);
         getCommandList()->SetGraphicsRootSignature(rootSignature);
     }
+   
 };

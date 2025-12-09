@@ -4,6 +4,7 @@
 #define gao 768.f
 #define WINDOW_GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define WINDOW_GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+#include "Texture.h"
 #include <Windows.h>
 #include <iostream>
 #include <string>
@@ -279,7 +280,7 @@ class Shader {
 public:
 	ID3DBlob* vertexShader;
 	ID3DBlob* pixelShader;
-	
+	map<string, int> textureBindPoints;
 	std::string name;
 	std::unordered_map<std::string, ConstantBuffer> vs_constantBuffer;
 	std::unordered_map<std::string, ConstantBuffer> ps_constantBuffer;
@@ -302,7 +303,7 @@ public:
 		HRESULT hr = D3DCompile(vertexShadersStr.c_str(), strlen(vertexShadersStr.c_str()), NULL,NULL, NULL, "VS", "vs_5_0", 0, 0, &vertexShader, &status);
 		string pixelShaderStr = ReadShader(ps);
 		hr = D3DCompile(pixelShaderStr.c_str(), strlen(pixelShaderStr.c_str()), NULL, NULL,NULL, "PS", "ps_5_0", 0, 0, &pixelShader, &status);
-		//getConstantBuffer(pixelShader, ps_constantBuffer);
+		getConstantBuffer(pixelShader, ps_constantBuffer);
 		getConstantBuffer(vertexShader, vs_constantBuffer);
 		
 		for (auto& pair : vs_constantBuffer)
@@ -364,6 +365,23 @@ public:
 			
 			
 		}
+		for (int i = 0; i < desc.BoundResources; i++)
+		{
+			D3D12_SHADER_INPUT_BIND_DESC bindDesc;
+			reflection->GetResourceBindingDesc(i, &bindDesc);
+			if (bindDesc.Type == D3D_SIT_TEXTURE)
+			{
+				textureBindPoints.insert({ bindDesc.Name, bindDesc.BindPoint });
+			}
+		}
+		
+	}
+	void updateTexturePS(Core* core, std::string name, int heapOffset) {
+
+		UINT bindPoint = textureBindPoints[name];
+		D3D12_GPU_DESCRIPTOR_HANDLE handle = core->srvHeap.gpuHandle;
+		handle.ptr = handle.ptr + (UINT64)(heapOffset - bindPoint) * (UINT64)core->srvHeap.incrementSize;
+		core->getCommandList()->SetGraphicsRootDescriptorTable(2, handle);
 	}
 	
 };
@@ -390,6 +408,10 @@ public:
 		shader.Compile(core, vsfilename, psfilename);
 		
 		shaders.insert({ shadername, shader });
+	}
+	void updateTexturePS(Core* core,string shader_name, string t_bindpoint, Texture* index)
+	{
+		shaders[shader_name].updateTexturePS(core, t_bindpoint, index->heapOffset);
 	}
 };
 
@@ -513,197 +535,7 @@ public:
 	}
 
 };
-class Texture {
-public:
-public:
-	unsigned int width;
-	unsigned int height;
-	unsigned int channels;
-	unsigned char* data;
-	size_t pixelSize;
 
-	ID3D12Resource* texture;
-	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-
-	void uploadImage(Core* core) {
-		// Create a texture resource in GPU memory
-		D3D12_RESOURCE_DESC texDesc = {};
-		texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		texDesc.Width = width;
-		texDesc.Height = height;
-		texDesc.DepthOrArraySize = 1;
-		texDesc.MipLevels = 1;
-		texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		texDesc.SampleDesc.Count = 1;
-		texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-		texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-		texture = nullptr;
-		D3D12_HEAP_PROPERTIES defaultHeap = {};
-		defaultHeap.Type = D3D12_HEAP_TYPE_DEFAULT;
-		core->device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &texDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&texture));
-
-		// get footprint size
-		D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
-		UINT numRows;
-		UINT64 rowSizeInBytes;
-		UINT64 totalBytes;
-		core->device->GetCopyableFootprints(&texDesc,
-			0,                  // First subresource
-			1,                  // Num subresources
-			0,                  // Base offset
-			&footprint, &numRows, &rowSizeInBytes, &totalBytes);
-
-		// copy data into upload buffer with proper row pitch
-		std::vector<BYTE> uploadData(totalBytes);
-		BYTE* dst = uploadData.data();
-		BYTE* src = data;
-		for (UINT row = 0; row < numRows; row++)
-		{
-			memcpy(dst, src, rowSizeInBytes);
-			dst += footprint.Footprint.RowPitch;
-			src += rowSizeInBytes;
-		}
-		core->uploadResource(texture, uploadData.data(), (unsigned int)uploadData.size(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &footprint);
-	}
-
-	void apply(Core* core) {
-		core->getCommandList()->SetGraphicsRootDescriptorTable(2, gpuHandle);
-	}
-
-	bool load(const std::string& filename) {
-		Microsoft::WRL::ComPtr<IWICImagingFactory> factory;
-		HRESULT hr = ::CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&factory));
-		if (FAILED(hr))
-		{
-			return false;
-		}
-
-		Microsoft::WRL::ComPtr<IWICBitmapDecoder> decoder;
-		IWICStream* stream = NULL;
-		factory->CreateStream(&stream);
-
-		std::wstring wFilename = std::wstring(filename.begin(), filename.end());
-		stream->InitializeFromFilename(wFilename.c_str(), GENERIC_READ);
-		factory->CreateDecoderFromStream(stream, 0, WICDecodeMetadataCacheOnDemand, &decoder);
-
-		Microsoft::WRL::ComPtr<IWICBitmapFrameDecode> frame;
-		decoder->GetFrame(0, &frame);
-
-		frame->GetSize(&width, &height);
-		WICPixelFormatGUID pixelFormat = { 0 };
-		frame->GetPixelFormat(&pixelFormat);
-
-		channels = 0;
-		int isRGB = 0;
-		pixelSize = width * height * 4;
-
-		// Determine the number of channels based on the pixel format
-		if (pixelFormat == GUID_WICPixelFormat24bppBGR)
-		{
-			channels = 3;
-		}
-		if (pixelFormat == GUID_WICPixelFormat32bppBGRA)
-		{
-			channels = 4;
-		}
-		if (pixelFormat == GUID_WICPixelFormat24bppRGB)
-		{
-			channels = 3;
-			isRGB = 1;
-		}
-		if (pixelFormat == GUID_WICPixelFormat32bppRGBA)
-		{
-			channels = 4;
-			isRGB = 1;
-		}
-		if (channels == 0)
-		{
-			return false;
-		}
-
-		data = new unsigned char[width * height * channels];
-		unsigned int stride = (width * channels + 3) & ~3; // Align stride to 4 bytes
-
-		if (stride == (width * channels))
-		{
-			// Copy pixels directly if stride matches
-			frame->CopyPixels(0, stride, width * height * channels, data);
-		}
-		else
-		{
-			// Handle images with padded stride
-			unsigned char* strideData = new unsigned char[stride * height];
-			frame->CopyPixels(0, stride, width * height * channels, strideData);
-			for (unsigned int i = 0; i < height; i++)
-			{
-				memcpy(&data[i * width * channels], &strideData[i * stride], width * channels * sizeof(unsigned char));
-			}
-			delete[] strideData;
-		}
-
-		if (isRGB == 0)
-		{
-			// Swap red and blue channels for BGR formats
-			for (unsigned int i = 0; i < width * height; i++)
-			{
-				unsigned char p = data[i * channels];
-				data[i * channels] = data[(i * channels) + 2];
-				data[(i * channels) + 2] = p;
-			}
-		}
-		return true;
-	}
-
-	// Returns a pointer to the pixel data at (x, y)
-		// Note, the bounds are handled via clamping
-	unsigned char* at(const unsigned int x, const unsigned int y) const
-	{
-		return &data[((min(y, height - 1) * width) + min(x, width - 1)) * channels];
-	}
-
-	// Returns the alpha value of the pixel at (x, y)
-	// Note, the bounds are handled via clamping
-	unsigned char alphaAt(const unsigned int x, const unsigned int y) const
-	{
-		if (channels == 4)
-		{
-			return data[((min(y, height - 1) * width) + min(x, width - 1)) * channels + 3];
-		}
-		return 255;
-	}
-
-	// Returns a the colour specified by index at (x, y)
-	// Note, the image bounds are handled via clamping, but the index is not checked
-	unsigned char at(const unsigned int x, const unsigned int y, const unsigned int index) const
-	{
-		return data[(((min(y, height - 1) * width) + min(x, width - 1)) * channels) + index];
-	}
-
-	// Returns a pointer to the pixel data at (x, y)
-	// Note, no checks performed on x and y coordinates
-	unsigned char* atUnchecked(const unsigned int x, const unsigned int y) const
-	{
-		return &data[((y * width) + x) * channels];
-	}
-
-	// Returns the alpha value of the pixel at (x, y)
-	// Note, no checks performed on x and y coordinates
-	unsigned char alphaAtUnchecked(const unsigned int x, const unsigned int y) const
-	{
-		if (channels == 4)
-		{
-			return data[(((y * width) + x) * channels) + 3];
-		}
-		return 255;
-	}
-
-	// Checks if the image has an alpha channel
-	bool hasAlpha() const
-	{
-		return channels == 4;
-	}
-};
 class StaticModle {
 public:
 
@@ -776,16 +608,22 @@ public:
 class AnimatedModel {
 public:
 
-	
+	std::vector<std::string> textureFilenames;
+	TextureManager textures;
 	vector<GeneralMesh*> meshes;
 	Animation animation;
 	//GeneralMesh mesh;
-	std::vector<std::string> textureFilenames;
+	
 	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos)
 	{
 		GEMLoader::GEMModelLoader loader;
 		std::vector<GEMLoader::GEMMesh> gemmeshes;
 		GEMLoader::GEMAnimation gemanimation;
+
+
+		
+
+
 		loader.load(filename, gemmeshes, gemanimation);
 		for (int i = 0; i < gemmeshes.size(); i++)
 		{
@@ -797,12 +635,22 @@ public:
 				memcpy(&v, &gemmeshes[i].verticesAnimated[j], sizeof(ANIMATED_VERTEX));
 				vertices.push_back(v);
 			}
+
+
+			std::string tex_root =  "../"+gemmeshes[i].material.find("albedo").getValue();
+			textureFilenames.push_back("../Resources/Textures/T-rex_Base_Color_alb.png");
+
+
+			
+			// Load texture with filename: gemmeshes[i].material.find("albedo").getValue()
+			textures.load(core, "../Resources/Textures/T-rex_Base_Color_alb.png");
+
 			mesh->init(core, vertices, gemmeshes[i].indices);
 		
 			meshes.push_back(mesh);
 		}
 
-		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderAnim"].vertexShader, shaders->shaders["shaderAnim"].pixelShader, VertexLayoutCache::getAnimatedLayout());
+		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderTexture"].vertexShader, shaders->shaders["shaderTexture"].pixelShader, VertexLayoutCache::getAnimatedLayout());
 		memcpy(&animation.skeleton.globalInverse, &gemanimation.globalInverse, 16 * sizeof(float));
 		for (int i = 0; i < gemanimation.bones.size(); i++)
 		{
@@ -854,7 +702,7 @@ public:
 		}
 
 	}
-	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance)
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance,Shader* textureshader)
 	{
 		
 	
@@ -864,11 +712,16 @@ public:
 
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
-
+	
+	
 		apply(core, shader);
 		psos->bind(core, "AnimatedModelPSO");
 		for (int i = 0; i < meshes.size(); i++)
 		{
+
+
+			shader->updateTexturePS(core, "tex", textures.find(textureFilenames[i])->heapOffset);
+
 			meshes[i]->draw(core);
 		}
 
@@ -1005,7 +858,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Shaders shaders; 
 	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderPixel.hlsl");
 	shaders.load(&core, "shaderAnim", "ShaderVerticesAnim.hlsl", "ShaderPixel.hlsl");
-	//shaders.load(&core, "shaderTexture", "ShaderTexture.hlsl", "ShaderPixel.hlsl");
+	shaders.load(&core, "shaderTexture", "ShaderVerticesAnim.hlsl", "ShaderTexture.hlsl");
 
 	//Cube cube;
 	//cube.init(&core,&psos, &shaders.shaders["shader1"]);
@@ -1125,7 +978,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		}
 		
 		
-		animatedModel.draw(&core, &world, &vp,&shaders.shaders["shaderAnim"],&psos,&animatedInstance);
+		animatedModel.draw(&core, &world, &vp,&shaders.shaders["shaderTexture"],&psos,&animatedInstance,&shaders.shaders["shaderTexture"]);
+
 
 
 
