@@ -344,7 +344,7 @@ public:
 		}
 
 	}
-	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos)
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, vector<Texture*> texture)
 	{
 
 
@@ -363,6 +363,7 @@ public:
 		psos->bind(core, "StaticModelPSO");
 		for (int i = 0; i < meshes.size(); i++)
 		{
+			shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
 			meshes[i]->draw(core);
 		}
 
@@ -472,7 +473,7 @@ public:
 		}
 
 	}
-	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance, Matrix& roation, Texture* texture)
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance, Matrix& roation, vector<Texture*> texture)
 	{
 
 		realshow = Matrix::translation(position) * roation * Matrix::scaling(scale);
@@ -488,7 +489,7 @@ public:
 		psos->bind(core, "AnimatedModelPSO");
 		for (int i = 0; i < meshes.size(); i++)
 		{
-			shader->updateTexturePS(core, "tex", texture->heapOffset);
+			shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
 			meshes[i]->draw(core);
 		}
 

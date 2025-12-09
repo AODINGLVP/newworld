@@ -38,7 +38,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 	Shaders shaders;
-	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderPixel.hlsl");
+	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderTexture.hlsl");
 	shaders.load(&core, "shaderAnim", "ShaderVerticesAnim.hlsl", "ShaderPixel.hlsl");
 	shaders.load(&core, "shaderTexture", "ShaderVerticesAnim.hlsl", "ShaderTexture.hlsl");
 	
@@ -47,24 +47,36 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 	//loadcontrol.Loadgame(&enemies, &test, &core, &psos, &shaders);
-
+	vector<string> texturenames;
 	TextureManager textures;
-	textures.load(&core, "../Resources/Trex/Textures/T-rex_Base_Color_alb.png","Trexalb");
-	textures.load(&core, "../Resources/Trex/Textures/T-rex_Base_Color_rmax.png","Trexrmax");
-	textures.load(&core, "../Resources/UZI/Textures/Uzi_Albedo_alb.png", "UZIalb");
+	texturenames.push_back("../Resources/Trex/Textures/T-rex_Base_Color_alb.png");
+	textures.load(&core, texturenames,"Trexalb");
+	texturenames.clear();
+	texturenames.push_back("../Resources/Trex/Textures/T-rex_Base_Color_rmax.png");
+	textures.load(&core, texturenames,"Trexrmax");
+	texturenames.clear();
 
-	
+	texturenames.push_back("../Resources/UZI/Textures/arms_1_Albedo_alb.png");
+	texturenames.push_back("../Resources/UZI/Textures/arms_2_Albedo_alb.png");
+	texturenames.push_back("../Resources/UZI/Textures/Uzi_bullet_shell_Albedo_alb.png");
+	texturenames.push_back("../Resources/UZI/Textures/Uzi_Albedo_alb.png");
+	textures.load(&core, texturenames, "UZIalb");
+	texturenames.clear();
+	texturenames.push_back("../Resources/Tree/Textures/Textures1_NH.png");
+	textures.load(&core, texturenames, "Tressalb");
+
+
 	StaticModle tree;
-	tree.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree,Vec3(0,0,0));
+	tree.load(&core, "../Resources/Tree/acacia_003.gem", &shaders, &psos, Staticmodels::Tree,Vec3(0,0,0));
 	staticmodles.push_back(tree);
 	StaticModle tree1;
-	tree1.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 5));
+	tree1.load(&core, "../Resources/Tree/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 5));
 	staticmodles.push_back(tree1);
 	StaticModle tree2;
-	tree2.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 10));
+	tree2.load(&core, "../Resources/Tree/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 10));
 	staticmodles.push_back(tree2);
 	StaticModle tree3;
-	tree3.load(&core, "../Resources/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 15));
+	tree3.load(&core, "../Resources/Tree/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 15));
 	staticmodles.push_back(tree3);
 	
 	/*
@@ -290,7 +302,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 		for (int i = 0; i < staticmodles.size(); i++) {
 			
-			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &shaders.shaders["shader1"], &psos);
+			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Tressalb"));
 		}
 
 	
@@ -329,7 +341,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		
 		hero.heromodelinstace.update("08 fire", rexdt);
 		if (hero.heromodelinstace.animationFinished()) {
-			hero.heromodelinstace.resetAnimationTime();
+			//hero.heromodelinstace.resetAnimationTime();
 		}
 		
 		Matrix R;

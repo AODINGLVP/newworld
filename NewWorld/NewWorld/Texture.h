@@ -92,24 +92,30 @@ public:
 
 class TextureManager {
 public:
-	map<string, Texture* > textures;
+	map<string, vector<Texture*> > textures;
 
-	void load(Core* core, string name,string texturename)
+	void load(Core* core, vector<string> name, string texturename)
 	{
-		if (textures.find(name) != textures.end())
-			return;
+		vector <Texture*> scv;
+		
+		for (int i = 0; i < name.size(); i++) {
+			if (textures.find(name[i]) != textures.end())
+				return;
 
-		Texture* texture = new Texture;
+			Texture* texture = new Texture;
 
-		texture->load(core, name);
-		textures.insert({ texturename, texture });
+			texture->load(core, name[i]);
+			scv.push_back(texture);
+		}
+		textures.insert({ texturename, scv });
+		
 	}
 
-	Texture* find(string name)
+	vector<Texture*> find(string name)
 	{
 		if (textures.find(name) != textures.end())
 			return textures[name];
 		else
-			return nullptr;
+			return {};
 	}
 };
