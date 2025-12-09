@@ -172,79 +172,79 @@ public:
 
 };
 
-class Cube {
+
+
+
+class Sphere {
 public:
 
 	PRIM_VERTEX vertices[3];
 	GeneralMesh mesh;
-	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
+	Vec3 position;
+	Vec3 scale = Vec3(1, 1, 1);
+	Matrix realshow;
+	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv, int tiling)
 	{
 		STATIC_VERTEX v;
 		v.pos = p;
 		v.normal = n;
-		v.tangent = Vec3(0, 0, 0); // For now
-		v.tu = tu;
-		v.tv = tv;
+		
+		v.tangent = Vec3(0, 0, 0); 
+		v.tu = tu * tiling;
+		v.tv = tv * tiling;
 		return v;
 	}
-	void init(Core* core, PSOManager* psos, Shader* shader) {
 
+	void init(Core* core, PSOManager* psos, Shader* shader, Vec3 _position) {
+		int rings = 64;
+		int segments = 128;
+		float radius = 98.f;
+		int tiling = 1;
+		position = _position;
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
 		std::vector<STATIC_VERTEX> vertices;
-		Vec3 p0 = Vec3(-1.0f, -1.0f, -1.0f);
-		Vec3 p1 = Vec3(1.0f, -1.0f, -1.0f);
-		Vec3 p2 = Vec3(1.0f, 1.0f, -1.0f);
-		Vec3 p3 = Vec3(-1.0f, 1.0f, -1.0f);
-		Vec3 p4 = Vec3(-1.0f, -1.0f, 1.0f);
-		Vec3 p5 = Vec3(1.0f, -1.0f, 1.0f);
-		Vec3 p6 = Vec3(1.0f, 1.0f, 1.0f);
-		Vec3 p7 = Vec3(-1.0f, 1.0f, 1.0f);
+		//Calculate the vertices of the circle using latitude and longitude. The normal of each vertex is the position normalize, and the UV values are filled based on the vertex positions.
+		for (int lat = 0; lat <= rings; lat++) {//¦È
+			float theta = lat * M_PI / rings;
+			float sinTheta = sinf(theta);
+			float cosTheta = cosf(theta);
+			for (int lon = 0; lon <= segments; lon++) {////¦Õ
+				float phi = lon * 2.0f * M_PI / segments;
+				float sinPhi = sinf(phi);
+				float cosPhi = cosf(phi);
+				Vec3 position(radius * sinTheta * cosPhi, radius * cosTheta, radius * sinTheta * sinPhi);//turn sphere to 3 dimension
+				Vec3 normal = position.normalize();
+				float tu = 1.0f - (float)lon / segments;//¦Õ
+				float tv = 1.0f - (float)lat / rings;//¦È
 
-		vertices.push_back(addVertex(p0, Vec3(0.0f, 0.0f, -1.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p1, Vec3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p2, Vec3(0.0f, 0.0f, -1.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p3, Vec3(0.0f, 0.0f, -1.0f), 0.0f, 0.0f));
-		vertices.push_back(addVertex(p5, Vec3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p4, Vec3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p7, Vec3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p6, Vec3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f));
-		vertices.push_back(addVertex(p4, Vec3(-1.0f, 0.0f, 0.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p0, Vec3(-1.0f, 0.0f, 0.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p3, Vec3(-1.0f, 0.0f, 0.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p7, Vec3(-1.0f, 0.0f, 0.0f), 0.0f, 0.0f));
-
-		vertices.push_back(addVertex(p1, Vec3(1.0f, 0.0f, 0.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p5, Vec3(1.0f, 0.0f, 0.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p6, Vec3(1.0f, 0.0f, 0.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p2, Vec3(1.0f, 0.0f, 0.0f), 0.0f, 0.0f));
-		vertices.push_back(addVertex(p3, Vec3(0.0f, 1.0f, 0.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p2, Vec3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p6, Vec3(0.0f, 1.0f, 0.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p7, Vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f));
-		vertices.push_back(addVertex(p4, Vec3(0.0f, -1.0f, 0.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p5, Vec3(0.0f, -1.0f, 0.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p1, Vec3(0.0f, -1.0f, 0.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p0, Vec3(0.0f, -1.0f, 0.0f), 0.0f, 0.0f));
+				vertices.push_back(addVertex(position, normal, tu, tv, tiling));
+			}
+		}
 
 		std::vector<unsigned int> indices;
-		indices.push_back(0); indices.push_back(1); indices.push_back(2);
-		indices.push_back(0); indices.push_back(2); indices.push_back(3);
-		indices.push_back(4); indices.push_back(5); indices.push_back(6);
-		indices.push_back(4); indices.push_back(6); indices.push_back(7);
-		indices.push_back(8); indices.push_back(9); indices.push_back(10);
-		indices.push_back(8); indices.push_back(10); indices.push_back(11);
-		indices.push_back(12); indices.push_back(13); indices.push_back(14);
-		indices.push_back(12); indices.push_back(14); indices.push_back(15);
-		indices.push_back(16); indices.push_back(17); indices.push_back(18);
-		indices.push_back(16); indices.push_back(18); indices.push_back(19);
-		indices.push_back(20); indices.push_back(21); indices.push_back(22);
-		indices.push_back(20); indices.push_back(22); indices.push_back(23);
+		for (int lat = 0; lat < rings; lat++)
+		{
+			for (int lon = 0; lon < segments; lon++)
+			{
+				int current = lat * (segments + 1) + lon;
+				int next = current + segments + 1;
+				indices.push_back(current);
+				indices.push_back(next);
+				indices.push_back(current + 1);
+				//topleft,bottonleft,topright
+				indices.push_back(current + 1);
+				indices.push_back(next);
+				indices.push_back(next + 1);
+				//topright,bottonleft,botton,right
+			}
+		}
 
 		mesh.init(core, vertices, indices);
 
 
 		//shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
 
-		psos->createPSO(core, "Cube", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
+		psos->createPSO(core, "Sphere", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
 	}
 	void apply(Core* core, Shader* shader) {
 		// Bind VS buffers
@@ -271,12 +271,16 @@ public:
 		}
 
 	}
-	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos)
+
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, vector<Texture*> texture)
 	{
 
 
 
 
+
+
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
 		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
 
@@ -284,8 +288,116 @@ public:
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
 
 		apply(core, shader);
-		psos->bind(core, "Cube");
+		psos->bind(core, "cube");
+
+		shader->updateTexturePS(core, "tex", texture[0]->heapOffset);
 		mesh.draw(core);
+
+
+	}
+
+};
+
+
+
+
+class Cube {
+public:
+
+	PRIM_VERTEX vertices[3];
+	GeneralMesh mesh;
+	Vec3 position ;
+	Vec3 scale = Vec3(1, 1, 1);
+	Matrix realshow;
+	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
+	{
+		STATIC_VERTEX v;
+		v.pos = p;
+		v.normal = n;
+		v.tangent = Vec3(0, 0, 0); // For now
+		v.tu = tu;
+		v.tv = tv;
+		return v;
+	}
+	void init(Core* core, PSOManager* psos, Shader* shader,Vec3 _position) {
+		position = _position;
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
+		int width = 1000;
+		int height = 1000;
+		std::vector<STATIC_VERTEX> vertices;
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				vertices.push_back(addVertex(Vec3(i/500,0,j/500), Vec3(0.0f, 1.0f, 0.0f), i/ height, j/ width));
+			}
+		}
+		
+
+		std::vector<unsigned int> indices;
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				int current = i;
+				indices.push_back(j); indices.push_back(j+1); indices.push_back(j+height);
+				indices.push_back(j + height); indices.push_back(j + 1); indices.push_back(j + height + 1);
+			}
+		}
+		
+		
+
+		mesh.init(core, vertices, indices);
+
+
+		//shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
+
+		psos->createPSO(core,"cube", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
+	}
+	void apply(Core* core, Shader* shader) {
+		// Bind VS buffers
+		unsigned int slot = 0;
+
+
+
+		/*for (auto i : shader.ps_constantBuffer)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader.ps_constantBuffer[i.first].getGPUAddress());
+			shader.ps_constantBuffer[i.first].next();
+			slot++;
+
+		}*/
+
+		for (auto& pair : shader->vs_constantBuffer)
+		{
+
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, pair.second.getGPUAddress());
+			pair.second.next();
+			//core->rootSignature.
+			slot++;
+
+		}
+
+	}
+	
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, vector<Texture*> texture)
+	{
+
+
+
+
+
+
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
+		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
+		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
+
+		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
+		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
+
+		apply(core, shader);
+		psos->bind(core, "cube");
+		
+			shader->updateTexturePS(core, "tex", texture[0]->heapOffset);
+			mesh.draw(core);
+		
+
 	}
 
 };

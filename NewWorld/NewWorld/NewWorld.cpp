@@ -41,9 +41,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderTexture.hlsl");
 	shaders.load(&core, "shaderAnim", "ShaderVerticesAnim.hlsl", "ShaderPixel.hlsl");
 	shaders.load(&core, "shaderTexture", "ShaderVerticesAnim.hlsl", "ShaderTexture.hlsl");
+	shaders.load(&core, "shaderSkyBox", "ShaderskyboxVector.hlsl", "ShaderTexture.hlsl");
 	
 	Cube cube;
-	cube.init(&core,&psos, &shaders.shaders["shader1"]);
+	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(30,0,30));
+	Sphere sphere;
+	sphere.init(&core, &psos, &shaders.shaders["shader1"], Vec3(30, 0, 40));
 
 
 	//loadcontrol.Loadgame(&enemies, &test, &core, &psos, &shaders);
@@ -64,6 +67,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	texturenames.clear();
 	texturenames.push_back("../Resources/Tree/Textures/Textures1_NH.png");
 	textures.load(&core, texturenames, "Tressalb");
+	texturenames.clear();
+	texturenames.push_back("../Resources/sky_37_2k.png");
+	textures.load(&core, texturenames, "SkyBox");
 
 
 	StaticModle tree;
@@ -136,7 +142,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Vec4 to = Vec4(0, 0, 0, 0);
 	Vec4 up = Vec4(0, 1, 0, 0);
 	Vec4 from = Vec4(16,0,4, 0);
-	Vec4 forward = Vec4(0, 0,1, 0);
+	Vec4 forward = Vec4(1, 0, 0, 0);
 	Vec4 right;
 	to = forward + from;
 	right = forward.Cross(Vec4(0, 1, 0, 0));
@@ -223,32 +229,6 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				}
 			}
 
-
-
-
-		//OutputDebugStringA(to_string(hero.heromodel.position.x).c_str());
-		//OutputDebugStringA("\n");
-		//OutputDebugStringA(to_string(hero.heromodel.collision.realmaxpoint.y).c_str());
-		//OutputDebugStringA("\n");
-		//OutputDebugStringA("x::");
-		//OutputDebugStringA(to_string(to.x).c_str());
-		//OutputDebugStringA("\n");
-		//OutputDebugStringA("z::");
-		//OutputDebugStringA(to_string(to.z).c_str());
-		//OutputDebugStringA("\n");
-		//OutputDebugStringA(to_string(to.y).c_str());
-		//OutputDebugStringA("\n");
-
-
-
-
-
-
-
-
-
-
-
 		}
 		if (win.keys['S']) {
 			from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
@@ -269,27 +249,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		hero.heromodel.position = Vec3(from.x,from.y,from.z);
 
 
-
-
-
-		//OutputDebugStringA(to_string(from.x).c_str());
-		//OutputDebugStringA("\n");
-		//OutputDebugStringA(to_string(from.z).c_str());
-		//OutputDebugStringA("\n");
-		//OutputDebugStringA("x::");
-		//OutputDebugStringA(to_string(to.x).c_str());
-		//OutputDebugStringA("\n");
-		//OutputDebugStringA("z::");
-		//OutputDebugStringA(to_string(to.z).c_str());
-		//OutputDebugStringA("\n");
-		//OutputDebugStringA(to_string(to.y).c_str());
-		//OutputDebugStringA("\n");
-
-		//Vec4 from = Vec4(11 * cos(dt), 5, 11 * sin(dt), 0);
-		//constBufferCPU1.time += dt;
 		to = forward + from;
 		right = forward.Cross(Vec4(0, 1, 0, 0));
 		lookat=lookat.LookatMatrix(from, to, up);
+
 		vp = prespection.mul(lookat);
 		//constBufferCPU3.w = constBufferCPU3.w.lookAtMatrix(from.TransToVec3(), to.TransToVec3(), up.TransToVec3());
 		core.beginFrame();
@@ -348,7 +311,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		R = Matrix::ForwardtoTOnlyHero(forward.TransToVec3RemoveW());
 		
 		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &hero.heromodelinstace,R, textures.find("UZIalb"));
-	/*	animatedInstance.update("run", rexdt);
+		
+		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("SkyBox"));
+		Matrix C;
+		C=C.translation(Vec3(from.x,0,from.z));
+		
+		sphere.draw(&core, &C, &vp, &shaders.shaders["shader1"], &psos, textures.find("SkyBox"));
+		
+		/*	animatedInstance.update("run", rexdt);
 		if (animatedInstance.animationFinished() == true)
 		{
 			animatedInstance.resetAnimationTime();
