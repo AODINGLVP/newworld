@@ -96,18 +96,23 @@ public:
 
 	void load(Core* core, vector<string> name, string texturename)
 	{
-		vector <Texture*> scv;
-		
-		for (int i = 0; i < name.size(); i++) {
-			if (textures.find(name[i]) != textures.end())
-				return;
+		if (textures.find(texturename) != textures.end()) {
 
-			Texture* texture = new Texture;
-
-			texture->load(core, name[i]);
-			scv.push_back(texture);
 		}
-		textures.insert({ texturename, scv });
+		else {
+			vector <Texture*> scv;
+
+			for (int i = 0; i < name.size(); i++) {
+				
+
+				Texture* texture = new Texture;
+
+				texture->load(core, name[i]);
+				scv.push_back(texture);
+			}
+			textures.insert({ texturename, scv });
+		}
+		
 		
 	}
 
