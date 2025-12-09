@@ -260,14 +260,15 @@ public:
 
 		}*/
 
-		for (auto& pair : shader->vs_constantBuffer)
+		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
 		{
-
-			core->getCommandList()->SetGraphicsRootConstantBufferView(0, pair.second.getGPUAddress());
-			pair.second.next();
-			//core->rootSignature.
-			slot++;
-
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, shader->vsConstantBuffers[i].getGPUAddress());
+			shader->vsConstantBuffers[i].next();
+		}
+		for (int i = 0; i < shader->psConstantBuffers.size(); i++)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader->psConstantBuffers[i].getGPUAddress());
+			shader->psConstantBuffers[i].next();
 		}
 
 	}
@@ -281,8 +282,9 @@ public:
 
 
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
-		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
-		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "W", w);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "VP", vp);
+		
 
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
@@ -369,40 +371,34 @@ public:
 	void apply(Core* core, Shader* shader) {
 		// Bind VS buffers
 		unsigned int slot = 0;
+	
 
-
-
-		/*for (auto i : shader.ps_constantBuffer)
+		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
 		{
-			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader.ps_constantBuffer[i.first].getGPUAddress());
-			shader.ps_constantBuffer[i.first].next();
-			slot++;
-
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, shader->vsConstantBuffers[i].getGPUAddress());
+			shader->vsConstantBuffers[i].next();
+		}
+		/*
+		for (int i = 0; i < shader->psConstantBuffers.size(); i++)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader->psConstantBuffers[i].getGPUAddress());
+			shader->psConstantBuffers[i].next();
 		}*/
 
-		for (auto& pair : shader->vs_constantBuffer)
-		{
-
-			core->getCommandList()->SetGraphicsRootConstantBufferView(0, pair.second.getGPUAddress());
-			pair.second.next();
-			//core->rootSignature.
-			slot++;
-
-		}
+		
 
 	}
 	
 	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, vector<Texture*> texture)
 	{
 
-
-
-
-
-
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
-		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
-		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
+
+
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "W", w);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "VP", vp);
+
+		
 
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
@@ -458,18 +454,17 @@ public:
 	}
 
 	void apply(Core* core, Shader* shader) {
-		// Bind VS buffers
-		unsigned int slot = 0;
-
-		for (auto& pair : shader->vs_constantBuffer)
+		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
 		{
-
-			core->getCommandList()->SetGraphicsRootConstantBufferView(0, pair.second.getGPUAddress());
-			pair.second.next();
-			//core->rootSignature.
-			slot++;
-
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, shader->vsConstantBuffers[i].getGPUAddress());
+			shader->vsConstantBuffers[i].next();
 		}
+		for (int i = 0; i < shader->psConstantBuffers.size(); i++)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader->psConstantBuffers[i].getGPUAddress());
+			shader->psConstantBuffers[i].next();
+		}
+
 
 	}
 	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, vector<Texture*> texture)
@@ -481,8 +476,9 @@ public:
 
 
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
-		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
-		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "W", w);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "VP", vp);
+
 
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
@@ -587,28 +583,27 @@ public:
 	}
 
 	void apply(Core* core, Shader* shader) {
-		// Bind VS buffers
-		unsigned int slot = 0;
-
-		for (auto& pair : shader->vs_constantBuffer)
+		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
 		{
-
-			core->getCommandList()->SetGraphicsRootConstantBufferView(0, pair.second.getGPUAddress());
-			pair.second.next();
-			//core->rootSignature.
-			slot++;
-
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, shader->vsConstantBuffers[i].getGPUAddress());
+			shader->vsConstantBuffers[i].next();
 		}
+		for (int i = 0; i < shader->psConstantBuffers.size(); i++)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader->psConstantBuffers[i].getGPUAddress());
+			shader->psConstantBuffers[i].next();
+		}
+
 
 	}
 	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance, Matrix& roation, vector<Texture*> texture)
 	{
 
 		realshow = Matrix::translation(position) * roation * Matrix::scaling(scale);
-
-		shader->vs_constantBuffer["staticMeshBuffer"].update("W", w);
-		shader->vs_constantBuffer["staticMeshBuffer"].update("VP", vp);
-		shader->vs_constantBuffer["staticMeshBuffer"].update("bones", instance->matrices);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "W", w);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "VP", vp);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "bones", instance->matrices);
+		
 
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);

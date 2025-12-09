@@ -44,7 +44,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shaderSkyBox", "ShaderskyboxVector.hlsl", "ShaderTexture.hlsl");
 	
 	Cube cube;
-	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(30,0,30));
+	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10));
 	Sphere sphere;
 	sphere.init(&core, &psos, &shaders.shaders["shader1"], Vec3(30, 0, 40));
 
@@ -73,7 +73,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	texturenames.clear();
 	texturenames.push_back("../Resources/Grass/Grass01_2K_BaseColor.png");
 	textures.load(&core, texturenames, "Grass");
-
+	
 
 	StaticModle tree;
 	tree.load(&core, "../Resources/Tree/acacia_003.gem", &shaders, &psos, Staticmodels::Tree,Vec3(0,0,0));
@@ -88,14 +88,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	tree3.load(&core, "../Resources/Tree/acacia_003.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 15));
 	staticmodles.push_back(tree3);
 	
-	/*
-	AnimatedModel animatedModel;
-	animatedModel.load(&core, "../Resources/TRex.gem", &shaders, &psos,Animatemodels::TRex, Vec3(0, 0, 0));
-	animateModels.push_back(animatedModel);
-	AnimationInstance animatedInstance;
-	animatedInstance.init(&animatedModel.animation, 0);
-	animationinstances.push_back(animatedInstance);
-	*/
+
+	
 	//AnimatedModel UZI;
 	//UZI.load(&core, "../Resources/UZI/Uzi.gem", &shaders, &psos, Animatemodels::UZI, Vec3(0, 0, 10));
 	//AnimationInstance UZIInstance;
@@ -126,7 +120,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-
+	
 
 	Matrix world;
 	world = world.scale(0.01f, 0.01f, 0.01f);
@@ -181,6 +175,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		{
 			break;
 		}
+		
 		if (win.keys['A']) {
 			from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
 			hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
@@ -251,7 +246,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		}
 		hero.heromodel.position = Vec3(from.x,from.y,from.z);
 
-
+		
 		to = forward + from;
 		right = forward.Cross(Vec4(0, 1, 0, 0));
 		lookat=lookat.LookatMatrix(from, to, up);
@@ -272,14 +267,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		}
 
 	
-		//tree.position = Vec3(10, 0, 0);
-		
-		//tree.draw(&core, &tree.realshow, &vp, &shaders.shaders["shader1"], &psos);
-		//cube.draw(&core, &constBufferCPU3.w, &constBufferCPU3.VP, &shaders.shaders["shader1"], &psos);
 		
 
 		
-
+		
 		for (int i = 0; i < enemies.size(); i++) {
 			
 			enemies[i].enemymodelinstace.updatewithControl(enemies[i].Animatestatus, rexdt);
@@ -313,7 +304,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Matrix R;
 		R = Matrix::ForwardtoTOnlyHero(forward.TransToVec3RemoveW());
 		
-		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &hero.heromodelinstace,R, textures.find("UZIalb"));
+		//hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &hero.heromodelinstace,R, textures.find("UZIalb"));
 		
 		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 		Matrix C;
@@ -321,25 +312,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		
 		sphere.draw(&core, &C, &vp, &shaders.shaders["shader1"], &psos, textures.find("SkyBox"));
 		
-		/*	animatedInstance.update("run", rexdt);
-		if (animatedInstance.animationFinished() == true)
-		{
-			animatedInstance.resetAnimationTime();
-		}
-		animatedModel.draw(&core, &animatedModel.realshow, &vp,&shaders.shaders["shaderAnim"],&psos,&animatedInstance);
-
-	*/
-		/*UZI.position = Vec3(0, 0, 20);
 		
-		UZIInstance.update("08 fire",rexdt);
-		if (UZIInstance.animationFinished() == true)
-		{
-			UZIInstance.resetAnimationTime();
-		}
-		UZI.draw(&core, &UZI.realshow, &vp, &shaders.shaders["shaderAnim"], &psos, &UZIInstance);
-
-		*/
-
 		core.finishFrame();
 	}
 	core.flushGraphicsQueue();
