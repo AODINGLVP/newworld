@@ -30,6 +30,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	vector<Enemies> enemies;
 	vector<StaticModle> test;
 	LoadControl loadcontrol;
+	vector<Objectload> loadgamestatic;
+	vector<Objectload> loadgameanim;
 	Window win;
 	Core core;
 	core.init(window->hwnd, kuan, gao);
@@ -81,55 +83,31 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	textures.load(&core, texturenames, "PineTree");
 
 
-	//loadcontrol.Loadgame(&enemies, &staticmodles, &core, &psos, &shaders, &textures);
-
+	
+	  loadcontrol.LoadData(&loadgamestatic,&loadgameanim);
 	Hero hero;
 	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0),&textures,"hero");
 	hero.heromodel.collision.hero(hero.position);
 	
-	Enemies enemy;
-	enemy.init(&core, &shaders, &psos, Vec3(0, 0, 50),&textures,"enemy");
-	enemies.push_back(enemy);
-	Enemies enemy1;
-	enemy1.init(&core, &shaders, &psos, Vec3(0, 0, 40), & textures, "enemy");
-	enemies.push_back(enemy1);
-	Enemies enemy2;
-	enemy2.init(&core, &shaders, &psos, Vec3(0, 0, 30), & textures, "enemy");
-	enemies.push_back(enemy2);
-
-	for (int i = 0; i < 2; i++) {
-		Enemies enemy3;
-		
-		enemies.push_back(enemy3);
+	for (int i = 0; i < loadgamestatic.size(); i++) {
+		StaticModle scvv;
+		staticmodles.push_back(scvv);
+		staticmodles[i].load(&core, loadgamestatic[i].location, &shaders, &psos, Staticmodels::Tree, loadgamestatic[i].position, &textures, loadgamestatic[i].textureName);
 	}
-	for (int i = 3; i < 5; i++) {
-		enemies[i].init(&core, &shaders, &psos, Vec3(0, 0, 50 + i * 10), &textures, "enemy");
+	for (int i = 0; i < loadgameanim.size(); i++) {
+		Enemies scvv;
+		enemies.push_back(scvv);
+		enemies[i].init(&core, &shaders, &psos, loadgameanim[i].position, &textures, loadgameanim[i].textureName);
 	}
 
-
-	StaticModle othertree;
-	othertree.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(50, 0, 0),&textures,"pine");
-
-	StaticModle othertree3;
-	othertree3.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(30, 0, 0), &textures, "pine");
 	
-
-	StaticModle othertree2;
-	othertree2.load(&core, "../Resources/OtherTree/bamboo.gem", &shaders, &psos, Staticmodels::Tree, Vec3(15, 0, 15), &textures, "bamboo");
-	staticmodles.push_back(othertree);
-	staticmodles.push_back(othertree3);
-	staticmodles.push_back(othertree2);
-
 	Matrix world;
 	world = world.scale(0.01f, 0.01f, 0.01f);
 	Matrix prespection;
 	prespection = prespection.Perspective(M_PI / 4, kuan / gao, 0.1f, 100.0f);
 	Matrix lookat;
-	
 	Matrix vp;
-	
 	GamesEngineeringBase::Timer timer;
-	
 	win.create(kuan, gao, "My Window");
 	float dt=0;
 	float rexdt;
