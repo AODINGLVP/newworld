@@ -11,6 +11,10 @@ struct PRIM_VERTEX
 	Vec3 position;
 	Colour colour;
 };
+struct Ray {
+	Vec3 origin;    
+	Vec3 dir;       
+};
 class Objects
 {
 };
@@ -29,10 +33,20 @@ public:
 		minpoint = Vec3(11111, 11111, 11111);
 		maxpoint = Vec3(-11111, -11111, -11111);
 		staticcalculateBox();
-
+		
+		minpoint.x = minpoint.x / (abs(minpoint.x) + abs(maxpoint.x));
+		minpoint.z = minpoint.z / (abs(minpoint.z) + abs(maxpoint.z));
+		maxpoint.x = maxpoint.x / (abs(minpoint.x) + abs(maxpoint.x));
+		maxpoint.z = maxpoint.z / (abs(minpoint.z) + abs(maxpoint.z));
 		realminpoint = minpoint + _position;
 		realmaxpoint = maxpoint + _position;
 
+	}
+	void staticinitfake() {
+		minpoint = Vec3(INT_MAX, INT_MAX, INT_MAX);
+		maxpoint=Vec3(INT_MAX, INT_MAX, INT_MAX);
+		realmaxpoint = Vec3(INT_MAX, INT_MAX, INT_MAX);
+		realminpoint= Vec3(INT_MAX, INT_MAX, INT_MAX);
 	}
 	void animateinit(vector<ANIMATED_VERTEX> _animatebox, Vec3 _position) {
 		animatebox = _animatebox;
@@ -171,6 +185,62 @@ public:
 
 		return true;
 	}
+
+
+	bool RayIntersectAABB( Vec3 rayOrigin, Vec3 rayDir,float outT) 
+	{
+		float tMin = -FLT_MAX;
+		float tMax = FLT_MAX;
+
+		// X axis
+		if (fabs(rayDir.x) < 1e-6f) {
+			if (rayOrigin.x < realminpoint.x || rayOrigin.x > realmaxpoint.x)
+				return false;
+		}
+		else {
+			float invD = 1.0f / rayDir.x;
+			float t1 = (realminpoint.x - rayOrigin.x) * invD;
+			float t2 = (realmaxpoint.x - rayOrigin.x) * invD;
+			if (t1 > t2) std::swap(t1, t2);
+			tMin = max(tMin, t1);
+			tMax = min(tMax, t2);
+			if (tMin > tMax) return false;
+		}
+
+		// Y axis
+		if (fabs(rayDir.y) < 1e-6f) {
+			if (rayOrigin.y < realminpoint.y || rayOrigin.y > realmaxpoint.y)
+				return false;
+		}
+		else {
+			float invD = 1.0f / rayDir.y;
+			float t1 = (realminpoint.y - rayOrigin.y) * invD;
+			float t2 = (realmaxpoint.y - rayOrigin.y) * invD;
+			if (t1 > t2) std::swap(t1, t2);
+			tMin = max(tMin, t1);
+			tMax = min(tMax, t2);
+			if (tMin > tMax) return false;
+		}
+
+		// Z axis
+		if (fabs(rayDir.z) < 1e-6f) {
+			if (rayOrigin.z < realminpoint.z || rayOrigin.z > realmaxpoint.z)
+				return false;
+		}
+		else {
+			float invD = 1.0f / rayDir.z;
+			float t1 = (realminpoint.z - rayOrigin.z) * invD;
+			float t2 = (realmaxpoint.z - rayOrigin.z) * invD;
+			if (t1 > t2) std::swap(t1, t2);
+			tMin = max(tMin, t1);
+			tMax = min(tMax, t2);
+			if (tMin > tMax) return false;
+		}
+
+		outT = tMin > 0 ? tMin : tMax;
+		return outT >= 0;
+	}
+
 
 };
 
@@ -401,6 +471,7 @@ public:
 };
 class StaticModle {
 public:
+	
 	Collider collision;
 	Staticmodels scv;
 	Vec3 position;
@@ -411,7 +482,7 @@ public:
 	string texturename;
 	//GeneralMesh mesh;
 	vector<string> textureFilenames;
-	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position,TextureManager *textures,string selftexturename)
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position,TextureManager *textures,string selftexturename,int iscollider)
 	{
 		texturename = selftexturename;
 		scv = _name;
@@ -444,7 +515,12 @@ public:
 		}
 		textures->load(core, textureFilenames, selftexturename);
 		psos->createPSO(core, "StaticModelPSO", shaders->shaders["shader1"].vertexShader, shaders->shaders["shader1"].pixelShader, VertexLayoutCache::getStaticLayout());
-		collision.staticinit(verticescout, position);
+		if (iscollider == 1) {
+			collision.staticinit(verticescout, position);
+		}
+		else {
+			collision.staticinitfake();
+		}
 	}
 
 	void apply(Core* core, Shader* shader) {

@@ -9,6 +9,7 @@ struct Objectload
 
 		string location;
 		string textureName;
+		int iscollider;
 	};
 class LoadControl
 {
@@ -59,6 +60,8 @@ public:
 			getinformation.location = (word);
 			getline(theline, word, ';');
 			getinformation.textureName = (word);
+			getline(theline, word, ';');
+			getinformation.iscollider = stoi(word);
 			if (getinformation.type == "static") {
 				scv1->push_back(getinformation);
 			}
@@ -83,7 +86,7 @@ public:
 		// or the data passed into the vector is incorrect. In general, if I store the enemies into the vector and initialize it here, 
 		// it will cause the queue of the vector to crash and report an error. The content of the error seems to be that the red-black tree was damaged due to out-of-bounds access.
 		ifstream file("../Resources/loadfile1.csv");
-
+		int iscollider;
 		string line;
 
 		getline(file, line);
@@ -112,13 +115,14 @@ public:
 			location = (word);
 			getline(theline, word, ';');
 			texturename = (word);
-
+			getline(theline, word, ';');
+			iscollider = stoi(word);
 
 			if (type == "static") {
 				if (name == "tree") {
 					
 					StaticModle tree;
-					tree.load(core, location, shaders, psos, Staticmodels::Tree, position, textures, texturename);
+					tree.load(core, location, shaders, psos, Staticmodels::Tree, position, textures, texturename,iscollider);
 					staticmodles->push_back(move(tree));
 					
 
