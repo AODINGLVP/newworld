@@ -6,7 +6,8 @@ public:
 	string name;
 	Vec3 position;
 	Vec3 rotation;
-
+	string location;
+	string texturename;
 
 	map<string, Animatemodels> Aniname;
 	map<string, Staticmodels> Staticname;
@@ -14,7 +15,7 @@ public:
 
 	}
 
-	void Loadgame(vector<Enemies>* enemies, vector<StaticModle>* staticmodles, Core* core, PSOManager* psos, Shaders* shaders,TextureManager* textures) {
+	void Loadgame(vector<Enemies>& enemies, vector<StaticModle>* staticmodles, Core* core, PSOManager* psos, Shaders* shaders,TextureManager* textures) {
 		ifstream file("../Resources/loadfile1.csv");
 
 		string line;
@@ -41,13 +42,19 @@ public:
 			rotation.y = stof(word);
 			getline(theline, word, ';');
 			rotation.z = stof(word);
+			getline(theline, word, ';');
+			location = (word);
+			getline(theline, word, ';');
+			texturename = (word);
 
 
 			if (type == "static") {
 				if (name == "tree") {
+					
 					StaticModle tree;
-					staticmodles->push_back(tree);
-					staticmodles->back().load(core, "../Resources/acacia_003.gem", shaders, psos, Staticmodels::Tree, position,textures,"OtherTree");
+					tree.load(core, location, shaders, psos, Staticmodels::Tree, position, textures, texturename);
+					staticmodles->push_back(move(tree));
+					
 
 				}
 
@@ -55,10 +62,13 @@ public:
 			else if (type == "anim") {
 
 				if (name == "trex") {
-					Enemies enemy;
-					enemy.init(core, shaders, psos, position,textures,"enemy");
-					enemies->push_back(enemy);
+					Enemies scv;
+					enemies.push_back(scv);
+					enemies[0].init(core, shaders, psos, position, textures, "enemy");
+					
+					
 				}
+				
 			}
 
 		}

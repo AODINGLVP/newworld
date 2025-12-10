@@ -29,6 +29,7 @@ public:
 		minpoint = Vec3(11111, 11111, 11111);
 		maxpoint = Vec3(-11111, -11111, -11111);
 		staticcalculateBox();
+
 		realminpoint = minpoint + _position;
 		realmaxpoint = maxpoint + _position;
 
@@ -130,6 +131,7 @@ public:
 	void updatehero(Vec3 position) {
 		realminpoint = position + minpoint;
 		realmaxpoint = position + maxpoint;
+
 	}
 	void animatecalculateBox() {
 		for (int i = 0; i < animatebox.size(); i++) {

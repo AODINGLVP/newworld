@@ -49,7 +49,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	sphere.init(&core, &psos, &shaders.shaders["shader1"], Vec3(30, 0, 40));
 
 
-	//loadcontrol.Loadgame(&enemies, &test, &core, &psos, &shaders);
+	
 	vector<string> texturenames;
 	TextureManager textures;
 	texturenames.push_back("../Resources/Trex/Textures/T-rex_Base_Color_alb.png");
@@ -81,35 +81,44 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	textures.load(&core, texturenames, "PineTree");
 
 
-
+	//loadcontrol.Loadgame(&enemies, &staticmodles, &core, &psos, &shaders, &textures);
 
 	Hero hero;
 	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0),&textures,"hero");
 	hero.heromodel.collision.hero(hero.position);
 	
 	Enemies enemy;
-	enemy.init(&core, &shaders, &psos, Vec3(0, 0, 10),&textures,"enemy");
+	enemy.init(&core, &shaders, &psos, Vec3(0, 0, 50),&textures,"enemy");
 	enemies.push_back(enemy);
 	Enemies enemy1;
-	enemy1.init(&core, &shaders, &psos, Vec3(0, 0, 20), & textures, "enemy");
+	enemy1.init(&core, &shaders, &psos, Vec3(0, 0, 40), & textures, "enemy");
 	enemies.push_back(enemy1);
 	Enemies enemy2;
 	enemy2.init(&core, &shaders, &psos, Vec3(0, 0, 30), & textures, "enemy");
 	enemies.push_back(enemy2);
-	
+
+	for (int i = 0; i < 2; i++) {
+		Enemies enemy3;
+		
+		enemies.push_back(enemy3);
+	}
+	for (int i = 3; i < 5; i++) {
+		enemies[i].init(&core, &shaders, &psos, Vec3(0, 0, 50 + i * 10), &textures, "enemy");
+	}
 
 
 	StaticModle othertree;
-	othertree.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(0, 0, 0),&textures,"Othertree");
+	othertree.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(50, 0, 0),&textures,"pine");
 
 	StaticModle othertree3;
-	othertree3.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(30, 0, 0), &textures, "Othertree");
-	//staticmodles.push_back(tree3);
+	othertree3.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(30, 0, 0), &textures, "pine");
+	
 
 	StaticModle othertree2;
-
-	othertree2.load(&core, "../Resources/OtherTree/bamboo.gem", &shaders, &psos, Staticmodels::Tree, Vec3(15, 0, 15), &textures, "Othertree2");
-
+	othertree2.load(&core, "../Resources/OtherTree/bamboo.gem", &shaders, &psos, Staticmodels::Tree, Vec3(15, 0, 15), &textures, "bamboo");
+	staticmodles.push_back(othertree);
+	staticmodles.push_back(othertree3);
+	staticmodles.push_back(othertree2);
 
 	Matrix world;
 	world = world.scale(0.01f, 0.01f, 0.01f);
@@ -127,7 +136,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	float cameramovespeed = 5.f;
 	Vec4 to = Vec4(0, 0, 0, 0);
 	Vec4 up = Vec4(0, 1, 0, 0);
-	Vec4 from = Vec4(16,0,4, 0);
+	Vec4 from = Vec4(0,0,0, 0);
 	Vec4 forward = Vec4(1, 0, 0, 0);
 	Vec4 right;
 	to = forward + from;
@@ -252,14 +261,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 		for (int i = 0; i < staticmodles.size(); i++) {
 			
-			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Tressalb"));
+			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find(staticmodles[i].texturename));
 		}
 
 	
 		
-		othertree.draw(&core, &othertree.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Othertree"));
-		othertree2.draw(&core, &othertree2.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Othertree2"));
-		othertree3.draw(&core, &othertree3.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Othertree"));
+		//othertree.draw(&core, &othertree.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find(othertree.texturename));
+		//othertree2.draw(&core, &othertree2.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find(othertree2.texturename));
+		//othertree3.draw(&core, &othertree3.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find(othertree3.texturename));
 		
 		for (int i = 0; i < enemies.size(); i++) {
 			
