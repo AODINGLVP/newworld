@@ -15,7 +15,7 @@ public:
 
 	}
 
-	void Loadgame(vector<Enemies>& enemies, vector<StaticModle>* staticmodles, Core* core, PSOManager* psos, Shaders* shaders,TextureManager* textures) {
+	void Loadgame(vector<Enemies>* enemies, vector<StaticModle>* staticmodles, Core* core, PSOManager* psos, Shaders* shaders,TextureManager* textures) {
 		ifstream file("../Resources/loadfile1.csv");
 
 		string line;
@@ -63,12 +63,12 @@ public:
 
 				if (name == "trex") {
 					Enemies scv;
-					enemies.push_back(scv);
-					enemies[0].init(core, shaders, psos, position, textures, "enemy");
+					enemies->push_back(scv);
+					
 					
 					
 				}
-				
+				(*enemies)[0].init(core, shaders, psos, position, textures, "enemy");
 			}
 
 		}
