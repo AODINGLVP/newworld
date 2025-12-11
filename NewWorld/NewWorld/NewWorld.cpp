@@ -58,7 +58,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	
 
-	texturenames.push_back("../Resources/NightSkyHDRI009_12K_TONEMAPPED.jpg");
+	texturenames.push_back("../Resources/citrus_orchard_road_puresky_8k.png");
 	textures.load(&core, texturenames, "SkyBox");
 	texturenames.clear();
 	texturenames.push_back("../Resources/Grass/Grass01_2K_BaseColor.png");
