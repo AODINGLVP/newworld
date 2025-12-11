@@ -716,7 +716,8 @@ public:
 	vector<GeneralMesh*> meshes;
 	vector<ANIMATED_VERTEX> verticescout;
 	Animation animation;
-	vector<string>textureFilenames;
+	vector<string> textureFilenames;
+	vector<string> textureNHFilenames;
 	//GeneralMesh mesh;
 
 	void load(Core* core, string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum, Vec3 _position,TextureManager* textures, string selftexturename)
@@ -755,9 +756,13 @@ public:
 			std::string tex_root = gemmeshes[i].material.find("albedo").getValue();
 			tex_root = "../Resources/" + tex_root;
 			textureFilenames.push_back(tex_root);
+			while (!tex_root.empty() && tex_root.back() != '_') {
+				tex_root.pop_back();
+			}
+			textureNHFilenames.push_back(tex_root + "NH.png");
 		}
-		textures->load(core, textureFilenames, selftexturename);
-		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderTexture"].vertexShader, shaders->shaders["shaderTexture"].pixelShader, VertexLayoutCache::getAnimatedLayout());
+		textures->load(core, textureFilenames, textureNHFilenames, selftexturename);
+		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderAnimlight"].vertexShader, shaders->shaders["shaderAnimlight"].pixelShader, VertexLayoutCache::getAnimatedLayout());
 		memcpy(&animation.skeleton.globalInverse, &gemanimation.globalInverse, 16 * sizeof(float));
 		for (int i = 0; i < gemanimation.bones.size(); i++)
 		{
@@ -809,14 +814,25 @@ public:
 
 
 	}
-	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, AnimationInstance* instance, Matrix& roation, vector<Texture*> texture)
+	void draw(Core* core, Matrix* w, Matrix* vp, Vec3* camerafrom, Vec3* strength, Vec3* direction, Shader* shader, PSOManager* psos, AnimationInstance* instance, Matrix& roation, vector<Texture*> texture, vector<Texture*> NHtexture)
 	{
-
+		
+		Vec4 gDiffuseAlbedo = Vec4(1, 1, 1, 1);
+		Vec4 gAmbientLight = Vec4(0.2f, 0.2f, 0.2f, 1.0f);
+		float  gRoughness = 0.1f;
+		Vec3 gFresnelR0 = Vec3(0.04f, 0.04f, 0.04f);;
+		
 		realshow = Matrix::translation(position) * roation * Matrix::scaling(scale);
 		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "W", w);
 		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "VP", vp);
 		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "bones", instance->matrices);
-		
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "gEyePosW", camerafrom);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "gDiffuseAlbedo", &gDiffuseAlbedo);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "gAmbientLight", &gAmbientLight);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "gRoughness", &gRoughness);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "gFresnelR0", &gFresnelR0);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "Strength", strength);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "Direction", direction);
 
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
@@ -827,10 +843,12 @@ public:
 		{
 			if (i >= texture.size()) {
 				shader->updateTexturePS(core, "tex", texture[texture.size() - 1]->heapOffset);
+				shader->updateTexturePS(core, "NHtex", NHtexture[NHtexture.size() - 1]->heapOffset);
 				meshes[i]->draw(core);
 			}
 			else {
 				shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
+				shader->updateTexturePS(core, "NHtex", NHtexture[i]->heapOffset);
 				meshes[i]->draw(core);
 			}
 		}

@@ -24,7 +24,7 @@ extern "C" {
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	PSTR lpCmdLine, int nCmdShow) {
 	PSOManager psos;
-	vector<StaticModle> staticmodles;
+	vector<StaticModleLight> staticmodles;
 	vector<AnimatedModel>animateModels;
 	vector<AnimationInstance>animationinstances;
 	vector<Enemies> enemies;
@@ -45,6 +45,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shaderTexture", "ShaderVerticesAnim.hlsl", "ShaderTexture.hlsl");
 	shaders.load(&core, "shaderSkyBox", "ShaderskyboxVector.hlsl", "ShaderTexture.hlsl");
 	shaders.load(&core, "shaderlight", "ShaderTextureLight.hlsl", "ShaderTextureLight.hlsl");
+	shaders.load(&core, "shaderAnimlight", "ShaderTextureLightAnim.hlsl", "ShaderTextureLightAnim.hlsl");
 	Cube cube;
 	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10));
 	Sphere sphere;
@@ -75,9 +76,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	hero.heromodel.collision.hero(hero.position);
 	
 	for (int i = 0; i < loadgamestatic.size(); i++) {
-		//StaticModle scvv;
-		//staticmodles.push_back(scvv);
-		//staticmodles[i].load(&core, loadgamestatic[i].location, &shaders, &psos, Staticmodels::Tree, loadgamestatic[i].position, &textures, loadgamestatic[i].textureName,loadgamestatic[i].iscollider);
+		StaticModleLight scvv;
+		staticmodles.push_back(scvv);
+		staticmodles[i].load(&core, loadgamestatic[i].location, &shaders, &psos, Staticmodels::Tree, loadgamestatic[i].position, &textures, loadgamestatic[i].textureName,loadgamestatic[i].iscollider);
 	}
 	for (int i = 0; i < loadgameanim.size(); i++) {
 		Enemies scvv;
@@ -234,8 +235,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 		for (int i = 0; i < staticmodles.size(); i++) {
-			
-			//staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find(staticmodles[i].texturename));
+			Vec3 from3 = Vec3(from.x, from.y, from.z);
+			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find(staticmodles[i].texturename), textures.findNH(staticmodles[i].texturename));
 		}
 
 	
@@ -261,10 +262,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			scv =  hero.heromodel.position- enemies[i].enemymodel.position;//calculate the new forward
 			scv = scv.normalize();
 			enemies[i].enemymodel.forward = scv;
-
+			Vec3 from3 = Vec3(from.x, from.y, from.z);
 			Matrix R = Matrix::ForwardtoOnlyTRex(scv);
 			enemies[i].enemymodel.collision.update(enemies[i].enemymodel.position, R);
-			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &enemies[i].enemymodelinstace, R,textures.find(enemies[i].enemymodel.texturename));
+			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp,&from3,&light.Strength,&light.Direction,&shaders.shaders["shaderAnimlight"], &psos, &enemies[i].enemymodelinstace, R,textures.find(enemies[i].enemymodel.texturename), textures.findNH(enemies[i].enemymodel.texturename));
 				
 			
 		}
@@ -276,8 +277,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		
 		Matrix R;
 		R = Matrix::ForwardtoTOnlyHero(forward.TransToVec3RemoveW());
-		
-		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &shaders.shaders["shaderTexture"], &psos, &hero.heromodelinstace,R, textures.find(hero.heromodel.texturename));
+		Vec3 from33 = Vec3(from.x, from.y, from.z);
+		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp,&from33,&light.Strength,&light.Direction,&shaders.shaders["shaderAnimlight"], &psos, &hero.heromodelinstace,R, textures.find(hero.heromodel.texturename), textures.findNH(hero.heromodel.texturename));
 		
 		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 		Matrix C;
