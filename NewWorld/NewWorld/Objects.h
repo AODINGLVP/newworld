@@ -624,6 +624,7 @@ public:
 
 		}
 		textures->load(core, textureFilenames, selftexturename);
+
 		psos->createPSO(core, "StaticModelPSOLight", shaders->shaders["shaderlight"].vertexShader, shaders->shaders["shaderlight"].pixelShader, VertexLayoutCache::getStaticLayout());
 		if (iscollider == 1) {
 			collision.staticinit(verticescout, position);

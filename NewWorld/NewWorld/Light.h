@@ -7,8 +7,8 @@ public:
 	Vec3 Strength;
 	Vec3 Direction;
 	Light() {
-		Strength = Vec3(1.0f, 1.0f, 1.0f);
-		Direction = Vec3(0, -1, 0);
+		Strength = Vec3(5, 5, 5);
+		Direction = Vec3(0.5f, -1.0f, 0.3f).normalize();
 	}
 
 };
