@@ -93,6 +93,7 @@ public:
 class TextureManager {
 public:
 	map<string, vector<Texture*> > textures;
+	map<string, vector<Texture*> > NHtextures;
 
 	void load(Core* core, vector<string> name, string texturename)
 	{
@@ -115,7 +116,35 @@ public:
 		
 		
 	}
+	void load(Core* core, vector<string> name,vector<string>NHname, string texturename)
+	{
+		if (textures.find(texturename) != textures.end()) {
 
+		}
+		else {
+			vector <Texture*> scv;
+			vector <Texture*> scv1;
+			for (int i = 0; i < name.size(); i++) {
+
+
+				Texture* texture = new Texture;
+
+				texture->load(core, name[i]);
+				scv.push_back(texture);
+
+
+				Texture* texture1 = new Texture;
+
+				texture1->load(core, NHname[i]);
+				scv1.push_back(texture1);
+
+			}
+			textures.insert({ texturename, scv });
+			NHtextures.insert({ texturename,scv1 });
+		}
+
+
+	}
 	vector<Texture*> find(string name)
 	{
 		if (textures.find(name) != textures.end())

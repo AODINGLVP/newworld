@@ -75,9 +75,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	hero.heromodel.collision.hero(hero.position);
 	
 	for (int i = 0; i < loadgamestatic.size(); i++) {
-		StaticModle scvv;
-		staticmodles.push_back(scvv);
-		staticmodles[i].load(&core, loadgamestatic[i].location, &shaders, &psos, Staticmodels::Tree, loadgamestatic[i].position, &textures, loadgamestatic[i].textureName,loadgamestatic[i].iscollider);
+		//StaticModle scvv;
+		//staticmodles.push_back(scvv);
+		//staticmodles[i].load(&core, loadgamestatic[i].location, &shaders, &psos, Staticmodels::Tree, loadgamestatic[i].position, &textures, loadgamestatic[i].textureName,loadgamestatic[i].iscollider);
 	}
 	for (int i = 0; i < loadgameanim.size(); i++) {
 		Enemies scvv;

@@ -592,6 +592,7 @@ public:
 	string texturename;
 	//GeneralMesh mesh;
 	vector<string> textureFilenames;
+	vector<string> textureNHFilenames;
 	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position, TextureManager* textures, string selftexturename, int iscollider)
 	{
 		texturename = selftexturename;
@@ -616,14 +617,17 @@ public:
 			std::string tex_root = gemmeshes[i].material.find("albedo").getValue();
 			tex_root = "../Resources/" + tex_root;
 			textureFilenames.push_back(tex_root);
-
+			while (!tex_root.empty() && tex_root.back() != '_') {
+				tex_root.pop_back();
+			}
+			textureNHFilenames.push_back(tex_root+"NH.png");
 
 
 			mesh->init(core, vertices, gemmeshes[i].indices);
 			meshes.push_back(mesh);
 
 		}
-		textures->load(core, textureFilenames, selftexturename);
+		textures->load(core, textureFilenames, textureNHFilenames, selftexturename);
 
 		psos->createPSO(core, "StaticModelPSOLight", shaders->shaders["shaderlight"].vertexShader, shaders->shaders["shaderlight"].pixelShader, VertexLayoutCache::getStaticLayout());
 		if (iscollider == 1) {
@@ -655,7 +659,7 @@ public:
 
 
 		Vec4 gDiffuseAlbedo = Vec4(1, 1, 1, 1);
-		Vec4 gAmbientLight = Vec4(0.2f, 0.2f, 0.2f, 1.0f);
+		Vec4 gAmbientLight = Vec4(0.6f, 0.6f, 0.6f, 1.0f);
 		float  gRoughness = 0.1f;
 		Vec3 gFresnelR0=Vec3(0.04f, 0.04f, 0.04f);;
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);

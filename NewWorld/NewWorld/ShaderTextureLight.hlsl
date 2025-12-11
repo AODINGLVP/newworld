@@ -134,9 +134,9 @@ float4 PS(PS_INPUT input) : SV_Target0
     float4 directLight = ComputeLighting(L, mat, input.PosW, N, toEyeW, shadowFactor);
 
     // 合并光照 & 材质 & 纹理
-    float3 albedo = colour.rgb * gDiffuseAlbedo.rgb;
+    
     float3 lighting = ambient.rgb + directLight.rgb;
-    float3 finalColor = albedo * lighting;
+    float3 finalColor = colour.rgb * lighting;
 
     return float4(finalColor, colour.a);
 }
