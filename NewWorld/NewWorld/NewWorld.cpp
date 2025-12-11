@@ -6,7 +6,7 @@
 #include "LoadControl.h"
 
 #include <iostream>
-
+#include "Light.h"
 
 
 
@@ -35,7 +35,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Window win;
 	Core core;
 	core.init(window->hwnd, kuan, gao);
-	
+	Light light;
 	Shader shader;
 
 
@@ -44,7 +44,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shaderAnim", "ShaderVerticesAnim.hlsl", "ShaderPixel.hlsl");
 	shaders.load(&core, "shaderTexture", "ShaderVerticesAnim.hlsl", "ShaderTexture.hlsl");
 	shaders.load(&core, "shaderSkyBox", "ShaderskyboxVector.hlsl", "ShaderTexture.hlsl");
-	
+	shaders.load(&core, "shaderlight", "ShaderTextureLight.hlsl", "ShaderTextureLight.hlsl");
 	Cube cube;
 	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10));
 	Sphere sphere;
@@ -54,22 +54,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	
 	vector<string> texturenames;
 	TextureManager textures;
-	texturenames.push_back("../Resources/Trex/Textures/T-rex_Base_Color_alb.png");
-	textures.load(&core, texturenames,"Trexalb");
-	texturenames.clear();
-	texturenames.push_back("../Resources/Trex/Textures/T-rex_Base_Color_rmax.png");
-	textures.load(&core, texturenames,"Trexrmax");
-	texturenames.clear();
 
-	texturenames.push_back("../Resources/UZI/Textures/arms_1_Albedo_alb.png");
-	texturenames.push_back("../Resources/UZI/Textures/arms_2_Albedo_alb.png");
-	texturenames.push_back("../Resources/UZI/Textures/Uzi_bullet_shell_Albedo_alb.png");
-	texturenames.push_back("../Resources/UZI/Textures/Uzi_Albedo_alb.png");
-	textures.load(&core, texturenames, "UZIalb");
-	texturenames.clear();
-	texturenames.push_back("../Resources/Tree/Textures/Textures1_NH.png");
-	textures.load(&core, texturenames, "Tressalb");
-	texturenames.clear();
+
+	
+
 	texturenames.push_back("../Resources/NightSkyHDRI009_12K_TONEMAPPED.jpg");
 	textures.load(&core, texturenames, "SkyBox");
 	texturenames.clear();
@@ -77,10 +65,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	textures.load(&core, texturenames, "Grass");
 	
 
-	texturenames.clear();
-	texturenames.push_back("../Resources/OtherTree/Textures/bark02_ALB.png");
-	texturenames.push_back("../Resources/OtherTree/Textures/pine branch_ALB.png");
-	textures.load(&core, texturenames, "PineTree");
+;
 
 
 	
@@ -100,6 +85,17 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		enemies[i].init(&core, &shaders, &psos, loadgameanim[i].position, &textures, loadgameanim[i].textureName);
 	}
 
+
+
+
+	StaticModleLight lighttest;
+	lighttest.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "pine", 0);
+	
+	
+	
+	
+	
+	
 	
 	Matrix world;
 	world = world.scale(0.01f, 0.01f, 0.01f);
@@ -239,7 +235,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 		for (int i = 0; i < staticmodles.size(); i++) {
 			
-			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find(staticmodles[i].texturename));
+			//staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find(staticmodles[i].texturename));
 		}
 
 	
@@ -286,6 +282,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 		Matrix C;
 		C=C.translation(Vec3(from.x,0,from.z));
+		Vec3 from3 = Vec3(from.x, from.y, from.z);
+		lighttest.draw(&core, &lighttest.realshow, &vp,&from3,&light.Strength,&light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find("pine"));
+		
+		
 		
 		sphere.draw(&core, &C, &vp, &shaders.shaders["shader1"], &psos, textures.find("SkyBox"));
 		

@@ -194,14 +194,18 @@ public:
 
 		// X axis
 		if (fabs(rayDir.x) < 1e-6f) {
+			//如果平行
 			if (rayOrigin.x < realminpoint.x || rayOrigin.x > realmaxpoint.x)
+				//只有起点就在ab框内才会碰撞
 				return false;
 		}
 		else {
 			float invD = 1.0f / rayDir.x;
 			float t1 = (realminpoint.x - rayOrigin.x) * invD;
+			//左平面
 			float t2 = (realmaxpoint.x - rayOrigin.x) * invD;
-			if (t1 > t2) std::swap(t1, t2);
+			//右平面
+			if (t1 > t2) swap(t1, t2);
 			tMin = max(tMin, t1);
 			tMax = min(tMax, t2);
 			if (tMin > tMax) return false;
@@ -521,6 +525,7 @@ public:
 		else {
 			collision.staticinitfake();
 		}
+
 	}
 
 	void apply(Core* core, Shader* shader) {
@@ -571,6 +576,117 @@ public:
 	}
 
 };
+
+
+
+class StaticModleLight {
+public:
+
+	Collider collision;
+	Staticmodels scv;
+	Vec3 position;
+	Vec3 scale;
+	Matrix realshow;
+	vector<STATIC_VERTEX> verticescout;
+	vector<GeneralMesh*> meshes;
+	string texturename;
+	//GeneralMesh mesh;
+	vector<string> textureFilenames;
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position, TextureManager* textures, string selftexturename, int iscollider)
+	{
+		texturename = selftexturename;
+		scv = _name;
+		position = _position;
+		scale = Vec3(0.01f, 0.01f, 0.01f);
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
+		GEMLoader::GEMModelLoader loader;
+		std::vector<GEMLoader::GEMMesh> gemmeshes;
+		loader.load(filename, gemmeshes);
+		for (int i = 0; i < gemmeshes.size(); i++)
+		{
+			GeneralMesh* mesh = new GeneralMesh();
+			std::vector<STATIC_VERTEX> vertices;
+			for (int j = 0; j < gemmeshes[i].verticesStatic.size(); j++)
+			{
+				STATIC_VERTEX v;
+				memcpy(&v, &gemmeshes[i].verticesStatic[j], sizeof(STATIC_VERTEX));
+				vertices.push_back(v);
+				verticescout.push_back(v);
+			}
+			std::string tex_root = gemmeshes[i].material.find("albedo").getValue();
+			tex_root = "../Resources/" + tex_root;
+			textureFilenames.push_back(tex_root);
+
+
+
+			mesh->init(core, vertices, gemmeshes[i].indices);
+			meshes.push_back(mesh);
+
+		}
+		textures->load(core, textureFilenames, selftexturename);
+		psos->createPSO(core, "StaticModelPSOLight", shaders->shaders["shaderlight"].vertexShader, shaders->shaders["shaderlight"].pixelShader, VertexLayoutCache::getStaticLayout());
+		if (iscollider == 1) {
+			collision.staticinit(verticescout, position);
+		}
+		else {
+			collision.staticinitfake();
+		}
+
+	}
+
+	void apply(Core* core, Shader* shader) {
+		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, shader->vsConstantBuffers[i].getGPUAddress());
+			shader->vsConstantBuffers[i].next();
+		}
+		for (int i = 0; i < shader->psConstantBuffers.size(); i++)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader->psConstantBuffers[i].getGPUAddress());
+			shader->psConstantBuffers[i].next();
+		}
+
+
+	}
+	void draw(Core* core, Matrix* w, Matrix* vp,Vec3* camerafrom,Vec3* strength,Vec3* direction,Shader* shader, PSOManager* psos, vector<Texture*> texture)
+	{
+
+
+
+
+
+
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "W", w);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "VP", vp);
+
+
+		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
+		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
+
+		apply(core, shader);
+		psos->bind(core, "StaticModelPSOLight");
+		for (int i = 0; i < meshes.size(); i++)
+		{
+			if (i >= texture.size()) {
+				shader->updateTexturePS(core, "tex", texture[texture.size() - 1]->heapOffset);
+				meshes[i]->draw(core);
+			}
+			else {
+				shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
+				meshes[i]->draw(core);
+			}
+
+		}
+
+	}
+
+};
+
+
+
+
+
 class AnimatedModel {
 public:
 	Animatemodels scv;

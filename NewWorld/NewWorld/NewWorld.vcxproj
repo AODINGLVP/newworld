@@ -130,6 +130,7 @@
     <ClCompile Include="Enums.cpp" />
     <ClCompile Include="GameObjects.cpp" />
     <ClCompile Include="GeneralMesh.cpp" />
+    <ClCompile Include="Light.cpp" />
     <ClCompile Include="LoadControl.cpp" />
     <ClCompile Include="MathTool.cpp" />
     <ClCompile Include="NewWorld.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="Enums.h" />
     <ClInclude Include="GameObjects.h" />
     <ClInclude Include="GeneralMesh.h" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="LoadControl.h" />
     <ClInclude Include="MathTool.h" />
     <ClInclude Include="Objects.h" />
