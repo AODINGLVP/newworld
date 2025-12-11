@@ -653,13 +653,13 @@ public:
 
 
 	}
-	void draw(Core* core, Matrix* w, Matrix* vp,Vec3* camerafrom,Vec3* strength,Vec3* direction,Shader* shader, PSOManager* psos, vector<Texture*> texture)
+	void draw(Core* core, Matrix* w, Matrix* vp,Vec3* camerafrom,Vec3* strength,Vec3* direction,Shader* shader, PSOManager* psos, vector<Texture*> texture,vector<Texture*> NHtexture)
 	{
 
 
 
 		Vec4 gDiffuseAlbedo = Vec4(1, 1, 1, 1);
-		Vec4 gAmbientLight = Vec4(0.6f, 0.6f, 0.6f, 1.0f);
+		Vec4 gAmbientLight = Vec4(0.2f, 0.2f, 0.2f, 1.0f);
 		float  gRoughness = 0.1f;
 		Vec3 gFresnelR0=Vec3(0.04f, 0.04f, 0.04f);;
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
@@ -682,10 +682,12 @@ public:
 		{
 			if (i >= texture.size()) {
 				shader->updateTexturePS(core, "tex", texture[texture.size() - 1]->heapOffset);
+				shader->updateTexturePS(core, "NHtex", NHtexture[NHtexture.size() - 1]->heapOffset);
 				meshes[i]->draw(core);
 			}
 			else {
 				shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
+				shader->updateTexturePS(core, "NHtex", NHtexture[i]->heapOffset);
 				meshes[i]->draw(core);
 			}
 

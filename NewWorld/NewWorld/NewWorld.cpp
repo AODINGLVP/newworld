@@ -285,7 +285,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 		Vec3 from3 = Vec3(from.x, from.y, from.z);
-		lighttest.draw(&core, &lighttest.realshow, &vp,&from3,&light.Strength,&light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find("pine"));
+		lighttest.draw(&core, &lighttest.realshow, &vp,&from3,&light.Strength,&light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find("pine"), textures.findNH("pine"));
 		
 		
 		

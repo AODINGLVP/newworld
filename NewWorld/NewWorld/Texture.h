@@ -152,4 +152,11 @@ public:
 		else
 			return {};
 	}
+	vector<Texture*> findNH(string name)
+	{
+		if (NHtextures.find(name) != NHtextures.end())
+			return NHtextures[name];
+		else
+			return {};
+	}
 };
