@@ -86,8 +86,8 @@ output.Normal = normalize(output.Normal);
 output.Tangent = normalize(output.Tangent);
     output.TexCoords = input.TexCoords;
    float4 posW = mul(pos, transform);
-    posW = mul(posW, W);
-    output.PosW = posW.xyz;
+posW = mul(posW, W);
+output.PosW = posW.xyz;
     return output;
 }
 
