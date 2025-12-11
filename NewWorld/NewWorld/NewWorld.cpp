@@ -282,6 +282,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 		Matrix C;
 		C=C.translation(Vec3(from.x,0,from.z));
+
+
 		Vec3 from3 = Vec3(from.x, from.y, from.z);
 		lighttest.draw(&core, &lighttest.realshow, &vp,&from3,&light.Strength,&light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find("pine"));
 		
