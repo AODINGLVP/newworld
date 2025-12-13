@@ -857,3 +857,140 @@ public:
 
 };
 
+class StaticModleLightInstance {
+public:
+
+	Collider collision;
+	Staticmodels scv;
+	Vec3 position;
+	Vec3 scale;
+	Matrix realshow;
+	vector<STATIC_VERTEX> verticescout;
+	vector<INSTANCE> InstanceMatrix;
+	vector<Mesh_Istancing*> meshes;
+	string texturename;
+	//GeneralMesh mesh;
+	vector<string> textureFilenames;
+	vector<string> textureNHFilenames;
+	void create_matixes()
+	{
+		for (unsigned int i = 0; i < 5; i++)
+		{
+			INSTANCE matrix;
+			matrix.w = Matrix();
+			matrix.w.m[3] = i * 10;
+			
+			matrix.w.a[0][0] = 0.01f;
+			matrix.w.a[1][1] = 0.01f;
+			matrix.w.a[2][2] = 0.01f;
+			InstanceMatrix.push_back(matrix);
+		}
+	}
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position, TextureManager* textures, string selftexturename, int iscollider, vector<INSTANCE> _InstanceMatrix)
+	{
+		//create_matixes();
+		InstanceMatrix = _InstanceMatrix;
+		texturename = selftexturename;
+		scv = _name;
+		position = _position;
+		scale = Vec3(0.01f, 0.01f, 0.01f);
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
+		GEMLoader::GEMModelLoader loader;
+		std::vector<GEMLoader::GEMMesh> gemmeshes;
+		loader.load(filename, gemmeshes);
+		for (int i = 0; i < gemmeshes.size(); i++)
+		{
+			Mesh_Istancing* mesh = new Mesh_Istancing();
+			std::vector<STATIC_VERTEX> vertices;
+			for (int j = 0; j < gemmeshes[i].verticesStatic.size(); j++)
+			{
+				STATIC_VERTEX v;
+				memcpy(&v, &gemmeshes[i].verticesStatic[j], sizeof(STATIC_VERTEX));
+				vertices.push_back(v);
+				verticescout.push_back(v);
+			}
+			std::string tex_root = gemmeshes[i].material.find("albedo").getValue();
+			tex_root = "../Resources/" + tex_root;
+			textureFilenames.push_back(tex_root);
+			while (!tex_root.empty() && tex_root.back() != '_') {
+				tex_root.pop_back();
+			}
+			textureNHFilenames.push_back(tex_root + "NH.png");
+
+
+			mesh->init(core, vertices, gemmeshes[i].indices, InstanceMatrix);
+			meshes.push_back(mesh);
+
+		}
+		textures->load(core, textureFilenames, textureNHFilenames, selftexturename);
+
+		psos->createPSO(core, "StaticModelPSOLightInstance", shaders->shaders["shaderinstance"].vertexShader, shaders->shaders["shaderinstance"].pixelShader, VertexLayoutCache::getStatictLayoutInstanced());
+		if (iscollider == 1) {
+			collision.staticinit(verticescout, position);
+		}
+		else {
+			collision.staticinitfake();
+		}
+
+	}
+
+	void apply(Core* core, Shader* shader) {
+		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, shader->vsConstantBuffers[i].getGPUAddress());
+			shader->vsConstantBuffers[i].next();
+		}
+		for (int i = 0; i < shader->psConstantBuffers.size(); i++)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader->psConstantBuffers[i].getGPUAddress());
+			shader->psConstantBuffers[i].next();
+		}
+
+
+	}
+	void draw(Core* core, Matrix* w, Matrix* vp, Vec3* camerafrom, Vec3* strength, Vec3* direction, Shader* shader, PSOManager* psos, vector<Texture*> texture, vector<Texture*> NHtexture)
+	{
+
+
+
+		Vec4 gDiffuseAlbedo = Vec4(1, 1, 1, 1);
+		Vec4 gAmbientLight = Vec4(0.2f, 0.2f, 0.2f, 1.0f);
+		float  gRoughness = 0.1f;
+		Vec3 gFresnelR0 = Vec3(0.04f, 0.04f, 0.04f);;
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "W", w);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "VP", vp);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "gEyePosW", camerafrom);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "gDiffuseAlbedo", &gDiffuseAlbedo);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "gAmbientLight", &gAmbientLight);
+	shader->updatePSConstantBuffer(core, "staticLightBuffer", "gRoughness", &gRoughness);
+	shader->updatePSConstantBuffer(core, "staticLightBuffer", "gFresnelR0", &gFresnelR0);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "Strength", strength);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "Direction", direction);
+
+		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
+		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
+
+		apply(core, shader);
+
+
+		psos->bind(core, "StaticModelPSOLightInstance");
+		for (int i = 0; i < meshes.size(); i++)
+		{
+			if (i >= texture.size()) {
+				shader->updateTexturePS(core, "tex", texture[texture.size() - 1]->heapOffset);
+				shader->updateTexturePS(core, "NHtex", NHtexture[NHtexture.size() - 1]->heapOffset);
+				meshes[i]->draw(core);
+			}
+			else {
+				shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
+				shader->updateTexturePS(core, "NHtex", NHtexture[i]->heapOffset);
+				meshes[i]->draw(core);
+			}
+
+		}
+
+	}
+
+};
+

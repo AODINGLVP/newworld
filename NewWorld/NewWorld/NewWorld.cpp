@@ -1,6 +1,6 @@
 // NewWorld.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-
+#include <random>
 
 #include"Window.h"
 #include "LoadControl.h"
@@ -40,12 +40,13 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 	Shaders shaders;
-	shaders.load(&core, "shader1", "ShaderVertices.hlsl", "ShaderTexture.hlsl");
-	shaders.load(&core, "shaderAnim", "ShaderVerticesAnim.hlsl", "ShaderPixel.hlsl");
-	shaders.load(&core, "shaderTexture", "ShaderVerticesAnim.hlsl", "ShaderTexture.hlsl");
-	shaders.load(&core, "shaderSkyBox", "ShaderskyboxVector.hlsl", "ShaderTexture.hlsl");
-	shaders.load(&core, "shaderlight", "ShaderTextureLight.hlsl", "ShaderTextureLight.hlsl");
-	shaders.load(&core, "shaderAnimlight", "ShaderTextureLightAnim.hlsl", "ShaderTextureLightAnim.hlsl");
+	shaders.load(&core, "shader1", "shaders/ShaderVertices.hlsl", "shaders/ShaderTexture.hlsl");
+	shaders.load(&core, "shaderAnim", "shaders/ShaderVerticesAnim.hlsl", "shaders/ShaderPixel.hlsl");
+	shaders.load(&core, "shaderTexture", "shaders/ShaderVerticesAnim.hlsl", "shaders/ShaderTexture.hlsl");
+	shaders.load(&core, "shaderSkyBox", "shaders/ShaderskyboxVector.hlsl", "shaders/ShaderTexture.hlsl");
+	shaders.load(&core, "shaderlight", "shaders/ShaderTextureLight.hlsl", "shaders/ShaderTextureLight.hlsl");
+	shaders.load(&core, "shaderAnimlight", "shaders/ShaderTextureLightAnim.hlsl", "shaders/ShaderTextureLightAnim.hlsl");
+	shaders.load(&core, "shaderinstance", "shaders/ShaderTextureLightInstace.hlsl", "shaders/ShaderTextureLightInstace.hlsl");
 	Cube cube;
 	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10));
 	Sphere sphere;
@@ -91,8 +92,27 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	StaticModleLight lighttest;
 	lighttest.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "pine", 0);
-	
-	
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> dist(-5.0f, 5.0f);
+
+	vector<INSTANCE> scv111;
+	for (int i = 0; i < 10000; i++) {
+		float x = dist(gen);
+		float z = dist(gen);
+		float y = 0.0f; // 地面高度
+		
+		INSTANCE inst;
+		
+		Matrix scale = scale.scale(1.f, 1.f,1.f);
+		Matrix trans = trans.translation(x, y, z);
+		inst.w = trans*scale ;
+		scv111.push_back(inst);
+	}
+	StaticModleLightInstance instancetest;
+	instancetest.load(&core, "../Resources/GemModels/Grass_Mix_Full_01q.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "Grass_Mix_Full_01q", 0,scv111);
+
 	
 	
 	
@@ -111,7 +131,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	float cameramovespeed = 5.f;
 	Vec4 to = Vec4(0, 0, 0, 0);
 	Vec4 up = Vec4(0, 1, 0, 0);
-	Vec4 from = Vec4(0,0,0, 0);
+	Vec4 from = Vec4(0,1,0, 0);
 	Vec4 forward = Vec4(1, 0, 0, 0);
 	Vec4 right;
 	to = forward + from;
@@ -288,7 +308,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Vec3 from3 = Vec3(from.x, from.y, from.z);
 		lighttest.draw(&core, &lighttest.realshow, &vp,&from3,&light.Strength,&light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find("pine"), textures.findNH("pine"));
 		
-		
+		instancetest.draw(&core, &instancetest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstance"], &psos, textures.find("Grass_Mix_Full_01q"), textures.findNH("Grass_Mix_Full_01q"));
 		
 		sphere.draw(&core, &C, &vp, &shaders.shaders["shader1"], &psos, textures.find("SkyBox"));
 		
