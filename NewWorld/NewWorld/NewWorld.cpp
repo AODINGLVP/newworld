@@ -47,6 +47,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shaderlight", "shaders/ShaderTextureLight.hlsl", "shaders/ShaderTextureLight.hlsl");
 	shaders.load(&core, "shaderAnimlight", "shaders/ShaderTextureLightAnim.hlsl", "shaders/ShaderTextureLightAnim.hlsl");
 	shaders.load(&core, "shaderinstance", "shaders/ShaderTextureLightInstace.hlsl", "shaders/ShaderTextureLightInstace.hlsl");
+	shaders.load(&core, "shaderinstancegrass", "shaders/ShaderTextureLightInstacegrass.hlsl", "shaders/ShaderTextureLightInstacegrass.hlsl");
+
 	Cube cube;
 	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10));
 	Sphere sphere;
@@ -112,8 +114,22 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	}
 	StaticModleLightInstance instancetest;
 	instancetest.load(&core, "../Resources/GemModels/Grass_Mix_Full_01q.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "Grass_Mix_Full_01q", 0,scv111);
+	scv111.clear();
+	uniform_real_distribution<float> dist1(-15.0f, -5.0f);
+	for (int i = 0; i < 10000; i++) {
+		float x = dist1(gen);
+		float z = dist1(gen);
+		float y = 0.0f; // 地面高度
 
-	
+		INSTANCE inst;
+
+		Matrix scale = scale.scale(1.f, 1.f, 1.f);
+		Matrix trans = trans.translation(x, y, z);
+		inst.w = trans * scale;
+		scv111.push_back(inst);
+	}
+	StaticModleLightInstanceGrass grasstest;
+	grasstest.load(&core, "../Resources/GemModels/Grass_Mix_Full_01q.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "Grass_Mix_Full_01q", 0, scv111);
 	
 	
 	
@@ -308,8 +324,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Vec3 from3 = Vec3(from.x, from.y, from.z);
 		lighttest.draw(&core, &lighttest.realshow, &vp,&from3,&light.Strength,&light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find("pine"), textures.findNH("pine"));
 		
-		instancetest.draw(&core, &instancetest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstance"], &psos, textures.find("Grass_Mix_Full_01q"), textures.findNH("Grass_Mix_Full_01q"));
+		instancetest.draw(&core, &instancetest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstance"], &psos, textures.find("Grass_Mix_Full_01q"), textures.findNH("Grass_Mix_Full_01q"), &dt);
 		
+		grasstest.draw(&core, &grasstest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstancegrass"], &psos, textures.find("Grass_Mix_Full_01q"), textures.findNH("Grass_Mix_Full_01q"), &dt);
+
+
+
 		sphere.draw(&core, &C, &vp, &shaders.shaders["shader1"], &psos, textures.find("SkyBox"));
 		
 		

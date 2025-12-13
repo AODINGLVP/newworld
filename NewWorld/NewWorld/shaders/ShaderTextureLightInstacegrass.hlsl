@@ -19,6 +19,26 @@ cbuffer staticMeshBuffer
     float time;
     float speed;
     float amplitude;
+
+    float uTime;
+  
+    float scaleVal;
+    float gradientPower;
+
+     float pad1;
+       float pad2;
+      
+
+    float WindIntensity;
+    float WindWeight;
+   
+    
+
+     
+    float areaSize;
+
+
+
 };
 
 cbuffer staticLightBuffer 
@@ -51,8 +71,27 @@ struct PS_INPUT
 };
 
 
+float3 GetWindEffect(float3 VertexWorldPos,  float GrassUV, float WindSpeed, float WindStrenth, float GameTime)
+{
+    float Timer = GameTime * WindSpeed;
+	
+   
+    float3 GrassWindOffset = float3(0, 0, 0);
 
-
+	//树木
+   
+	//草
+  
+    
+       // float WindDirectionX = sin(Timer) + VertexWorldPos.y
+        float UVChange = 1 - abs(GrassUV);
+        GrassWindOffset.z = UVChange * sin(cos(Timer + VertexWorldPos.z)) * WindStrenth;
+        GrassWindOffset.x = UVChange * cos(sin(Timer + VertexWorldPos.x)) * WindStrenth;
+        GrassWindOffset.y = 0;
+        return GrassWindOffset;
+    
+    
+}
 
 float3 ComputeDirectionalLight(Light L,float4 DiffuseAlbedo, float3 normal, float3 toEye)
 {
@@ -74,12 +113,18 @@ PS_INPUT VS(VS_INPUT input)
     PS_INPUT o;
 
     float4 posW = mul(input.Pos, input.World);
+ 
 
+
+   o.PosW=posW.xyz+GetWindEffect(posW.xyz,input.TexCoords[0],0.7,0.1,time);
+
+  
     // 🌬 风偏移（在算 PosH 之前）
    // posW.y += sin(posW.x * freq + time * speed) * amplitude;
 
-    o.PosW = posW.xyz;
-    o.PosH = mul(posW, VP);
+    float4 PosW4=float4(o.PosW,1.0f);
+    
+    o.PosH = mul(PosW4, VP);
 
     float3x3 W3 = (float3x3)input.World;
     o.Normal  = normalize(mul(input.Normal,  W3));
@@ -135,6 +180,6 @@ float4 PS(PS_INPUT input) : SV_Target0
 
   
     float3 finalColor = colour.rgb * lighting;
-   // return float4(colour.rgb, 1);
-    return float4(finalColor, colour.a);
+   return float4(finalColor.rgb, 1);
+    //return float4(colour);
 }
