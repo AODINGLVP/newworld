@@ -109,28 +109,54 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	vector<vector<INSTANCE>> scv111;
 	for (int j = 0; j < loadinsatnceinformatiojn.size(); j++) {
 		vector<INSTANCE> wf3ee;
-		for (int i = 0; i < loadinstanceposition[j].size(); i++) {
+		if (loadinsatnceinformatiojn[j].type == "normal") {
+			for (int i = 0; i < loadinstanceposition[j].size(); i++) {
 
 
-			INSTANCE inst;
+				INSTANCE inst;
 
-			Matrix scale = scale.scale(0.01f, 0.01f, 0.01f);
-			Matrix trans = trans.translation(loadinstanceposition[j][i].x, loadinstanceposition[j][i].y, loadinstanceposition[j][i].z);
-			inst.w = trans * scale;
-			wf3ee.push_back(inst);
+				Matrix scale = scale.scale(0.01f, 0.01f, 0.01f);
+				Matrix trans = trans.translation(loadinstanceposition[j][i].x, loadinstanceposition[j][i].y, loadinstanceposition[j][i].z);
+				inst.w = trans * scale;
+				wf3ee.push_back(inst);
+			}
+			scv111.push_back(wf3ee);
+			
 		}
-		scv111.push_back(wf3ee);
+		else if (loadinsatnceinformatiojn[j].type == "grass") {
+
+			for (int i = 0; i < loadinstanceposition[j].size(); i++) {
+
+
+				INSTANCE inst;
+
+				Matrix scale = scale.scale(1.f,1.f,1.f);
+				Matrix trans = trans.translation(loadinstanceposition[j][i].x, loadinstanceposition[j][i].y, loadinstanceposition[j][i].z);
+				inst.w = trans * scale;
+				wf3ee.push_back(inst);
+			}
+			scv111.push_back(wf3ee);
+
+		
+		}
+		
 	}
-
-	
 	StaticModleLightInstance instancetest;
-	instancetest.load(&core, loadinsatnceinformatiojn[0].location, &shaders, &psos, Staticmodels::Tree, loadinsatnceinformatiojn[0].position, &textures, loadinsatnceinformatiojn[0].textureName, 0, scv111[0]);
-	
-	
 	StaticModleLightInstanceGrass grasstest;
-	grasstest.load(&core, loadinsatnceinformatiojn[1].location, &shaders, &psos, Staticmodels::Tree, loadinsatnceinformatiojn[1].position, &textures, loadinsatnceinformatiojn[1].textureName, 0, scv111[1]);
 
+	for (int i = 0; i < loadinsatnceinformatiojn.size(); i++) {
+		if (loadinsatnceinformatiojn[i].type == "normal") {
+			
+			instancetest.load(&core, loadinsatnceinformatiojn[i].location, &shaders, &psos, Staticmodels::Tree, loadinsatnceinformatiojn[i].position, &textures, loadinsatnceinformatiojn[0].textureName, 0, scv111[i]);
+		}
+		else if (loadinsatnceinformatiojn[i].type == "grass") {
 
+			
+			grasstest.load(&core, loadinsatnceinformatiojn[i].location, &shaders, &psos, Staticmodels::Tree, loadinsatnceinformatiojn[i].position, &textures, loadinsatnceinformatiojn[i].textureName, 0, scv111[i]);
+		}
+	}
+	
+	
 
 
 
@@ -160,46 +186,6 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-	/*
-
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<float> dist(-5.0f, 5.0f);
-
-	vector<INSTANCE> scv111;
-	for (int i = 0; i < 10000; i++) {
-		float x = dist(gen);
-		float z = dist(gen);
-		float y = 0.0f; // 地面高度
-		
-		INSTANCE inst;
-		
-		Matrix scale = scale.scale(1.f, 1.f,1.f);
-		Matrix trans = trans.translation(x, y, z);
-		inst.w = trans*scale ;
-		scv111.push_back(inst);
-	}
-	StaticModleLightInstance instancetest;
-	instancetest.load(&core, "../Resources/GemModels/Grass_Mix_Full_01q.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "Grass_Mix_Full_01q", 0,scv111);
-	scv111.clear();
-	uniform_real_distribution<float> dist1(-15.0f, -5.0f);
-	for (int i = 0; i < 10000; i++) {
-		float x = dist1(gen);
-		float z = dist1(gen);
-		float y = 0.0f; // 地面高度
-
-		INSTANCE inst;
-
-		Matrix scale = scale.scale(1.f, 1.f, 1.f);
-		Matrix trans = trans.translation(x, y, z);
-		inst.w = trans * scale;
-		scv111.push_back(inst);
-	}
-	StaticModleLightInstanceGrass grasstest;
-	grasstest.load(&core, "../Resources/GemModels/Grass_Mix_Full_01q.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "Grass_Mix_Full_01q", 0, scv111);
-	
-	
-	*/
 	
 	Matrix world;
 	world = world.scale(0.01f, 0.01f, 0.01f);
