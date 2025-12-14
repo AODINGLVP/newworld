@@ -11,12 +11,28 @@ struct PRIM_VERTEX
 	Vec3 position;
 	Colour colour;
 };
-struct Ray {
-	Vec3 origin;    
-	Vec3 dir;       
-};
+
 class Objects
 {
+};
+class Ray
+{
+public:
+	Vec3 o;
+	Vec3 dir;
+	Vec3 invdir;
+	Ray() {}
+	Ray(const Vec3 _o, const Vec3 _dir) {
+		init(_o, _dir);
+	}
+	void init(const Vec3 _o, const Vec3 _dir) {
+		o = _o;
+		dir = _dir;
+		invdir = Vec3(1.0f, 1.0f, 1.0f) / dir;
+	}
+	Vec3 at(const float t) {
+		return (o + (dir * t));
+	}
 };
 
 class Collider {
@@ -27,6 +43,18 @@ public:
 	Vec3 realmaxpoint;
 	Vec3 minpoint;
 	Vec3 maxpoint;
+	bool rayAABB(const Ray& r, float& t)
+	{
+		Vec3 s = (realminpoint - r.o) * r.invdir;
+		Vec3 l = (realmaxpoint - r.o) * r.invdir;
+		Vec3 s1 = Min(s, l);
+		Vec3 l1 = Max(s, l);
+		float ts = max(s1.x, max(s1.y, s1.z));
+		float tl = min(l1.x, min(l1.y, l1.z));
+		t = min(ts, tl);
+		return (ts < tl);
+	}
+
 	void staticinit(vector<STATIC_VERTEX> _staticbox, Vec3 _position) {
 		staticbox = _staticbox;
 

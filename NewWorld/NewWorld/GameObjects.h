@@ -6,6 +6,7 @@ class GameObjects
 };
 class Hero {
 public:
+	Ray raytest;
 	AnimatedModel heromodel;
 	AnimationInstance heromodelinstace;
 	float movespeed = 10.f;
@@ -16,6 +17,7 @@ public:
 	float cooldown = 0.2f;
 	float timecount = 0.f;
 	void init(Core* core, Shaders* shaders, PSOManager* psos, Vec3 position, TextureManager* textures, string selftexturename,string meshname) {
+		raytest.init(Vec3(1, 1, 1), Vec3(1, 1, 1));
 		heromodel.load(core, "../Resources/UZI/Uzi.gem", shaders, psos, Animatemodels::UZI, position,textures,selftexturename, meshname);
 		heromodelinstace.init(&heromodel.animation, 0);
 	}

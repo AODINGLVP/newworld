@@ -87,12 +87,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Hero hero;
 	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0),&textures,"hero","gun");
 	hero.heromodel.collision.hero(hero.position);
+
+
 	loadcontrol.LoadData(&loadgamestatic, &loadgameanim);
-	for (int i = 0; i < loadgamestatic.size(); i++) {
+	/*for (int i = 0; i < loadgamestatic.size(); i++) {
 		StaticModleLight scvv;
 		staticmodles.push_back(scvv);
 		staticmodles[i].load(&core, loadgamestatic[i].location, &shaders, &psos, Staticmodels::Tree, loadgamestatic[i].position, &textures, loadgamestatic[i].textureName,loadgamestatic[i].iscollider,loadgamestatic[i].meshname);
-	}
+	}*/
 	for (int i = 0; i < loadgameanim.size(); i++) {
 		Enemies scvv;
 		enemies.push_back(scvv);
@@ -101,9 +103,6 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	loadcontrol.LoadinstaceData(&loadinsatnceinformatiojn);
 	loadcontrol.LoadinstacepositionData(&loadinstanceposition);
-
-
-
 
 
 	vector<vector<INSTANCE>> scv111;
@@ -159,30 +158,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	StaticModle scvtest111;
-	scvtest111.load(&core, "../Resources/OtherTree/banana3_LOD5.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "banana", 0,"banbana");
-	StaticModle scvtest222;
-	scvtest222.load(&core, "../Resources/OtherTree/banana3_LOD5.gem", &shaders, &psos, Staticmodels::Tree, Vec3(20, 0, 20), &textures, "banana", 0,"banbana");
-
+	
 
 
 
@@ -307,33 +283,25 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}
 		}
 		hero.heromodel.position = Vec3(from.x,from.y,from.z);
-
-		
 		to = forward + from;
 		right = forward.Cross(Vec4(0, 1, 0, 0));
 		lookat=lookat.LookatMatrix(from, to, up);
-
 		vp = prespection.mul(lookat);
-	
+
+
+
 		core.beginFrame();
 		win.processMessages();
-		
-
 		core.beginRenderPass();
 
 
-
+		/*
 		for (int i = 0; i < staticmodles.size(); i++) {
 			Vec3 from3 = Vec3(from.x, from.y, from.z);
 			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find(staticmodles[i].texturename), textures.findNH(staticmodles[i].texturename));
 		}
-
+		*/
 	
-		
-		//othertree.draw(&core, &othertree.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find(othertree.texturename));
-		//othertree2.draw(&core, &othertree2.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find(othertree2.texturename));
-		//othertree3.draw(&core, &othertree3.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find(othertree3.texturename));
-		
 		for (int i = 0; i < enemies.size(); i++) {
 			
 			enemies[i].enemymodelinstace.updatewithControl(enemies[i].Animatestatus, rexdt);
@@ -358,53 +326,49 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				
 			
 		}
+
+		for (int i = 0; i < cubes.size(); i++) {
+			cubes[i]->draw(&core, &cubes[i]->realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
+		}
+		Vec3 from3 = Vec3(from.x, from.y, from.z);
+
+		instancetest.draw(&core, &instancetest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstance"], &psos, textures.find(instancetest.texturename), textures.findNH(instancetest.texturename), &dt);
+
+		grasstest.draw(&core, &grasstest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstancegrass"], &psos, textures.find(grasstest.texturename), textures.findNH(grasstest.texturename), &dt);
+
 		
 		hero.heromodelinstace.update("08 fire", rexdt);
 		if (hero.heromodelinstace.animationFinished()) {
 			hero.heromodelinstace.resetAnimationTime();
 		}
-		
+		if (win.mouseButtons[0]) {
+			hero.raytest.init(from.TransToVec3RemoveW(), forward.TransToVec3RemoveW());
+			float t;
+			for (int i = 0; i < enemies.size(); i++) {
+				
+				if (enemies[i].enemymodel.collision.rayAABB(hero.raytest, t)) {
+					enemies[i].health -= 5;
+					OutputDebugStringA("Hello Output Window\n");
+				}
+				if (enemies[i].health < 0) {
+					OutputDebugStringA("Hello Output Window\n");
+				}
+			}
+		}
+	
+		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
+	
+
+
 		Matrix R;
 		R = Matrix::ForwardtoTOnlyHero(forward.TransToVec3RemoveW());
 		Vec3 from33 = Vec3(from.x, from.y, from.z);
-		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp,&from33,&light.Strength,&light.Direction,&shaders.shaders["shaderAnimlight"], &psos, &hero.heromodelinstace,R, textures.find(hero.heromodel.texturename), textures.findNH(hero.heromodel.texturename));
-		
-		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
-		Matrix C;
-		C=C.translation(Vec3(from.x,0,from.z));
+		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &from33, &light.Strength, &light.Direction, &shaders.shaders["shaderAnimlight"], &psos, &hero.heromodelinstace, R, textures.find(hero.heromodel.texturename), textures.findNH(hero.heromodel.texturename));
 
-
-		Vec3 from3 = Vec3(from.x, from.y, from.z);
 	
-		
-		instancetest.draw(&core, &instancetest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstance"], &psos, textures.find(instancetest.texturename), textures.findNH(instancetest.texturename), &dt);
-		
-		grasstest.draw(&core, &grasstest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstancegrass"], &psos, textures.find(grasstest.texturename), textures.findNH(grasstest.texturename), &dt);
 
-
-
-
-		scvtest111.draw(&core, &scvtest111.realshow, &vp,  &shaders.shaders["shaderlight"], &psos, textures.find("banana"));
-		scvtest222.draw(&core, &scvtest222.realshow, &vp, &shaders.shaders["shaderlight"], &psos, textures.find("banana"));
-
-
-
-
-		for (int i = 0; i < cubes.size(); i++) {
-			cubes[i]->draw(&core, &cubes[i]->realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
-		}
-
-
-
-
-
-
-
-
-
-
-
-
+		Matrix C;
+		C = C.translation(Vec3(from.x, 0, from.z));
 		sphere.draw(&core, &C, &vp, &shaders.shaders["shader1"], &psos, textures.find("SkyBox"));
 		
 		
