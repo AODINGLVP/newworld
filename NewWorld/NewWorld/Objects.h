@@ -372,10 +372,11 @@ class Cube {
 public:
 
 	PRIM_VERTEX vertices[3];
-	GeneralMesh mesh;
+	//GeneralMesh mesh;
 	Vec3 position ;
 	Vec3 scale = Vec3(1, 1, 1);
 	Matrix realshow;
+	string meshname;
 	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
 	{
 		STATIC_VERTEX v;
@@ -386,9 +387,9 @@ public:
 		v.tv = tv;
 		return v;
 	}
-	void init(Core* core, PSOManager* psos, Shader* shader,Vec3 _position) {
+	void init(Core* core, PSOManager* psos, Shader* shader,Vec3 _position,string _msehname) {
 		float tilling = 50.f;
-
+		meshname = _msehname;
 		position = _position;
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
 		int width = 25;
@@ -423,15 +424,19 @@ public:
 				indices.push_back(downR);
 			}
 		}
-		
-		
+		vector<vector<STATIC_VERTEX>> scv;
+		scv.push_back(vertices);
 
-		mesh.init(core, vertices, indices);
+		vector<vector<unsigned int> >scv1;
+		scv1.push_back(indices);
+		
+		MeshManager::Instance().loadmesh(core, scv, scv1, meshname);
+		//mesh.init(core, vertices, indices);
 
 
 		//shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
 
-		psos->createPSO(core,"cube", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc);
+		psos->createPSO(core,"cube", shader->vertexShader, shader->pixelShader, MeshManager::Instance().meshesmanager[meshname][0]->inputLayoutDesc);
 	}
 	void apply(Core* core, Shader* shader) {
 		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
@@ -467,7 +472,10 @@ public:
 		psos->bind(core, "cube");
 		
 			shader->updateTexturePS(core, "tex", texture[0]->heapOffset);
-			mesh.draw(core);
+			for (int i = 0; i < MeshManager::Instance().meshesmanager[meshname].size(); i++) {
+				MeshManager::Instance().meshesmanager[meshname][i]->draw(core);
+			}
+			
 		
 
 	}
@@ -483,11 +491,15 @@ public:
 	Matrix realshow;
 	vector<STATIC_VERTEX> verticescout;
 	vector<GeneralMesh*> meshes;
+	vector<vector<STATIC_VERTEX>> manyvertices;
+	vector<vector<unsigned int>> manyindices;
 	string texturename;
+	string meshname;
 	//GeneralMesh mesh;
 	vector<string> textureFilenames;
-	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position,TextureManager *textures,string selftexturename,int iscollider)
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position,TextureManager *textures,string selftexturename,int iscollider,string _meshname)
 	{
+		meshname = _meshname;
 		texturename = selftexturename;
 		scv = _name;
 		position = _position;
@@ -514,11 +526,14 @@ public:
 			
 
 			mesh->init(core, vertices, gemmeshes[i].indices);
+			manyvertices.push_back(vertices);
+			manyindices.push_back(gemmeshes[i].indices);
 			meshes.push_back(mesh);
 		
 		}
 		textures->load(core, textureFilenames, selftexturename);
 		psos->createPSO(core, "StaticModelPSO", shaders->shaders["shader1"].vertexShader, shaders->shaders["shader1"].pixelShader, VertexLayoutCache::getStaticLayout());
+		MeshManager::Instance().loadmesh(core, manyvertices, manyindices, meshname);
 		if (iscollider == 1) {
 			collision.staticinit(verticescout, position);
 		}
@@ -557,18 +572,18 @@ public:
 
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
-
+		//MeshManager::Instance().meshesmanager["sctest"][1];
 		apply(core, shader);
 		psos->bind(core, "StaticModelPSO");
-		for (int i = 0; i < meshes.size(); i++)
+		for (int i = 0; i < MeshManager::Instance().meshesmanager[meshname].size(); i++)
 		{
 			if (i >= texture.size()) {
 				shader->updateTexturePS(core, "tex", texture[texture.size()-1]->heapOffset);
-				meshes[i]->draw(core);
+				MeshManager::Instance().meshesmanager[meshname][i]->draw(core);
 			}
 			else {
 				shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
-				meshes[i]->draw(core);
+				MeshManager::Instance().meshesmanager[meshname][i]->draw(core);
 			}
 			
 		}
@@ -588,13 +603,16 @@ public:
 	Vec3 scale;
 	Matrix realshow;
 	vector<STATIC_VERTEX> verticescout;
-	vector<GeneralMesh*> meshes;
+	//vector<GeneralMesh*> meshes;
+	vector<vector<STATIC_VERTEX>> manyvertices;
+	vector<vector<unsigned int>> manyindices;
 	string texturename;
+	string meshname;
 	//GeneralMesh mesh;
 	vector<string> textureFilenames;
 	vector<string> textureNHFilenames;
-	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position, TextureManager* textures, string selftexturename, int iscollider)
-	{
+	void load(Core* core, std::string filename, Shaders* shaders, PSOManager* psos, Staticmodels _name, Vec3 _position, TextureManager* textures, string selftexturename, int iscollider,string _meshname)	{
+		meshname = _meshname;
 		texturename = selftexturename;
 		scv = _name;
 		position = _position;
@@ -622,11 +640,13 @@ public:
 			}
 			textureNHFilenames.push_back(tex_root+"NH.png");
 
-
-			mesh->init(core, vertices, gemmeshes[i].indices);
-			meshes.push_back(mesh);
+			manyvertices.push_back(vertices);
+			manyindices.push_back(gemmeshes[i].indices);
+			//mesh->init(core, vertices, gemmeshes[i].indices);
+			//meshes.push_back(mesh);
 
 		}
+		MeshManager::Instance().loadmesh(core, manyvertices, manyindices, meshname);
 		textures->load(core, textureFilenames, textureNHFilenames, selftexturename);
 
 		psos->createPSO(core, "StaticModelPSOLight", shaders->shaders["shaderlight"].vertexShader, shaders->shaders["shaderlight"].pixelShader, VertexLayoutCache::getStaticLayout());
@@ -678,17 +698,17 @@ public:
 
 		apply(core, shader);
 		psos->bind(core, "StaticModelPSOLight");
-		for (int i = 0; i < meshes.size(); i++)
+		for (int i = 0; i < MeshManager::Instance().meshesmanager[meshname].size(); i++)
 		{
 			if (i >= texture.size()) {
 				shader->updateTexturePS(core, "tex", texture[texture.size() - 1]->heapOffset);
 				shader->updateTexturePS(core, "NHtex", NHtexture[NHtexture.size() - 1]->heapOffset);
-				meshes[i]->draw(core);
+				MeshManager::Instance().meshesmanager[meshname][i]->draw(core);
 			}
 			else {
 				shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
 				shader->updateTexturePS(core, "NHtex", NHtexture[i]->heapOffset);
-				meshes[i]->draw(core);
+				MeshManager::Instance().meshesmanager[meshname][i]->draw(core);
 			}
 
 		}
@@ -711,17 +731,20 @@ public:
 	Matrix realshow;
 	string texturename;
 
+	vector<vector<ANIMATED_VERTEX>> manyvertices;
+	vector<vector<unsigned int>> manyindices;
+	string meshname;
 
-
-	vector<GeneralMesh*> meshes;
+	//vector<GeneralMesh*> meshes;
 	vector<ANIMATED_VERTEX> verticescout;
 	Animation animation;
 	vector<string> textureFilenames;
 	vector<string> textureNHFilenames;
 	//GeneralMesh mesh;
 
-	void load(Core* core, string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum, Vec3 _position,TextureManager* textures, string selftexturename)
+	void load(Core* core, string filename, Shaders* shaders, PSOManager* psos, Animatemodels _enum, Vec3 _position,TextureManager* textures, string selftexturename,string _meshname)
 	{
+		meshname = _meshname;
 		texturename = selftexturename;
 		scv = _enum;
 
@@ -735,7 +758,7 @@ public:
 		loader.load(filename, gemmeshes, gemanimation);
 		for (int i = 0; i < gemmeshes.size(); i++)
 		{
-			GeneralMesh* mesh = new GeneralMesh();
+		//	GeneralMesh* mesh = new GeneralMesh();
 			std::vector<ANIMATED_VERTEX> vertices;
 			for (int j = 0; j < gemmeshes[i].verticesAnimated.size(); j++)
 			{
@@ -749,10 +772,11 @@ public:
 			//textureFilenames.push_back("../Resources/Textures/T-rex_Base_Color_alb.png");
 			// Load texture with filename: gemmeshes[i].material.find("albedo").getValue()
 			//textures.load(core, "../Resources/Textures/T-rex_Base_Color_alb.png");
+			manyvertices.push_back(vertices);
+			manyindices.push_back(gemmeshes[i].indices);
+			//mesh->init(core, vertices, gemmeshes[i].indices);
 
-			mesh->init(core, vertices, gemmeshes[i].indices);
-
-			meshes.push_back(mesh);
+			//meshes.push_back(mesh);
 			std::string tex_root = gemmeshes[i].material.find("albedo").getValue();
 			tex_root = "../Resources/" + tex_root;
 			textureFilenames.push_back(tex_root);
@@ -761,8 +785,9 @@ public:
 			}
 			textureNHFilenames.push_back(tex_root + "NH.png");
 		}
+		MeshManager::Instance().loadmesh(core, manyvertices, manyindices, meshname);
 		textures->load(core, textureFilenames, textureNHFilenames, selftexturename);
-		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderAnimlight"].vertexShader, shaders->shaders["shaderAnimlight"].pixelShader, VertexLayoutCache::getAnimatedLayout());
+		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderTexture"].vertexShader, shaders->shaders["shaderTexture"].pixelShader, VertexLayoutCache::getAnimatedLayout());
 		memcpy(&animation.skeleton.globalInverse, &gemanimation.globalInverse, 16 * sizeof(float));
 		for (int i = 0; i < gemanimation.bones.size(); i++)
 		{
@@ -839,17 +864,17 @@ public:
 
 		apply(core, shader);
 		psos->bind(core, "AnimatedModelPSO");
-		for (int i = 0; i < meshes.size(); i++)
+		for (int i = 0; i < MeshManager::Instance().meshesmanager[meshname].size(); i++)
 		{
 			if (i >= texture.size()) {
 				shader->updateTexturePS(core, "tex", texture[texture.size() - 1]->heapOffset);
-				shader->updateTexturePS(core, "NHtex", NHtexture[NHtexture.size() - 1]->heapOffset);
-				meshes[i]->draw(core);
+				//shader->updateTexturePS(core, "NHtex", NHtexture[NHtexture.size() - 1]->heapOffset);
+				MeshManager::Instance().meshesmanager[meshname][i]->draw(core);
 			}
 			else {
 				shader->updateTexturePS(core, "tex", texture[i]->heapOffset);
-				shader->updateTexturePS(core, "NHtex", NHtexture[i]->heapOffset);
-				meshes[i]->draw(core);
+				//shader->updateTexturePS(core, "NHtex", NHtexture[i]->heapOffset);
+				MeshManager::Instance().meshesmanager[meshname][i]->draw(core);
 			}
 		}
 

@@ -10,6 +10,7 @@ struct Objectload
 		string location;
 		string textureName;
 		int iscollider;
+		string meshname;
 	};
 class LoadControl
 {
@@ -22,7 +23,7 @@ public:
 	string location;
 	string texturename;
 	vector<Objectload> scv;
-	
+	string meshname;
 	map<string, Animatemodels> Aniname;
 	map<string, Staticmodels> Staticname;
 	LoadControl() {
@@ -62,6 +63,8 @@ public:
 			getinformation.textureName = (word);
 			getline(theline, word, ';');
 			getinformation.iscollider = stoi(word);
+			getline(theline, word, ';');
+			getinformation.meshname = (word);
 			if (getinformation.type == "static") {
 				scv1->push_back(getinformation);
 			}
@@ -117,12 +120,14 @@ public:
 			texturename = (word);
 			getline(theline, word, ';');
 			iscollider = stoi(word);
+			getline(theline, word, ';');
+			meshname = word;
 
 			if (type == "static") {
 				if (name == "tree") {
 					
 					StaticModle tree;
-					tree.load(core, location, shaders, psos, Staticmodels::Tree, position, textures, texturename,iscollider);
+					tree.load(core, location, shaders, psos, Staticmodels::Tree, position, textures, texturename, iscollider, meshname);
 					staticmodles->push_back(move(tree));
 					
 
@@ -138,7 +143,7 @@ public:
 					
 					
 				}
-				(*enemies)[0].init(core, shaders, psos, position, textures, "enemy");
+				(*enemies)[0].init(core, shaders, psos, position, textures, "enemy",meshname);
 			}
 
 		}

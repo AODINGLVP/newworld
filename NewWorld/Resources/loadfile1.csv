@@ -1,8 +1,8 @@
-﻿modeltype;modelname;positionX;positionY;positionZ;rotationX;rotationY;rotationZ;location;texturename;iscollider
-static;tree;10;0;0;0;0;0;../Resources/OtherTree/pine1.gem;pine;1
-static;tree;25;0;25;0;0;0;../Resources/OtherTree/pine1.gem;pine;1
-static;tree;20;0;10;0;0;0;../Resources/OtherTree/pine1.gem;pine;1
-static;bamboo;25;0;15;0;0;0;../Resources/OtherTree/bamboo.gem;bamboo;0
-static;bamboo;30;0;20;0;0;0;../Resources/OtherTree/bamboo.gem;bamboo;0
-anim;trex;20;0;20;0;0;0;../Resources/Trex/TRex.gem;enemy;1
-static;grass;32;0;32;0;0;0;../Resources/OtherTree/flower1.gem;grass;0
+﻿modeltype;modelname;positionX;positionY;positionZ;rotationX;rotationY;rotationZ;location;texturename;iscollider;meshname
+static;tree;10;0;0;0;0;0;../Resources/OtherTree/pine1.gem;pine;1;pine
+static;tree;25;0;25;0;0;0;../Resources/OtherTree/pine1.gem;pine;1;pine
+static;tree;20;0;10;0;0;0;../Resources/OtherTree/pine1.gem;pine;1;pine
+static;bamboo;25;0;15;0;0;0;../Resources/OtherTree/bamboo.gem;bamboo;0;bamboo
+static;bamboo;30;0;20;0;0;0;../Resources/OtherTree/bamboo.gem;bamboo;0;bamboo
+anim;trex;20;0;20;0;0;0;../Resources/Trex/TRex.gem;enemy;1;enemy
+static;grass;32;0;32;0;0;0;../Resources/OtherTree/flower1.gem;grass;0;flover

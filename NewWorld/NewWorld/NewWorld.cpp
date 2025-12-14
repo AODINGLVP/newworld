@@ -29,6 +29,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	vector<AnimationInstance>animationinstances;
 	vector<Enemies> enemies;
 	vector<StaticModle> test;
+	vector<Cube*> cubes;
 	LoadControl loadcontrol;
 	vector<Objectload> loadgamestatic;
 	vector<Objectload> loadgameanim;
@@ -50,7 +51,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shaderinstancegrass", "shaders/ShaderTextureLightInstacegrass.hlsl", "shaders/ShaderTextureLightInstacegrass.hlsl");
 
 	Cube cube;
-	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10));
+	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10),"plane");
+	for (int i = 0; i < 20; i++) {
+		for (int j = 0; j < 20; j++) {
+			Cube* cube1 = new Cube();
+			cube1->init(&core, &psos, &shaders.shaders["shader1"], Vec3(-150+i*20, 0, -150 + j * 20), "plane");
+			cubes.push_back(cube1);
+		}
+	}
 	Sphere sphere;
 	sphere.init(&core, &psos, &shaders.shaders["shader1"], Vec3(30, 0, 40));
 
@@ -59,7 +67,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	vector<string> texturenames;
 	TextureManager textures;
 
-
+	
 	
 
 	texturenames.push_back("../Resources/citrus_orchard_road_puresky_8k.png");
@@ -75,25 +83,32 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	
 	  loadcontrol.LoadData(&loadgamestatic,&loadgameanim);
 	Hero hero;
-	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0),&textures,"hero");
+	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0),&textures,"hero","gun");
 	hero.heromodel.collision.hero(hero.position);
 	
 	for (int i = 0; i < loadgamestatic.size(); i++) {
 		StaticModleLight scvv;
 		staticmodles.push_back(scvv);
-		staticmodles[i].load(&core, loadgamestatic[i].location, &shaders, &psos, Staticmodels::Tree, loadgamestatic[i].position, &textures, loadgamestatic[i].textureName,loadgamestatic[i].iscollider);
+		staticmodles[i].load(&core, loadgamestatic[i].location, &shaders, &psos, Staticmodels::Tree, loadgamestatic[i].position, &textures, loadgamestatic[i].textureName,loadgamestatic[i].iscollider,loadgamestatic[i].meshname);
 	}
 	for (int i = 0; i < loadgameanim.size(); i++) {
 		Enemies scvv;
 		enemies.push_back(scvv);
-		enemies[i].init(&core, &shaders, &psos, loadgameanim[i].position, &textures, loadgameanim[i].textureName);
+		enemies[i].init(&core, &shaders, &psos, loadgameanim[i].position, &textures, loadgameanim[i].textureName,loadgameanim[i].meshname);
 	}
 
 
+	StaticModle scvtest111;
+	scvtest111.load(&core, "../Resources/OtherTree/banana3_LOD5.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "banana", 0,"banbana");
 
 
-	StaticModleLight lighttest;
-	lighttest.load(&core, "../Resources/OtherTree/pine1.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "pine", 0);
+	StaticModle scvtest222;
+	scvtest222.load(&core, "../Resources/OtherTree/banana3_LOD5.gem", &shaders, &psos, Staticmodels::Tree, Vec3(20, 0, 20), &textures, "banana", 0,"banbana");
+
+
+
+
+	
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
@@ -301,7 +316,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			Vec3 from3 = Vec3(from.x, from.y, from.z);
 			Matrix R = Matrix::ForwardtoOnlyTRex(scv);
 			enemies[i].enemymodel.collision.update(enemies[i].enemymodel.position, R);
-			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp,&from3,&light.Strength,&light.Direction,&shaders.shaders["shaderAnimlight"], &psos, &enemies[i].enemymodelinstace, R,textures.find(enemies[i].enemymodel.texturename), textures.findNH(enemies[i].enemymodel.texturename));
+			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp,&from3,&light.Strength,&light.Direction,&shaders.shaders["shaderTexture"], &psos, &enemies[i].enemymodelinstace, R,textures.find(enemies[i].enemymodel.texturename), textures.findNH(enemies[i].enemymodel.texturename));
 				
 			
 		}
@@ -322,11 +337,33 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 		Vec3 from3 = Vec3(from.x, from.y, from.z);
-		lighttest.draw(&core, &lighttest.realshow, &vp,&from3,&light.Strength,&light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find("pine"), textures.findNH("pine"));
+	
 		
 		instancetest.draw(&core, &instancetest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstance"], &psos, textures.find("Grass_Mix_Full_01q"), textures.findNH("Grass_Mix_Full_01q"), &dt);
 		
 		grasstest.draw(&core, &grasstest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstancegrass"], &psos, textures.find("Grass_Mix_Full_01q"), textures.findNH("Grass_Mix_Full_01q"), &dt);
+
+
+
+
+		scvtest111.draw(&core, &scvtest111.realshow, &vp,  &shaders.shaders["shaderlight"], &psos, textures.find("banana"));
+		scvtest222.draw(&core, &scvtest222.realshow, &vp, &shaders.shaders["shaderlight"], &psos, textures.find("banana"));
+
+
+
+
+		for (int i = 0; i < cubes.size(); i++) {
+			cubes[i]->draw(&core, &cubes[i]->realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
+		}
+
+
+
+
+
+
+
+
+
 
 
 

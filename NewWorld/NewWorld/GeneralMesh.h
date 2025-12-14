@@ -241,3 +241,44 @@ public:
 		core->getCommandList()->DrawIndexedInstanced(numMeshIndices, numInstances, 0, 0, 0);
 	}
 };
+class MeshManager {
+public:
+	static MeshManager& Instance()
+	{
+		static MeshManager instance; // 线程安全
+		return instance;
+	}
+	map<string, vector<GeneralMesh*>> meshesmanager;
+	void loadmesh(Core* core, vector<vector<STATIC_VERTEX>> vertices, vector<vector<unsigned int>> indices,string meshname) {
+		if (meshesmanager.find(meshname) != meshesmanager.end()) {
+
+		}
+		else {
+			vector<GeneralMesh*> meshes;
+			for (int i = 0; i < vertices.size(); i++) {
+				GeneralMesh* mesh = new GeneralMesh();
+				mesh->init(core, vertices[i], indices[i]);
+				meshes.push_back(mesh);
+			}
+			meshesmanager.insert({ meshname,meshes });
+		}
+		
+		
+	}
+	void loadmesh(Core* core, vector<vector<ANIMATED_VERTEX>> vertices, vector<vector<unsigned int>> indices, string meshname) {
+		if (meshesmanager.find(meshname) != meshesmanager.end()) {
+
+		}
+		else {
+			vector<GeneralMesh*> meshes;
+			for (int i = 0; i < vertices.size(); i++) {
+				GeneralMesh* mesh = new GeneralMesh();
+				mesh->init(core, vertices[i], indices[i]);
+				meshes.push_back(mesh);
+			}
+			meshesmanager.insert({ meshname,meshes });
+		}
+
+
+	}
+};
