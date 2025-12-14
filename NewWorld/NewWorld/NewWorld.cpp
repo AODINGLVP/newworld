@@ -33,6 +33,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	LoadControl loadcontrol;
 	vector<Objectload> loadgamestatic;
 	vector<Objectload> loadgameanim;
+	vector<Objectload> loadinsatnceinformatiojn;
+	vector<vector<Vec3>> loadinstanceposition;
 	Window win;
 	Core core;
 	core.init(window->hwnd, kuan, gao);
@@ -81,11 +83,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 	
-	  loadcontrol.LoadData(&loadgamestatic,&loadgameanim);
+	
 	Hero hero;
 	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0),&textures,"hero","gun");
 	hero.heromodel.collision.hero(hero.position);
-	
+	loadcontrol.LoadData(&loadgamestatic, &loadgameanim);
 	for (int i = 0; i < loadgamestatic.size(); i++) {
 		StaticModleLight scvv;
 		staticmodles.push_back(scvv);
@@ -97,18 +99,68 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		enemies[i].init(&core, &shaders, &psos, loadgameanim[i].position, &textures, loadgameanim[i].textureName,loadgameanim[i].meshname);
 	}
 
+	loadcontrol.LoadinstaceData(&loadinsatnceinformatiojn);
+	loadcontrol.LoadinstacepositionData(&loadinstanceposition);
+
+
+
+
+
+	vector<vector<INSTANCE>> scv111;
+	for (int j = 0; j < loadinsatnceinformatiojn.size(); j++) {
+		vector<INSTANCE> wf3ee;
+		for (int i = 0; i < loadinstanceposition[j].size(); i++) {
+
+
+			INSTANCE inst;
+
+			Matrix scale = scale.scale(0.01f, 0.01f, 0.01f);
+			Matrix trans = trans.translation(loadinstanceposition[j][i].x, loadinstanceposition[j][i].y, loadinstanceposition[j][i].z);
+			inst.w = trans * scale;
+			wf3ee.push_back(inst);
+		}
+		scv111.push_back(wf3ee);
+	}
+
+	
+	StaticModleLightInstance instancetest;
+	instancetest.load(&core, loadinsatnceinformatiojn[0].location, &shaders, &psos, Staticmodels::Tree, loadinsatnceinformatiojn[0].position, &textures, loadinsatnceinformatiojn[0].textureName, 0, scv111[0]);
+	
+	
+	StaticModleLightInstanceGrass grasstest;
+	grasstest.load(&core, loadinsatnceinformatiojn[1].location, &shaders, &psos, Staticmodels::Tree, loadinsatnceinformatiojn[1].position, &textures, loadinsatnceinformatiojn[1].textureName, 0, scv111[1]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	StaticModle scvtest111;
 	scvtest111.load(&core, "../Resources/OtherTree/banana3_LOD5.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "banana", 0,"banbana");
-
-
 	StaticModle scvtest222;
 	scvtest222.load(&core, "../Resources/OtherTree/banana3_LOD5.gem", &shaders, &psos, Staticmodels::Tree, Vec3(20, 0, 20), &textures, "banana", 0,"banbana");
 
 
 
 
-	
+	/*
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
@@ -147,7 +199,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	grasstest.load(&core, "../Resources/GemModels/Grass_Mix_Full_01q.gem", &shaders, &psos, Staticmodels::Tree, Vec3(10, 0, 10), &textures, "Grass_Mix_Full_01q", 0, scv111);
 	
 	
-	
+	*/
 	
 	Matrix world;
 	world = world.scale(0.01f, 0.01f, 0.01f);
@@ -339,9 +391,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Vec3 from3 = Vec3(from.x, from.y, from.z);
 	
 		
-		instancetest.draw(&core, &instancetest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstance"], &psos, textures.find("Grass_Mix_Full_01q"), textures.findNH("Grass_Mix_Full_01q"), &dt);
+		instancetest.draw(&core, &instancetest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstance"], &psos, textures.find(instancetest.texturename), textures.findNH(instancetest.texturename), &dt);
 		
-		grasstest.draw(&core, &grasstest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstancegrass"], &psos, textures.find("Grass_Mix_Full_01q"), textures.findNH("Grass_Mix_Full_01q"), &dt);
+		grasstest.draw(&core, &grasstest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstancegrass"], &psos, textures.find(grasstest.texturename), textures.findNH(grasstest.texturename), &dt);
 
 
 

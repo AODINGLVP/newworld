@@ -399,7 +399,7 @@ public:
 			for (int j = 0; j < width; j++) {
 				float fi = i / 1.f;
 				float fj = j / 1.f;
-				vertices.push_back(addVertex(Vec3(fi, -5, fj), Vec3(0.0f, 1.0f, 0.0f), (float)i / height, (float)j / width));
+				vertices.push_back(addVertex(Vec3(fi, 0, fj), Vec3(0.0f, 1.0f, 0.0f), (float)i / height, (float)j / width));
 
 			}
 		}

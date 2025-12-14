@@ -22,6 +22,9 @@ public:
 	Vec3 rotation;
 	string location;
 	string texturename;
+	vector<Matrix> temporary;
+	vector<Objectload> instance;
+	
 	vector<Objectload> scv;
 	string meshname;
 	map<string, Animatemodels> Aniname;
@@ -81,7 +84,90 @@ public:
 		return scv;
 	}
 
+	vector<Objectload> LoadinstaceData(vector<Objectload>* scv1) {
+		ifstream file("../Resources/loadfileinstancedata.csv");
 
+		string line;
+
+		getline(file, line);
+		Objectload getinformation;
+		while (getline(file, line)) {
+			std::stringstream theline(line);
+			std::string word;
+
+			getline(theline, word, ';');
+			getinformation.type = word;
+			getline(theline, word, ';');
+			getinformation.name = word;
+			getline(theline, word, ';');
+			getinformation.position.x = stof(word);
+			getline(theline, word, ';');
+			getinformation.position.y = stof(word);
+			getline(theline, word, ';');
+			getinformation.position.z = stof(word);
+			getline(theline, word, ';');
+			getinformation.rotation.x = stof(word);
+			getline(theline, word, ';');
+			getinformation.rotation.y = stof(word);
+			getline(theline, word, ';');
+			getinformation.rotation.z = stof(word);
+			getline(theline, word, ';');
+			getinformation.location = (word);
+			getline(theline, word, ';');
+			getinformation.textureName = (word);
+			getline(theline, word, ';');
+			getinformation.iscollider = stoi(word);
+			getline(theline, word, ';');
+			getinformation.meshname = (word);
+			
+				scv1->push_back(getinformation);
+			
+			
+
+
+
+		}
+
+
+		file.close();
+		return scv;
+	}
+	vector<Objectload> LoadinstacepositionData(vector<vector<Vec3>>* scv1) {
+		ifstream file("../Resources/loadfileinstanceposition.csv");
+		vector<Vec3>instances;
+		string line;
+		Vec3 instanceposition;
+		int end;
+		getline(file, line);
+		Objectload getinformation;
+		while (getline(file, line)) {
+			std::stringstream theline(line);
+			std::string word;
+
+			getline(theline, word, ';');
+			instanceposition.x = stof(word);
+			getline(theline, word, ';');
+			instanceposition.y = stof(word);
+			getline(theline, word, ';');
+			instanceposition.z = stof(word);
+			getline(theline, word, ';');
+			end = stoi(word);
+			if (end == 1) {
+				instances.push_back(instanceposition); 
+					scv1->push_back(instances);
+				instances.clear();
+			}
+			else {
+				instances.push_back(instanceposition);
+			}
+			
+
+		}
+
+
+		file.close();
+		return scv;
+	}
 
 
 	void Loadgame(vector<Enemies>* enemies, vector<StaticModle>* staticmodles, Core* core, PSOManager* psos, Shaders* shaders,TextureManager* textures) {
