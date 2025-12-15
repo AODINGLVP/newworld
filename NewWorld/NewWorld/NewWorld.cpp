@@ -309,21 +309,28 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			
 			Vec3 scv;
 			enemies[i].enemymodel.position = enemies[i].enemymodel.position + enemies[i].enemymodel.forward * enemies[i].movespeed * rexdt;//move
-			if (enemies[i].enemymodel.collision.AABBtest(hero.heromodel.collision.realminpoint, hero.heromodel.collision.realmaxpoint)) {
+			if (enemies[i].health < 0) {
+				
+				enemies[i].anim(rexdt, "death", from.TransToVec3RemoveW());
 				enemies[i].enemymodel.position = enemies[i].enemymodel.position - enemies[i].enemymodel.forward * enemies[i].movespeed * rexdt;
-				enemies[i].Animatestatus = "attack";
+			}
+			else if (enemies[i].enemymodel.collision.AABBtest(hero.heromodel.collision.realminpoint, hero.heromodel.collision.realmaxpoint)) {
+				enemies[i].enemymodel.position = enemies[i].enemymodel.position - enemies[i].enemymodel.forward * enemies[i].movespeed * rexdt;
+				
+				enemies[i].anim(rexdt, "attack", from.TransToVec3RemoveW());
 			}
 			else {
-				enemies[i].Animatestatus = "run";
+				
+				enemies[i].anim(rexdt, "run", from.TransToVec3RemoveW());
 			}
 			scv =  hero.heromodel.position- enemies[i].enemymodel.position;//calculate the new forward
 			scv = scv.normalize();
-			enemies[i].enemymodel.forward = scv;
+			//enemies[i].enemymodel.forward = scv;
 			Vec3 from3 = Vec3(from.x, from.y, from.z);
-			Matrix R = Matrix::ForwardtoOnlyTRex(scv);
+			Matrix R = Matrix::ForwardtoOnlyTRex(scv, &enemies[i].enemymodel.forward,dt);
 			enemies[i].enemymodel.collision.update(enemies[i].enemymodel.position, R);
 			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp,&from3,&light.Strength,&light.Direction,&shaders.shaders["shaderTexture"], &psos, &enemies[i].enemymodelinstace, R,textures.find(enemies[i].enemymodel.texturename), textures.findNH(enemies[i].enemymodel.texturename));
-				
+			
 			
 		}
 
@@ -348,10 +355,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				
 				if (enemies[i].enemymodel.collision.rayAABB(hero.raytest, t)) {
 					enemies[i].health -= 5;
-					OutputDebugStringA("Hello Output Window\n");
+					
 				}
 				if (enemies[i].health < 0) {
-					OutputDebugStringA("Hello Output Window\n");
+					
 				}
 			}
 		}

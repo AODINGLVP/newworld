@@ -825,13 +825,31 @@ namespace MathTool
 			float z = p.x * M.m[2] + p.y * M.m[6] + p.z * M.m[10] + M.m[14];
 			return Vec3(x, y, z);
 		}
-		Matrix static ForwardtoOnlyTRex(Vec3 forward) {//rotation  the collider box and the Trex
+		static float InterpYaw(float yaw0, float yaw1, float t)
+		{
+			
+			const float TWO_PI = 2.0f *M_PI;
+			const float EPS = 0.0349066f;
+			float delta = yaw1 - yaw0;
+
+			while (delta > M_PI) delta -= TWO_PI;
+			while (delta < -M_PI) delta += TWO_PI;
+			if (fabs(delta) < EPS)
+				return yaw1;
+			return yaw0 + delta * t;
+		}
+		Matrix static ForwardtoOnlyTRex(Vec3 forward,Vec3* now,float t) {//rotation  the collider box and the Trex
 			//models have different basic forward,so only use in TRex
 			Matrix RY;
 			Matrix RX;
 			
 			float yaw = atan2f(forward.x, forward.z);
-			float pitch = -asinf(forward.y);
+			float yawnow = atan2f(now->x, now->z);
+			yaw = InterpYaw(yawnow, yaw, t*0.1);
+			//now = new Vec3(sinf(yaw),  now->y, cosf(yaw));
+			now->x = sinf(yaw);
+			now->z = cosf(yaw);
+			//float pitch = -asinf(forward.y);
 			RY = RY.rotationY(yaw);
 			RX = RX.rotationX(0);
 			Matrix R = RY * RX;

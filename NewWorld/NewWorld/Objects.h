@@ -755,7 +755,7 @@ public:
 	Collider collision;
 	Vec3 position;
 	Vec3 scale;
-	Vec3 forward;
+	Vec3 forward=Vec3(0,0,0);
 	Matrix realshow;
 	string texturename;
 

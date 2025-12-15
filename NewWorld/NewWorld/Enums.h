@@ -10,7 +10,8 @@ enum class AnimState {
 	Idle,
 	Walk,
 	Run,
-	Attack
+	Attack,
+	Die
 };
 enum class Animatemodels {
 	UZI,
