@@ -12,7 +12,21 @@
 
 
 
+vector<int> calculatenumber(int number) {
+	vector<int> scv;
+	if (number == 0) {
+		scv.push_back(0);
+		return scv;
+	}
+	int sss;
+	while (number / 10 != 0) {
+		scv.push_back(number % 10);
 
+		number = number / 10;
+	}
+	scv.push_back(number % 10);
+	return scv;
+}
 
 
 
@@ -30,6 +44,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	vector<Enemies*> enemies;
 	vector<StaticModle> test;
 	vector<Cube*> cubes;
+	vector<Font*> healthnumber;
+	vector<Font*> scorenumber;
+	vector<Font*> bulletnumber;
 	LoadControl loadcontrol;
 	vector<Objectload> loadgamestatic;
 	vector<Objectload> loadgameanim;
@@ -51,6 +68,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shaderAnimlight", "shaders/ShaderTextureLightAnim.hlsl", "shaders/ShaderTextureLightAnim.hlsl");
 	shaders.load(&core, "shaderinstance", "shaders/ShaderTextureLightInstace.hlsl", "shaders/ShaderTextureLightInstace.hlsl");
 	shaders.load(&core, "shaderinstancegrass", "shaders/ShaderTextureLightInstacegrass.hlsl", "shaders/ShaderTextureLightInstacegrass.hlsl");
+	shaders.load(&core, "shaderfont", "shaders/ShaderFont.hlsl", "shaders/ShaderFont.hlsl");
 
 	Cube cube;
 	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10),"plane");
@@ -77,11 +95,43 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	texturenames.clear();
 	texturenames.push_back("../Resources/Grass/Grass01_2K_BaseColor.png");
 	textures.load(&core, texturenames, "Grass");
+	texturenames.clear();
+	//texturenames.push_back("../Resources/Grass/Grass01_2K_BaseColor.png");
+	//textures.load(&core, texturenames, "font");
+	//texturenames.clear();
+	for (int i = 0; i < 10; i++) {
+		
+		texturenames.push_back("../Resources/character/"+string(to_string(i))+string(".png"));
+	}
+	texturenames.push_back("../Resources/character/bullet1.png");//10
+	texturenames.push_back("../Resources/character/health.png");//11
+	texturenames.push_back("../Resources/character/score.png");//12
+	texturenames.push_back("../Resources/character/Snipe1.png");//13
+	textures.load(&core, texturenames, "font");
+	texturenames.clear();
+
+	for (int i = 0; i < 10; i++) {
+		Font* font=new Font();
+		font->init(&core, &psos, &shaders.shaders["shaderfont"], 72, Vec3(200+100 * i, 980, 980), Vec3(300+100*i, 1080, 1080));
+		healthnumber.push_back(font);
+
+	}
+	for (int i = 0; i < 10; i++) {
+		Font* font = new Font();
+		font->init(&core, &psos, &shaders.shaders["shaderfont"], 72, Vec3(200 + 100 * i, 880, 880), Vec3(300 + 100 * i, 980, 980));
+		scorenumber.push_back(font);
+
+	}
+	for (int i = 0; i < 30; i++) {
+		Font* font = new Font();
+		font->init(&core, &psos, &shaders.shaders["shaderfont"], 72, Vec3(0 + 25 * i, 0, 0), Vec3(25 + 25 * i, 100, 100));
+		bulletnumber.push_back(font);
+	}
 	
-
-;
-
-
+	Font* healthUI = new Font();
+	healthUI->init(&core, &psos, &shaders.shaders["shaderfont"], 72, Vec3(0, 980, 980), Vec3(200 , 1080, 1080));
+	Font* sorceUI = new Font();
+	sorceUI->init(&core, &psos, &shaders.shaders["shaderfont"], 72, Vec3(0, 880, 880), Vec3(200, 980, 980));
 	
 	
 	Hero hero;
@@ -311,12 +361,32 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &from33, &light.Strength, &light.Direction, &shaders.shaders["shaderAnimlight"], &psos, &hero.heromodelinstace, R, textures.find(hero.heromodel.texturename), textures.findNH(hero.heromodel.texturename));
 
 	
+		
+
+
 
 		Matrix C;
 		C = C.translation(Vec3(from.x, 0, from.z));
 		sphere.draw(&core, &C, &vp, &shaders.shaders["shader1"], &psos, textures.find("SkyBox"));
+		vector<int>UIcount=calculatenumber(hero.health);
 		
+		for (int i = 0; i < UIcount.size(); i++) {
+			healthnumber[i]->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"), UIcount[UIcount.size()-1-i]);
 		
+
+		}
+		UIcount = calculatenumber(hero.score);
+		for (int i = 0; i < UIcount.size(); i++) {
+			scorenumber[i]->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"), UIcount[UIcount.size() - 1 - i]);
+
+		}
+		
+		for (int i = 0; i < hero.bullet; i++) {
+			bulletnumber[i]->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"), 13);
+
+		}
+		healthUI->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"),11);
+		sorceUI->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"), 12);
 		core.finishFrame();
 	}
 	core.flushGraphicsQueue();

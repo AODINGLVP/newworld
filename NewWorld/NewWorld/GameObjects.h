@@ -45,7 +45,7 @@ public:
 
 			}
 			else {
-				if (enemymodelinstace.animationFinished() == true || dieanim > 1.42495f) {
+				if (enemymodelinstace.animationFinished() == true || dieanim > 2.8999f) {
 					health = 100.f;
 					Animatestatus = "run";
 					die(from);
@@ -74,7 +74,10 @@ public:
 
 class Hero {
 public:
+
 	bool ischange = false;;
+	int score = 0;
+	int health=100;
 	int bullet = 30;
 	bool shot=true;
 	string statusanim;

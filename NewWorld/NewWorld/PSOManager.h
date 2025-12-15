@@ -9,7 +9,7 @@ class PSOManager
 public:
 	int debug = 1;
 	std::unordered_map<std::string, ID3D12PipelineState*> psos;
-	void createPSO(Core* core, std::string name, ID3DBlob* vs, ID3DBlob* ps, D3D12_INPUT_LAYOUT_DESC layout)
+	void createPSO(Core* core, std::string name, ID3DBlob* vs, ID3DBlob* ps, D3D12_INPUT_LAYOUT_DESC layout,bool deeptest)
 	{
 		if (psos.find(name) != psos.end())
 		{
@@ -40,10 +40,20 @@ public:
 
 		// Responsible for configuring the depth buffer
 		D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
-		depthStencilDesc.DepthEnable = TRUE;
-		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-		depthStencilDesc.StencilEnable = FALSE;
+		if (deeptest) {
+			depthStencilDesc.DepthEnable = TRUE;
+			depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+			depthStencilDesc.StencilEnable = FALSE;
+		}
+		else {
+			depthStencilDesc.DepthEnable = FALSE;              
+			depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+			depthStencilDesc.StencilEnable = FALSE;
+		}
+		
+	
 		desc.DepthStencilState = depthStencilDesc;
 
 		//Blend State
