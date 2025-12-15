@@ -27,7 +27,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	vector<StaticModleLight> staticmodles;
 	vector<AnimatedModel>animateModels;
 	vector<AnimationInstance>animationinstances;
-	vector<Enemies> enemies;
+	vector<Enemies*> enemies;
 	vector<StaticModle> test;
 	vector<Cube*> cubes;
 	LoadControl loadcontrol;
@@ -96,9 +96,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		staticmodles[i].load(&core, loadgamestatic[i].location, &shaders, &psos, Staticmodels::Tree, loadgamestatic[i].position, &textures, loadgamestatic[i].textureName,loadgamestatic[i].iscollider,loadgamestatic[i].meshname);
 	}*/
 	for (int i = 0; i < loadgameanim.size(); i++) {
-		Enemies scvv;
+		Enemies* scvv=new Enemies();
+		scvv->init(&core, &shaders, &psos, loadgameanim[i].position, &textures, loadgameanim[i].textureName, loadgameanim[i].meshname);
 		enemies.push_back(scvv);
-		enemies[i].init(&core, &shaders, &psos, loadgameanim[i].position, &textures, loadgameanim[i].textureName,loadgameanim[i].meshname);
+		//enemies[i]->init(&core, &shaders, &psos, loadgameanim[i].position, &textures, loadgameanim[i].textureName,loadgameanim[i].meshname);
 	}
 
 	loadcontrol.LoadinstaceData(&loadinsatnceinformatiojn);
@@ -216,75 +217,23 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		{
 			break;
 		}
+		Vec4 delta(0, 0, 0, 0);
+		if (win.keys['A']) delta += Vec4(right.x, 0, right.z, 0);
+		if (win.keys['D']) delta -= Vec4(right.x, 0, right.z, 0);
+		if (win.keys['W']) delta += Vec4(forward.x, 0, forward.z, 0);
+		if (win.keys['S']) delta -= Vec4(forward.x, 0, forward.z, 0);
+
+		delta *= cameramovespeed * rexdt;
+		from = from + delta;
+		hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
+		for (int i = 0; i < enemies.size(); i++) {
+			if (hero.heromodel.collision.AABBtest(enemies[i]->enemymodel.collision.realminpoint, enemies[i]->enemymodel.collision.realmaxpoint)) {
+				from = from - delta ;
+				hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
+				break;
+			}
+		}
 		
-		if (win.keys['A']) {
-			from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-			hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-			
-			for (int i = 0; i < enemies.size(); i++) {
-				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
-					from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-				}
-			}
-			for (int i = 0; i < staticmodles.size(); i++) {
-				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
-					from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-				}
-			}
-		}
-		if (win.keys['D']) {
-			from = from - Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-			hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-			for (int i = 0; i < enemies.size(); i++) {
-				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
-					from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-				}
-			}
-			for (int i = 0; i < staticmodles.size(); i++) {
-				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
-					from = from + Vec4(right.x, 0, right.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-				}
-			}
-		}
-		if (win.keys['W']) {
-			from = from+Vec4(forward.x,0, forward.z,0) * cameramovespeed * rexdt;
-			hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-			for (int i = 0; i < enemies.size(); i++) {
-				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
-					from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-					
-				}
-			}
-			for (int i = 0; i < staticmodles.size(); i++) {
-				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
-					from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-
-				}
-			}
-
-		}
-		if (win.keys['S']) {
-			from = from - Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-			hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-			for (int i = 0; i < enemies.size(); i++) {
-				if (hero.heromodel.collision.AABBtest(enemies[i].enemymodel.collision.realminpoint, enemies[i].enemymodel.collision.realmaxpoint)) {
-					from = from + Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-				}
-			}
-			for (int i = 0; i < staticmodles.size(); i++) {
-				if (hero.heromodel.collision.AABBtest(staticmodles[i].collision.realminpoint, staticmodles[i].collision.realmaxpoint)) {
-					from = from + Vec4(forward.x, 0, forward.z, 0) * cameramovespeed * rexdt;
-					hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
-				}
-			}
-		}
 		hero.heromodel.position = Vec3(from.x,from.y,from.z);
 		to = forward + from;
 		right = forward.Cross(Vec4(0, 1, 0, 0));
@@ -298,47 +247,43 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		core.beginRenderPass();
 
 
-		/*
-		for (int i = 0; i < staticmodles.size(); i++) {
-			Vec3 from3 = Vec3(from.x, from.y, from.z);
-			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find(staticmodles[i].texturename), textures.findNH(staticmodles[i].texturename));
-		}
-		*/
-		/*
-		if (enemies.size()<10+dt/5&&enemies.size()<20) {
-			Enemies scvv;
+		
+		if (enemies.size()<3+dt/10&&enemies.size()<8) {
+			Enemies* scvv=new Enemies();
+			scvv->init(&core, &shaders, &psos, Vec3(11111, 111111, 11111), &textures, "enemy", "enemy");
+			scvv->die(from.TransToVec3RemoveW());
 			enemies.push_back(scvv);
-			enemies.back().init(&core, &shaders, &psos, Vec3(11111, 111111, 11111), &textures, "enemy", "enemy");
-			enemies.back().die(from.TransToVec3RemoveW());
-	}*/
+			
+	}
+
 		for (int i = 0; i < enemies.size(); i++) {
 			
-			enemies[i].enemymodelinstace.updatewithControl(enemies[i].Animatestatus, rexdt);
+			
 			
 			
 			Vec3 scv;
-			enemies[i].enemymodel.position = enemies[i].enemymodel.position + enemies[i].enemymodel.forward * enemies[i].movespeed * rexdt;//move
-			if (enemies[i].health < 0) {
+			enemies[i]->enemymodel.position = enemies[i]->enemymodel.position + enemies[i]->enemymodel.forward * enemies[i]->movespeed * rexdt;//move
+			if (enemies[i]->health < 0) {
 				
-				enemies[i].anim(rexdt, "death", from.TransToVec3RemoveW());
-				enemies[i].enemymodel.position = enemies[i].enemymodel.position - enemies[i].enemymodel.forward * enemies[i].movespeed * rexdt;
+				enemies[i]->anim(rexdt, "death", from.TransToVec3RemoveW());
+				enemies[i]->enemymodel.position = enemies[i]->enemymodel.position - enemies[i]->enemymodel.forward * enemies[i]->movespeed * rexdt;
 			}
-			else if (enemies[i].enemymodel.collision.AABBtest(hero.heromodel.collision.realminpoint, hero.heromodel.collision.realmaxpoint)) {
-				enemies[i].enemymodel.position = enemies[i].enemymodel.position - enemies[i].enemymodel.forward * enemies[i].movespeed * rexdt;
+			else if (enemies[i]->enemymodel.collision.AABBtest(hero.heromodel.collision.realminpoint, hero.heromodel.collision.realmaxpoint)) {
+				enemies[i]->enemymodel.position = enemies[i]->enemymodel.position - enemies[i]->enemymodel.forward * enemies[i]->movespeed * rexdt;
 				
-				enemies[i].anim(rexdt, "attack", from.TransToVec3RemoveW());
+				enemies[i]->anim(rexdt, "attack", from.TransToVec3RemoveW());
 			}
 			else {
 				
-				enemies[i].anim(rexdt, "run", from.TransToVec3RemoveW());
+				enemies[i]->anim(rexdt, "run", from.TransToVec3RemoveW());
 			}
-			scv =  hero.heromodel.position- enemies[i].enemymodel.position;//calculate the new forward
+			scv =  hero.heromodel.position- enemies[i]->enemymodel.position;//calculate the new forward
 			scv = scv.normalize();
-			//enemies[i].enemymodel.forward = scv;
+			//enemies[i]->enemymodel.forward = scv;
 			Vec3 from3 = Vec3(from.x, from.y, from.z);
-			Matrix R = Matrix::ForwardtoOnlyTRex(scv, &enemies[i].enemymodel.forward,dt);
-			enemies[i].enemymodel.collision.update(enemies[i].enemymodel.position, R);
-			enemies[i].enemymodel.draw(&core, &enemies[i].enemymodel.realshow, &vp,&from3,&light.Strength,&light.Direction,&shaders.shaders["shaderTexture"], &psos, &enemies[i].enemymodelinstace, R,textures.find(enemies[i].enemymodel.texturename), textures.findNH(enemies[i].enemymodel.texturename));
+			Matrix R = Matrix::ForwardtoOnlyTRex(scv, &enemies[i]->enemymodel.forward,dt);
+			enemies[i]->enemymodel.collision.update(enemies[i]->enemymodel.position, R);
+			enemies[i]->enemymodel.draw(&core, &enemies[i]->enemymodel.realshow, &vp,&from3,&light.Strength,&light.Direction,&shaders.shaders["shaderTexture"], &psos, &enemies[i]->enemymodelinstace, R,textures.find(enemies[i]->enemymodel.texturename), textures.findNH(enemies[i]->enemymodel.texturename));
 			
 			
 		}
@@ -352,26 +297,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 		grasstest.draw(&core, &grasstest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstancegrass"], &psos, textures.find(grasstest.texturename), textures.findNH(grasstest.texturename), &dt);
 
-		/*
-		hero.heromodelinstace.update("08 fire", rexdt);
-		if (hero.heromodelinstace.animationFinished()) {
-			hero.heromodelinstace.resetAnimationTime();
-		}
-		if (win.mouseButtons[0]) {
-			hero.raytest.init(from.TransToVec3RemoveW(), forward.TransToVec3RemoveW());
-			float t;
-			for (int i = 0; i < enemies.size(); i++) {
-				
-				if (enemies[i].enemymodel.collision.rayAABB(hero.raytest, t)) {
-					enemies[i].health -= 5;
-					
-				}
-				if (enemies[i].health < 0) {
-					
-				}
-			}
-		}
-	*/
+	
 		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 	
 

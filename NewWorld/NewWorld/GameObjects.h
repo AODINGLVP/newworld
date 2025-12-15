@@ -17,7 +17,7 @@ public:
 	float dieanim = 0;
 	float cooldown = 5.f;
 	float timecount = 0.f;
-	float movespeed = 5.f;
+	float movespeed = 4.f;
 	void init(Core* core, Shaders* shaders, PSOManager* psos, Vec3 position, TextureManager* textures, string selftexturename, string meshname) {
 		Animatestatus = "run";
 		enemymodel.load(core, "../Resources/Trex/TRex.gem", shaders, psos, Animatemodels::TRex, position, textures, selftexturename, meshname);
@@ -93,7 +93,7 @@ public:
 		heromodel.load(core, "../Resources/UZI/Uzi.gem", shaders, psos, Animatemodels::UZI, position,textures,selftexturename, meshname);
 		heromodelinstace.init(&heromodel.animation, 0);
 	}
-	void anim(Vec3 from, vector<Enemies>& enemies, bool mouse[3], float rexdt, Vec3 forawrd,bool changeR) {
+	void anim(Vec3 from, vector<Enemies*> enemies, bool mouse[3], float rexdt, Vec3 forawrd,bool changeR) {
 		if (changeR&&!ischange) {
 			ischange = true;
 			heromodelinstace.update("17 reload", rexdt);
@@ -129,8 +129,8 @@ public:
 						raytest.init(from, forawrd);
 						for (int i = 0; i < enemies.size(); i++) {
 							float t;
-							if (enemies[i].enemymodel.collision.rayAABB(raytest, t)) {
-								enemies[i].health -= 5;
+							if (enemies[i]->enemymodel.collision.rayAABB(raytest, t)) {
+								enemies[i]->health -= 5;
 							}
 
 						}
@@ -155,8 +155,8 @@ public:
 					raytest.init(from, forawrd);
 					for (int i = 0; i < enemies.size(); i++) {
 						float t;
-						if (enemies[i].enemymodel.collision.rayAABB(raytest, t)) {
-							enemies[i].health -= 5;
+						if (enemies[i]->enemymodel.collision.rayAABB(raytest, t)) {
+							enemies[i]->health -= 5;
 						}
 
 					}
