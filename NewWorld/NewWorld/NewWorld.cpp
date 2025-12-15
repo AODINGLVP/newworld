@@ -343,7 +343,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 		grasstest.draw(&core, &grasstest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstancegrass"], &psos, textures.find(grasstest.texturename), textures.findNH(grasstest.texturename), &dt);
 
-		
+		/*
 		hero.heromodelinstace.update("08 fire", rexdt);
 		if (hero.heromodelinstace.animationFinished()) {
 			hero.heromodelinstace.resetAnimationTime();
@@ -362,7 +362,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				}
 			}
 		}
-	
+	*/
 		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 	
 
@@ -370,6 +370,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Matrix R;
 		R = Matrix::ForwardtoTOnlyHero(forward.TransToVec3RemoveW());
 		Vec3 from33 = Vec3(from.x, from.y, from.z);
+
+
+		hero.anim(from33, enemies, win.mouseButtons, rexdt, forward.TransToVec3RemoveW());
 		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &from33, &light.Strength, &light.Direction, &shaders.shaders["shaderAnimlight"], &psos, &hero.heromodelinstace, R, textures.find(hero.heromodel.texturename), textures.findNH(hero.heromodel.texturename));
 
 	
