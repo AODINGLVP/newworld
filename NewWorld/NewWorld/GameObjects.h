@@ -74,6 +74,8 @@ public:
 
 class Hero {
 public:
+	bool ischange = false;;
+	int bullet = 30;
 	bool shot=true;
 	string statusanim;
 	Ray raytest;
@@ -91,21 +93,64 @@ public:
 		heromodel.load(core, "../Resources/UZI/Uzi.gem", shaders, psos, Animatemodels::UZI, position,textures,selftexturename, meshname);
 		heromodelinstace.init(&heromodel.animation, 0);
 	}
-	void anim(Vec3 from,vector<Enemies> &enemies, bool mouse[3], float rexdt, Vec3 forawrd) {
-
-		if (!shot) {
-			timecount += rexdt;
-			if (timecount > cooldown) {
+	void anim(Vec3 from, vector<Enemies>& enemies, bool mouse[3], float rexdt, Vec3 forawrd,bool changeR) {
+		if (changeR&&!ischange) {
+			ischange = true;
+			heromodelinstace.update("17 reload", rexdt);
+		}
+		if (bullet <= 0 && !ischange) {
+			ischange = true;
+			heromodelinstace.update("17 reload", rexdt);
+		}
+		if (ischange) {
+			heromodelinstace.update("17 reload", rexdt);
+			if (heromodelinstace.animationFinished()) {
+				heromodelinstace.resetAnimationTime();
+				ischange = false;
+				bullet = 30;
 				shot = true;
-				timecount = 0.f;
 			}
 		}
-		
+		else {
+			if (!shot) {
+				timecount += rexdt;
+				if (timecount > cooldown) {
+					shot = true;
+					timecount = 0.f;
+				}
+			}
 
 
-		if (mouse[1]) {
 
-			if (mouse[0]) {
+			if (mouse[1]) {
+
+				if (mouse[0] && bullet > 0) {
+					if (shot) {
+						raytest.init(from, forawrd);
+						for (int i = 0; i < enemies.size(); i++) {
+							float t;
+							if (enemies[i].enemymodel.collision.rayAABB(raytest, t)) {
+								enemies[i].health -= 5;
+							}
+
+						}
+						bullet--;
+						shot = false;
+					}
+					heromodelinstace.update("13 zoom fire", rexdt);
+
+					if (heromodelinstace.animationFinished()) {
+						heromodelinstace.resetAnimationTime();
+						shot = true;
+					}
+				}
+				else {
+					heromodelinstace.updatewithControl("11 zoom idle", rexdt);
+
+				}
+
+			}
+			else if (mouse[0] && bullet > 0) {
 				if (shot) {
 					raytest.init(from, forawrd);
 					for (int i = 0; i < enemies.size(); i++) {
@@ -113,47 +158,20 @@ public:
 						if (enemies[i].enemymodel.collision.rayAABB(raytest, t)) {
 							enemies[i].health -= 5;
 						}
-						
+
 					}
+					bullet--;
 					shot = false;
 				}
-				heromodelinstace.update("13 zoom fire", rexdt);
-				
+				heromodelinstace.update("08 fire", rexdt);
 				if (heromodelinstace.animationFinished()) {
 					heromodelinstace.resetAnimationTime();
 					shot = true;
 				}
 			}
 			else {
-				heromodelinstace.updatewithControl("11 zoom idle", rexdt);
-			
+				heromodelinstace.updatewithControl("04 idle", rexdt);
 			}
-
-
-
-
-			
-		}
-		else if (mouse[0]) {
-			if (shot) {
-				raytest.init(from, forawrd);
-				for (int i = 0; i < enemies.size(); i++) {
-					float t;
-					if (enemies[i].enemymodel.collision.rayAABB(raytest, t)) {
-						enemies[i].health -= 5;
-					}
-
-				}
-				shot = false;
-			}
-			heromodelinstace.update("08 fire", rexdt);
-			if (heromodelinstace.animationFinished()) {
-				heromodelinstace.resetAnimationTime();
-				shot = true;
-			}
-		}
-		else {
-			heromodelinstace.updatewithControl("04 idle", rexdt);
 		}
 	}
 };

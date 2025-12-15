@@ -190,6 +190,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	int deltaY = window->mousey - lastMouseY;
 	float mouseSensitivity = 0.01f;
 	while (1) {
+
+
+
 		rexdt = timer.dt();
 		dt += rexdt;
 		
@@ -301,7 +304,13 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			staticmodles[i].draw(&core, &staticmodles[i].realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderlight"], &psos, textures.find(staticmodles[i].texturename), textures.findNH(staticmodles[i].texturename));
 		}
 		*/
-	
+		/*
+		if (enemies.size()<10+dt/5&&enemies.size()<20) {
+			Enemies scvv;
+			enemies.push_back(scvv);
+			enemies.back().init(&core, &shaders, &psos, Vec3(11111, 111111, 11111), &textures, "enemy", "enemy");
+			enemies.back().die(from.TransToVec3RemoveW());
+	}*/
 		for (int i = 0; i < enemies.size(); i++) {
 			
 			enemies[i].enemymodelinstace.updatewithControl(enemies[i].Animatestatus, rexdt);
@@ -371,8 +380,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		R = Matrix::ForwardtoTOnlyHero(forward.TransToVec3RemoveW());
 		Vec3 from33 = Vec3(from.x, from.y, from.z);
 
-
-		hero.anim(from33, enemies, win.mouseButtons, rexdt, forward.TransToVec3RemoveW());
+		
+		hero.anim(from33, enemies, win.mouseButtons, rexdt, forward.TransToVec3RemoveW(), win.keys['R']);
 		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &from33, &light.Strength, &light.Direction, &shaders.shaders["shaderAnimlight"], &psos, &hero.heromodelinstace, R, textures.find(hero.heromodel.texturename), textures.findNH(hero.heromodel.texturename));
 
 	
