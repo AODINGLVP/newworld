@@ -144,6 +144,7 @@ public:
 	void updatewithControl(std::string name, float dt) {
 		update(name, dt);
 		if (animationFinished()) {
+			
 			resetAnimationTime();
 		}
 	}

@@ -107,6 +107,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	texturenames.push_back("../Resources/character/health.png");//11
 	texturenames.push_back("../Resources/character/score.png");//12
 	texturenames.push_back("../Resources/character/Snipe1.png");//13
+	texturenames.push_back("../Resources/character/end.png");//14
 	textures.load(&core, texturenames, "font");
 	texturenames.clear();
 
@@ -132,11 +133,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	healthUI->init(&core, &psos, &shaders.shaders["shaderfont"], 72, Vec3(0, 980, 980), Vec3(200 , 1080, 1080));
 	Font* sorceUI = new Font();
 	sorceUI->init(&core, &psos, &shaders.shaders["shaderfont"], 72, Vec3(0, 880, 880), Vec3(200, 980, 980));
+	Font* end = new Font();
+	end->init(&core, &psos, &shaders.shaders["shaderfont"], 72, Vec3(0, 0, 0), Vec3(1920, 1080, 1080));
 	
-	
-	Hero hero;
-	hero.init(&core, &shaders, &psos, Vec3(0, 0, 0),&textures,"hero","gun");
-	hero.heromodel.collision.hero(hero.position);
+	Hero* hero=new Hero();
+	hero->init(&core, &shaders, &psos, Vec3(0, 0, 0),&textures,"hero","gun");
+	hero->heromodel.collision.hero(hero->position);
 
 
 	loadcontrol.LoadData(&loadgamestatic, &loadgameanim);
@@ -275,16 +277,16 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 		delta *= cameramovespeed * rexdt;
 		from = from + delta;
-		hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
+		hero->heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 		for (int i = 0; i < enemies.size(); i++) {
-			if (hero.heromodel.collision.AABBtest(enemies[i]->enemymodel.collision.realminpoint, enemies[i]->enemymodel.collision.realmaxpoint)) {
+			if (hero->heromodel.collision.AABBtest(enemies[i]->enemymodel.collision.realminpoint, enemies[i]->enemymodel.collision.realmaxpoint)) {
 				from = from - delta ;
-				hero.heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
+				hero->heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));
 				break;
 			}
 		}
 		
-		hero.heromodel.position = Vec3(from.x,from.y,from.z);
+		hero->heromodel.position = Vec3(from.x,from.y,from.z);
 		to = forward + from;
 		right = forward.Cross(Vec4(0, 1, 0, 0));
 		lookat=lookat.LookatMatrix(from, to, up);
@@ -314,20 +316,24 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			Vec3 scv;
 			enemies[i]->enemymodel.position = enemies[i]->enemymodel.position + enemies[i]->enemymodel.forward * enemies[i]->movespeed * rexdt;//move
 			if (enemies[i]->health < 0) {
-				
+				enemies[i]->attatcktime = 0;
 				enemies[i]->anim(rexdt, "death", from.TransToVec3RemoveW());
 				enemies[i]->enemymodel.position = enemies[i]->enemymodel.position - enemies[i]->enemymodel.forward * enemies[i]->movespeed * rexdt;
 			}
-			else if (enemies[i]->enemymodel.collision.AABBtest(hero.heromodel.collision.realminpoint, hero.heromodel.collision.realmaxpoint)) {
+			else if (enemies[i]->enemymodel.collision.AABBtest(hero->heromodel.collision.realminpoint, hero->heromodel.collision.realmaxpoint)) {
 				enemies[i]->enemymodel.position = enemies[i]->enemymodel.position - enemies[i]->enemymodel.forward * enemies[i]->movespeed * rexdt;
-				
+				enemies[i]->attatcktime += rexdt;
+				if (enemies[i]->attatcktime > 2.8f) {
+					enemies[i]->attatcktime = 0;
+					hero->health -= 5;
+				}
 				enemies[i]->anim(rexdt, "attack", from.TransToVec3RemoveW());
 			}
 			else {
-				
+				enemies[i]->attatcktime = 0;
 				enemies[i]->anim(rexdt, "run", from.TransToVec3RemoveW());
 			}
-			scv =  hero.heromodel.position- enemies[i]->enemymodel.position;//calculate the new forward
+			scv =  hero->heromodel.position- enemies[i]->enemymodel.position;//calculate the new forward
 			scv = scv.normalize();
 			//enemies[i]->enemymodel.forward = scv;
 			Vec3 from3 = Vec3(from.x, from.y, from.z);
@@ -357,8 +363,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Vec3 from33 = Vec3(from.x, from.y, from.z);
 
 		
-		hero.anim(from33, enemies, win.mouseButtons, rexdt, forward.TransToVec3RemoveW(), win.keys['R']);
-		hero.heromodel.draw(&core, &hero.heromodel.realshow, &vp, &from33, &light.Strength, &light.Direction, &shaders.shaders["shaderAnimlight"], &psos, &hero.heromodelinstace, R, textures.find(hero.heromodel.texturename), textures.findNH(hero.heromodel.texturename));
+		hero->anim(from33, enemies, win.mouseButtons, rexdt, forward.TransToVec3RemoveW(), win.keys['R']);
+		hero->heromodel.draw(&core, &hero->heromodel.realshow, &vp, &from33, &light.Strength, &light.Direction, &shaders.shaders["shaderAnimlight"], &psos, &hero->heromodelinstace, R, textures.find(hero->heromodel.texturename), textures.findNH(hero->heromodel.texturename));
 
 	
 		
@@ -368,27 +374,34 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Matrix C;
 		C = C.translation(Vec3(from.x, 0, from.z));
 		sphere.draw(&core, &C, &vp, &shaders.shaders["shader1"], &psos, textures.find("SkyBox"));
-		vector<int>UIcount=calculatenumber(hero.health);
-		
+		vector<int>UIcount=calculatenumber(hero->health);
+		if (hero->health <= 0) {
+			UIcount.clear();
+		}
 		for (int i = 0; i < UIcount.size(); i++) {
 			healthnumber[i]->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"), UIcount[UIcount.size()-1-i]);
 		
 
 		}
-		UIcount = calculatenumber(hero.score);
+		UIcount = calculatenumber(hero->score);
 		for (int i = 0; i < UIcount.size(); i++) {
 			scorenumber[i]->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"), UIcount[UIcount.size() - 1 - i]);
 
 		}
 		
-		for (int i = 0; i < hero.bullet; i++) {
+		for (int i = 0; i < hero->bullet; i++) {
 			bulletnumber[i]->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"), 13);
 
 		}
 		healthUI->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"),11);
 		sorceUI->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"), 12);
+		if (hero->health <= 0) {
+			end->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"), 14);
+		}
 		core.finishFrame();
+
 	}
+	
 	core.flushGraphicsQueue();
 
 }

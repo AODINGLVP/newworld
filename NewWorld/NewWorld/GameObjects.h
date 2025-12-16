@@ -5,9 +5,11 @@
 class GameObjects
 {
 };
+class Hero;
 class Enemies {
 public:
-
+	bool isdying = false;
+	float attatcktime=0;
 	string Animatestatus;
 	AnimatedModel enemymodel;
 	AnimationInstance enemymodelinstace;
@@ -41,6 +43,7 @@ public:
 
 			if (status != Animatestatus) {
 				Animatestatus = status;
+				isdying = true;
 				dieanim = 0;
 
 			}
@@ -48,7 +51,9 @@ public:
 				if (enemymodelinstace.animationFinished() == true || dieanim > 2.8999f) {
 					health = 100.f;
 					Animatestatus = "run";
+
 					die(from);
+					isdying = false;
 					dieanim = 0;
 				}
 				else {
@@ -65,16 +70,22 @@ public:
 		else {
 			Animatestatus = status;
 			enemymodelinstace.updatewithControl(Animatestatus, rexdt);
-		}
+			if (enemymodelinstace.animationFinished()) {
+				enemymodelinstace.resetAnimationTime();
+				attatcktime = 0;
+			}
 
-		//enemymodelinstace.updatewithControl(Animatestatus, rexdt);
+		}
 	}
 
 };
 
 class Hero {
 public:
-
+	static Hero instance() {
+		static Hero instance;
+		return instance;
+	}
 	bool ischange = false;;
 	int score = 0;
 	int health=100;
@@ -134,6 +145,10 @@ public:
 							float t;
 							if (enemies[i]->enemymodel.collision.rayAABB(raytest, t)) {
 								enemies[i]->health -= 5;
+								if (enemies[i]->health <= 0&&!enemies[i]->isdying) {
+									score += 5;
+									enemies[i]->isdying = true;
+								}
 							}
 
 						}
@@ -160,6 +175,10 @@ public:
 						float t;
 						if (enemies[i]->enemymodel.collision.rayAABB(raytest, t)) {
 							enemies[i]->health -= 5;
+							if (enemies[i]->health <= 0 && !enemies[i]->isdying) {
+								score += 5;
+								enemies[i]->isdying = true;
+							}
 						}
 
 					}

@@ -845,7 +845,7 @@ namespace MathTool
 			
 			float yaw = atan2f(forward.x, forward.z);
 			float yawnow = atan2f(now->x, now->z);
-			yaw = InterpYaw(yawnow, yaw, t*0.1);
+			//yaw = InterpYaw(yawnow, yaw, t*0.1);
 			//now = new Vec3(sinf(yaw),  now->y, cosf(yaw));
 			now->x = sinf(yaw);
 			now->z = cosf(yaw);
