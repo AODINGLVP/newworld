@@ -269,12 +269,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		{
 			break;
 		}
+		Vec4 groundright = Vec4(right.x, 0, right.z, 0).normalize();
+		Vec4 groundforawrd = Vec4(forward.x, 0, forward.z, 0).normalize();
 		Vec4 delta(0, 0, 0, 0);
-		if (win.keys['A']) delta += Vec4(right.x, 0, right.z, 0);
-		if (win.keys['D']) delta -= Vec4(right.x, 0, right.z, 0);
-		if (win.keys['W']) delta += Vec4(forward.x, 0, forward.z, 0);
-		if (win.keys['S']) delta -= Vec4(forward.x, 0, forward.z, 0);
-
+		if (win.keys['A']) delta += Vec4(groundright.x, 0, groundright.z, 0);
+		if (win.keys['D']) delta -= Vec4(groundright.x, 0, groundright.z, 0);
+		if (win.keys['W']) delta += Vec4(groundforawrd.x, 0, groundforawrd.z, 0);
+		if (win.keys['S']) delta -= Vec4(groundforawrd.x, 0, groundforawrd.z, 0);
+		//delta=delta.normalize();
 		delta *= cameramovespeed * rexdt;
 		from = from + delta;
 		hero->heromodel.collision.updatehero(Vec3(from.x, from.y, from.z));

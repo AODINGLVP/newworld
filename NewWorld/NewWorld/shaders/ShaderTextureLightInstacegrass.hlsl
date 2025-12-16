@@ -19,22 +19,14 @@ cbuffer staticMeshBuffer
     float time;
     float speed;
     float amplitude;
-
     float uTime;
-  
     float scaleVal;
     float gradientPower;
-
-     float pad1;
-       float pad2;
-      
-
+    float pad1;
+    float pad2;
     float WindIntensity;
     float WindWeight;
    
-    
-
-     
     float areaSize;
 
 
@@ -75,22 +67,15 @@ float3 GetWindEffect(float3 VertexWorldPos,  float GrassUV, float WindSpeed, flo
 {
     float Timer = GameTime * WindSpeed;
 	
-   
     float3 GrassWindOffset = float3(0, 0, 0);
 
-	//树木
-   
-	//草
-  
-    
-       // float WindDirectionX = sin(Timer) + VertexWorldPos.y
         float UVChange = 1 - abs(GrassUV);
+    //Due to the issue with the texture, the UV weights did not achieve a satisfactory result.
         GrassWindOffset.z = UVChange * sin(cos(Timer + VertexWorldPos.z)) * WindStrenth;
         GrassWindOffset.x = UVChange * cos(sin(Timer + VertexWorldPos.x)) * WindStrenth;
         GrassWindOffset.y = 0;
         return GrassWindOffset;
-    
-    
+   
 }
 
 float3 ComputeDirectionalLight(Light L,float4 DiffuseAlbedo, float3 normal, float3 toEye)
@@ -119,7 +104,7 @@ PS_INPUT VS(VS_INPUT input)
    o.PosW=posW.xyz+GetWindEffect(posW.xyz,input.TexCoords[0],0.7,0.1,time);
 
   
-    // 🌬 风偏移（在算 PosH 之前）
+   
    // posW.y += sin(posW.x * freq + time * speed) * amplitude;
 
     float4 PosW4=float4(o.PosW,1.0f);

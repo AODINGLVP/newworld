@@ -245,7 +245,7 @@ class MeshManager {
 public:
 	static MeshManager& Instance()
 	{
-		static MeshManager instance; // 线程安全
+		static MeshManager instance; 
 		return instance;
 	}
 	map<string, vector<GeneralMesh*>> meshesmanager;
