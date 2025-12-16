@@ -157,18 +157,7 @@ public:
 		realminpoint += position;
 		realmaxpoint += position;
 
-		OutputDebugStringA(to_string(realminpoint.x).c_str());
-		OutputDebugStringA("      ");
-		OutputDebugStringA(to_string(realminpoint.y).c_str());
-		OutputDebugStringA("      ");
-		OutputDebugStringA(to_string(realminpoint.z).c_str());
-		OutputDebugStringA("\n");
-		OutputDebugStringA(to_string(realmaxpoint.x).c_str());
-		OutputDebugStringA("      ");
-		OutputDebugStringA(to_string(realmaxpoint.y).c_str());
-		OutputDebugStringA("      ");
-		OutputDebugStringA(to_string(realmaxpoint.z).c_str());
-		OutputDebugStringA("\n");
+		
 	}
 	void updatehero(Vec3 position) {
 		realminpoint = position + minpoint;
@@ -220,26 +209,26 @@ public:
 		float tMin = -FLT_MAX;
 		float tMax = FLT_MAX;
 
-		// X axis
+		
 		if (fabs(rayDir.x) < 1e-6f) {
-			//如果平行
+			
 			if (rayOrigin.x < realminpoint.x || rayOrigin.x > realmaxpoint.x)
-				//只有起点就在ab框内才会碰撞
+				
 				return false;
 		}
 		else {
 			float invD = 1.0f / rayDir.x;
 			float t1 = (realminpoint.x - rayOrigin.x) * invD;
-			//左平面
+			
 			float t2 = (realmaxpoint.x - rayOrigin.x) * invD;
-			//右平面
+			
 			if (t1 > t2) swap(t1, t2);
 			tMin = max(tMin, t1);
 			tMax = min(tMax, t2);
 			if (tMin > tMax) return false;
 		}
 
-		// Y axis
+		
 		if (fabs(rayDir.y) < 1e-6f) {
 			if (rayOrigin.y < realminpoint.y || rayOrigin.y > realmaxpoint.y)
 				return false;
@@ -254,7 +243,7 @@ public:
 			if (tMin > tMax) return false;
 		}
 
-		// Z axis
+		
 		if (fabs(rayDir.z) < 1e-6f) {
 			if (rayOrigin.z < realminpoint.z || rayOrigin.z > realmaxpoint.z)
 				return false;
