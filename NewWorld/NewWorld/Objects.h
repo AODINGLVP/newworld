@@ -319,7 +319,7 @@ public:
 		mesh.init(core, vertices, indices);
 	
 
-		psos->createPSO(core, "font", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc,false);
+		psos->createPSO(core, "font", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc,1);
 	}
 	void apply(Core* core, Shader* shader) {
 		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
@@ -422,7 +422,7 @@ public:
 
 		//shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
 
-		psos->createPSO(core, "Sphere", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc,true);
+		psos->createPSO(core, "Sphere", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc,2);
 	}
 	void apply(Core* core, Shader* shader) {
 		
@@ -538,7 +538,7 @@ public:
 
 		//shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
 
-		psos->createPSO(core,"cube", shader->vertexShader, shader->pixelShader, MeshManager::Instance().meshesmanager[meshname][0]->inputLayoutDesc,true);
+		psos->createPSO(core,"cube", shader->vertexShader, shader->pixelShader, MeshManager::Instance().meshesmanager[meshname][0]->inputLayoutDesc,0);
 	}
 	void apply(Core* core, Shader* shader) {
 		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
@@ -634,7 +634,7 @@ public:
 		
 		}
 		textures->load(core, textureFilenames, selftexturename);
-		psos->createPSO(core, "StaticModelPSO", shaders->shaders["shader1"].vertexShader, shaders->shaders["shader1"].pixelShader, VertexLayoutCache::getStaticLayout(),true);
+		psos->createPSO(core, "StaticModelPSO", shaders->shaders["shader1"].vertexShader, shaders->shaders["shader1"].pixelShader, VertexLayoutCache::getStaticLayout(),0);
 		MeshManager::Instance().loadmesh(core, manyvertices, manyindices, meshname);
 		if (iscollider == 1) {
 			collision.staticinit(verticescout, position);
@@ -751,7 +751,7 @@ public:
 		MeshManager::Instance().loadmesh(core, manyvertices, manyindices, meshname);
 		textures->load(core, textureFilenames, textureNHFilenames, selftexturename);
 
-		psos->createPSO(core, "StaticModelPSOLight", shaders->shaders["shaderlight"].vertexShader, shaders->shaders["shaderlight"].pixelShader, VertexLayoutCache::getStaticLayout(),true);
+		psos->createPSO(core, "StaticModelPSOLight", shaders->shaders["shaderlight"].vertexShader, shaders->shaders["shaderlight"].pixelShader, VertexLayoutCache::getStaticLayout(),0);
 		if (iscollider == 1) {
 			collision.staticinit(verticescout, position);
 		}
@@ -889,7 +889,7 @@ public:
 		}
 		MeshManager::Instance().loadmesh(core, manyvertices, manyindices, meshname);
 		textures->load(core, textureFilenames, textureNHFilenames, selftexturename);
-		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderTexture"].vertexShader, shaders->shaders["shaderTexture"].pixelShader, VertexLayoutCache::getAnimatedLayout(),true);
+		psos->createPSO(core, "AnimatedModelPSO", shaders->shaders["shaderTexture"].vertexShader, shaders->shaders["shaderTexture"].pixelShader, VertexLayoutCache::getAnimatedLayout(),0);
 		memcpy(&animation.skeleton.globalInverse, &gemanimation.globalInverse, 16 * sizeof(float));
 		for (int i = 0; i < gemanimation.bones.size(); i++)
 		{
@@ -1051,7 +1051,7 @@ public:
 		}
 		textures->load(core, textureFilenames, textureNHFilenames, selftexturename);
 
-		psos->createPSO(core, "StaticModelPSOLightInstance", shaders->shaders["shaderinstance"].vertexShader, shaders->shaders["shaderinstance"].pixelShader, VertexLayoutCache::getStatictLayoutInstanced(),true);
+		psos->createPSO(core, "StaticModelPSOLightInstance", shaders->shaders["shaderinstance"].vertexShader, shaders->shaders["shaderinstance"].pixelShader, VertexLayoutCache::getStatictLayoutInstanced(),0);
 		if (iscollider == 1) {
 			collision.staticinit(verticescout, position);
 		}
@@ -1210,7 +1210,7 @@ public:
 		}
 		textures->load(core, textureFilenames, textureNHFilenames, selftexturename);
 
-		psos->createPSO(core, "StaticModelPSOLightInstanceGrass", shaders->shaders["shaderinstancegrass"].vertexShader, shaders->shaders["shaderinstancegrass"].pixelShader, VertexLayoutCache::getStatictLayoutInstanced(),true);
+		psos->createPSO(core, "StaticModelPSOLightInstanceGrass", shaders->shaders["shaderinstancegrass"].vertexShader, shaders->shaders["shaderinstancegrass"].pixelShader, VertexLayoutCache::getStatictLayoutInstanced(),0);
 		if (iscollider == 1) {
 			collision.staticinit(verticescout, position);
 		}
