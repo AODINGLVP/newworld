@@ -73,12 +73,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shaderfire", "shaders/Shaderfire.hlsl", "shaders/Shaderfire.hlsl");
 
 	Fire fire;
-	fire.init(&core, &psos, &shaders.shaders["shaderfire"], Vec3(0, 10, 0));
-
+	fire.init(&core, &psos, &shaders.shaders["shaderfire"], Vec3(0, 5, 0),"fire");
+	fire.active = true;
 
 	for (int i = 0; i < 40; i++) {
 				Fire* fire1 = new Fire();
-		fire1->init(&core, &psos, &shaders.shaders["shaderfire"], Vec3(0, 0, 0));
+		fire1->init(&core, &psos, &shaders.shaders["shaderfire"], Vec3(0, 0, 0),"fire");
 		fires.push_back(fire1);
 	}
 
@@ -398,7 +398,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			if (fires[i]->active) {
 
 				fires[i]->timecount += rexdt;
-				fires[i]->draw(&core, &fires[i]->realshow, &vp, &shaders.shaders["shaderfire"], &psos, textures.find("font"), &dt);
+				Vec3 scv;
+				scv = hero->heromodel.position - fires[i]->position;//calculate the new forward
+				scv = scv.normalize();
+				Matrix R = Matrix::ForwardtoOnlyTRex(scv, &scv, dt);
+				fires[i]->draw(&core, &fires[i]->realshow, &vp, &shaders.shaders["shaderfire"], &psos, textures.find("font"), &dt, R);
 				if (fires[i]->timecount >=0.95f) {
 					fires[i]->end();
 				}
@@ -415,8 +419,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-		fire.draw(&core, &fire.realshow, &vp, &shaders.shaders["shaderfire"], &psos, textures.find("font"), &dt);
-		fire.position.x -= 0.5f*rexdt;
+		//fire.draw(&core, &fire.realshow, &vp, &shaders.shaders["shaderfire"], &psos, textures.find("font"), &dt);
+		//fire.position.x -= 0.5f*rexdt;
 
 
 

@@ -64,7 +64,7 @@ float3 FireworkParticles(
         float3 p = fireworkPos + dir * speed * time;
 
         float dist = length(worldPos - p);
-        float size = 0.15;
+        float size = 0.1;
         float fade = saturate(1.0 - time);
 
         float intensity = smoothstep(size, 0.0, dist) * fade;
@@ -112,10 +112,10 @@ float4 PS(PS_INPUT input) : SV_Target
 
     float intensity = length(firework); // 亮度
     
-    if (intensity < 0.1f)
-        discard;
+   if (intensity < 0.1f)
+       discard;
     float luminance = dot(fireworkColor, float3(0.2126, 0.7152, 0.0722));
     if (luminance < 0.05)
-    discard;
+   discard;
     return float4(firework, 1.0f);
 }
