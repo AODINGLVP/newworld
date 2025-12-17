@@ -174,6 +174,8 @@ public:
 		//Actually, I'm not quite sure. Maybe it's because of the initialization of the animation model,
 		// or the data passed into the vector is incorrect. In general, if I store the enemies into the vector and initialize it here, 
 		// it will cause the queue of the vector to crash and report an error. The content of the error seems to be that the red-black tree was damaged due to out-of-bounds access.
+
+		//I understand, but, every thing too late
 		ifstream file("../Resources/loadfile1.csv");
 		int iscollider;
 		string line;

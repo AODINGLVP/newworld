@@ -86,8 +86,6 @@ float4 PS(PS_INPUT input) : SV_Target0
     float4 colour = tex.Sample(samplerLinear, input.TexCoords);
     if (colour.a < 0.5f)
         discard;
-
-   
     float3 normalTS = NHtex.Sample(samplerLinear, input.TexCoords).xyz;
     normalTS = normalize(normalTS * 2.0f - 1.0f);   // turn Vec to normal
 
@@ -97,32 +95,16 @@ float4 PS(PS_INPUT input) : SV_Target0
     T = normalize(T - dot(T, N) * N);
     float3 B = cross(N, T);
     float3x3 TBN = float3x3(T, B, N);
-
-   
     float3 normalWS = normalize(mul(normalTS, TBN));//turn to world space normal
-
-    
     float3 toEyeW = normalize(gEyePosW - input.PosW);//direct
-
-   
     Light L;
     L.Strength  = Strength;
     L.Direction = normalize(Direction);
 
     float4 ambient = gAmbientLight * gDiffuseAlbedo;//ambient light
-
- 
-   
-
-   
     float shadowFactor = 1.0f;
     float4 directLight = ComputeLighting(L, gDiffuseAlbedo, input.PosW, normalWS, toEyeW, shadowFactor);
-
-    
     float3 lighting = ambient.rgb + directLight.rgb;
-
-  
     float3 finalColor = colour.rgb * lighting;
-
     return float4(finalColor, colour.a);
 }
