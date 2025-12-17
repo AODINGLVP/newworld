@@ -306,7 +306,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}
 		}
 		
-		hero->heromodel.position = Vec3(from.x,from.y,from.z);
+		hero->heromodel.position = Vec3(from.x,from.y,from.z)+forward.TransToVec3RemoveW()*0;
 		to = forward + from;
 		right = forward.Cross(Vec4(0, 1, 0, 0));
 		lookat=lookat.LookatMatrix(from, to, up);
@@ -393,7 +393,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 		
 		hero->anim(from33, enemies, win.mouseButtons, rexdt, forward.TransToVec3RemoveW(), win.keys['R'],fires);
-		hero->heromodel.draw(&core, &hero->heromodel.realshow, &vp, &from33, &light.Strength, &light.Direction, &shaders.shaders["shaderAnimlight"], &psos, &hero->heromodelinstace, R, textures.find(hero->heromodel.texturename), textures.findNH(hero->heromodel.texturename));
+		hero->heromodel.draw(&core, &hero->heromodel.realshow, &vp, &from33, &light.Strength, &light.Direction, &shaders.shaders["shaderTexture"], &psos, &hero->heromodelinstace, R, textures.find(hero->heromodel.texturename), textures.findNH(hero->heromodel.texturename));
 		for (int i = 0; i < fires.size(); i++) {
 			if (fires[i]->active) {
 

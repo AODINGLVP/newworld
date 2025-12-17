@@ -390,7 +390,7 @@ public:
 		return v;
 	}
 	void init(Core* core, PSOManager* psos, Shader* shader, Vec3 _position, string _msehname) {
-		float size = 10.0f;          // Æ½Ãæ¿í¸ß
+		float size = 10.0f;       
 		float halfSize = size * 0.5f;
 
 		int width = 100;
