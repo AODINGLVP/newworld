@@ -8,6 +8,7 @@ class GameObjects
 class Hero;
 class Enemies {
 public:
+	float distance = 10000;
 	bool isdying = false;
 	float attatcktime=0;
 	string Animatestatus;
@@ -107,7 +108,7 @@ public:
 		heromodel.load(core, "../Resources/UZI/Uzi.gem", shaders, psos, Animatemodels::UZI, position,textures,selftexturename, meshname);
 		heromodelinstace.init(&heromodel.animation, 0);
 	}
-	void anim(Vec3 from, vector<Enemies*> enemies, bool mouse[3], float rexdt, Vec3 forawrd,bool changeR) {
+	void anim(Vec3 from, vector<Enemies*> enemies, bool mouse[3], float rexdt, Vec3 forawrd,bool changeR,vector<Fire*> fires) {
 		if (changeR&&!ischange) {
 			ischange = true;
 			heromodelinstace.update("17 reload", rexdt);
@@ -145,10 +146,17 @@ public:
 							float t;
 							if (enemies[i]->enemymodel.collision.rayAABB(raytest, t)) {
 								enemies[i]->health -= 5;
+								for(int i=0;i< fires.size();i++){
+									if(!fires[i]->active){
+										fires[i]->work(rexdt, from+( forawrd*t));
+										break;
+									}
+								}
 								if (enemies[i]->health <= 0&&!enemies[i]->isdying) {
 									score += 5;
 									enemies[i]->isdying = true;
 								}
+								break;
 							}
 
 						}
@@ -175,10 +183,17 @@ public:
 						float t;
 						if (enemies[i]->enemymodel.collision.rayAABB(raytest, t)) {
 							enemies[i]->health -= 5;
+							for (int i = 0; i < fires.size(); i++) {
+								if (!fires[i]->active) {
+									fires[i]->work(rexdt, from+(forawrd * t));
+									break;
+								}
+							}
 							if (enemies[i]->health <= 0 && !enemies[i]->isdying) {
 								score += 5;
 								enemies[i]->isdying = true;
 							}
+							break;
 						}
 
 					}

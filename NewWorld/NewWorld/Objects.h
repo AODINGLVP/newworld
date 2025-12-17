@@ -258,8 +258,13 @@ public:
 			if (tMin > tMax) return false;
 		}
 
-		outT = tMin > 0 ? tMin : tMax;
-		return outT >= 0;
+		//outT = tMin > 0 ? tMin : tMax;
+		//return outT >= 0;
+		if (tMax < 0.0f)
+			return false;
+
+		outT = tMin;
+		return true;
 	}
 
 
@@ -346,6 +351,122 @@ public:
 
 		shader->updateTexturePS(core, "tex", texture[number]->heapOffset);
 		
+		mesh.draw(core);
+
+
+	}
+
+};
+class Fire {
+public:
+	float timecount = 0;
+	bool active = false;
+	PRIM_VERTEX vertices[3];
+	GeneralMesh mesh;
+	Vec3 position;
+	Vec3 scale = Vec3(1, 1, 1);
+	Matrix realshow;
+	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv, int tiling)
+	{
+		STATIC_VERTEX v;
+		v.pos = p;
+		v.normal = n;
+
+		v.tangent = Vec3(0, 0, 0);
+		v.tu = tu * tiling;
+		v.tv = tv * tiling;
+		return v;
+	}
+	void work(float rexdt,Vec3 newposition) {
+		active = true;
+		position = newposition;
+		timecount = 0;
+	}
+	void end() {
+		active = false;
+		timecount = 0;
+	}
+	void init(Core* core, PSOManager* psos, Shader* shader, Vec3 _position) {
+		int rings = 64;
+		int segments = 128;
+		float radius = 3.f;
+		int tiling = 1;
+		position = _position;
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
+		std::vector<STATIC_VERTEX> vertices;
+		//Calculate the vertices of the circle using latitude and longitude. The normal of each vertex is the position normalize, and the UV values are filled based on the vertex positions.
+		for (int lat = 0; lat <= rings; lat++) {//¦È
+			float theta = lat * M_PI / rings;
+			float sinTheta = sinf(theta);
+			float cosTheta = cosf(theta);
+			for (int lon = 0; lon <= segments; lon++) {////¦Õ
+				float phi = lon * 2.0f * M_PI / segments;
+				float sinPhi = sinf(phi);
+				float cosPhi = cosf(phi);
+				Vec3 position(radius * sinTheta * cosPhi, radius * cosTheta, radius * sinTheta * sinPhi);//turn sphere to 3 dimension
+				Vec3 normal = position.normalize();
+				float tu = 1.0f - (float)lon / segments;//¦Õ
+				float tv = 1.0f - (float)lat / rings;//¦È
+
+				vertices.push_back(addVertex(position, normal, tu, tv, tiling));
+			}
+		}
+
+		std::vector<unsigned int> indices;
+		for (int lat = 0; lat < rings; lat++)
+		{
+			for (int lon = 0; lon < segments; lon++)
+			{
+				int current = lat * (segments + 1) + lon;
+				int next = current + segments + 1;
+				indices.push_back(current);
+				indices.push_back(next);
+				indices.push_back(current + 1);
+				//topleft,bottonleft,topright
+				indices.push_back(current + 1);
+				indices.push_back(next);
+				indices.push_back(next + 1);
+				//topright,bottonleft,botton,right
+			}
+		}
+
+		mesh.init(core, vertices, indices);
+
+
+		//shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
+
+		psos->createPSO(core, "fire", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc,0);
+	}
+	void apply(Core* core, Shader* shader) {
+
+
+		for (int i = 0; i < shader->vsConstantBuffers.size(); i++)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(0, shader->vsConstantBuffers[i].getGPUAddress());
+			shader->vsConstantBuffers[i].next();
+		}
+		for (int i = 0; i < shader->psConstantBuffers.size(); i++)
+		{
+			core->getCommandList()->SetGraphicsRootConstantBufferView(1, shader->psConstantBuffers[i].getGPUAddress());
+			shader->psConstantBuffers[i].next();
+		}
+
+	}
+
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, vector<Texture*> texture,float *rexdt)
+	{
+
+		realshow = Matrix::translation(position) * Matrix::scaling(scale);
+		Vec3 fireposition = Vec3(position.x, position.y-1.5, position.z);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "W", w);
+		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "VP", vp);
+		shader->updatePSConstantBuffer(core, "TimeBuffer", "iTime", &timecount);
+		shader->updatePSConstantBuffer(core, "TimeBuffer", "fireposition", &fireposition);
+
+		apply(core, shader);
+		psos->bind(core, "fire");
+
+		//shader->updateTexturePS(core, "tex", texture[0]->heapOffset);
 		mesh.draw(core);
 
 
@@ -457,7 +578,7 @@ public:
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
 
 		apply(core, shader);
-		psos->bind(core, "cube");
+		psos->bind(core, "Sphere");
 
 		shader->updateTexturePS(core, "tex", texture[0]->heapOffset);
 		mesh.draw(core);

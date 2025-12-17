@@ -52,6 +52,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	vector<Objectload> loadgameanim;
 	vector<Objectload> loadinsatnceinformatiojn;
 	vector<vector<Vec3>> loadinstanceposition;
+	vector<Fire*>fires;
 	Window win;
 	Core core;
 	core.init(window->hwnd, kuan, gao);
@@ -69,6 +70,17 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shaderinstance", "shaders/ShaderTextureLightInstace.hlsl", "shaders/ShaderTextureLightInstace.hlsl");
 	shaders.load(&core, "shaderinstancegrass", "shaders/ShaderTextureLightInstacegrass.hlsl", "shaders/ShaderTextureLightInstacegrass.hlsl");
 	shaders.load(&core, "shaderfont", "shaders/ShaderFont.hlsl", "shaders/ShaderFont.hlsl");
+	shaders.load(&core, "shaderfire", "shaders/Shaderfire.hlsl", "shaders/Shaderfire.hlsl");
+
+	Fire fire;
+	fire.init(&core, &psos, &shaders.shaders["shaderfire"], Vec3(0, 10, 0));
+
+
+	for (int i = 0; i < 40; i++) {
+				Fire* fire1 = new Fire();
+		fire1->init(&core, &psos, &shaders.shaders["shaderfire"], Vec3(0, 0, 0));
+		fires.push_back(fire1);
+	}
 
 	Cube cube;
 	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10),"plane");
@@ -156,7 +168,6 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	loadcontrol.LoadinstaceData(&loadinsatnceinformatiojn);
 	loadcontrol.LoadinstacepositionData(&loadinstanceposition);
-
 
 	vector<vector<INSTANCE>> scv111;
 	for (int j = 0; j < loadinsatnceinformatiojn.size(); j++) {
@@ -276,6 +287,13 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		if (win.keys['D']) delta -= Vec4(groundright.x, 0, groundright.z, 0);
 		if (win.keys['W']) delta += Vec4(groundforawrd.x, 0, groundforawrd.z, 0);
 		if (win.keys['S']) delta -= Vec4(groundforawrd.x, 0, groundforawrd.z, 0);
+
+
+		if (win.keys['N']) {
+			for (int i = 0; i < enemies.size(); i++) {
+				enemies[i]->die(from.TransToVec3RemoveW());
+			}
+		}
 		//delta=delta.normalize();
 		delta *= cameramovespeed * rexdt;
 		from = from + delta;
@@ -311,7 +329,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	}
 
 		for (int i = 0; i < enemies.size(); i++) {
-			
+			enemies[i]->distance = (enemies[i]->enemymodel.position - hero->heromodel.position).length();
 			
 			
 			
@@ -344,8 +362,17 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			enemies[i]->enemymodel.draw(&core, &enemies[i]->enemymodel.realshow, &vp,&from3,&light.Strength,&light.Direction,&shaders.shaders["shaderTexture"], &psos, &enemies[i]->enemymodelinstace, R,textures.find(enemies[i]->enemymodel.texturename), textures.findNH(enemies[i]->enemymodel.texturename));
 			
 			
+		}	
+		for (int i = 0; i < enemies.size(); i++) {
+			for (int j = 0; j < enemies.size()-1; j++) {
+				if(enemies[j]->distance>enemies[j+1]->distance){
+					Enemies* temp;
+					temp = enemies[j];
+					enemies[j] = enemies[j + 1];
+					enemies[j + 1] = temp;
+				}
+			}
 		}
-
 		for (int i = 0; i < cubes.size(); i++) {
 			cubes[i]->draw(&core, &cubes[i]->realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 		}
@@ -365,11 +392,35 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Vec3 from33 = Vec3(from.x, from.y, from.z);
 
 		
-		hero->anim(from33, enemies, win.mouseButtons, rexdt, forward.TransToVec3RemoveW(), win.keys['R']);
+		hero->anim(from33, enemies, win.mouseButtons, rexdt, forward.TransToVec3RemoveW(), win.keys['R'],fires);
 		hero->heromodel.draw(&core, &hero->heromodel.realshow, &vp, &from33, &light.Strength, &light.Direction, &shaders.shaders["shaderAnimlight"], &psos, &hero->heromodelinstace, R, textures.find(hero->heromodel.texturename), textures.findNH(hero->heromodel.texturename));
+		for (int i = 0; i < fires.size(); i++) {
+			if (fires[i]->active) {
 
-	
+				fires[i]->timecount += rexdt;
+				fires[i]->draw(&core, &fires[i]->realshow, &vp, &shaders.shaders["shaderfire"], &psos, textures.find("font"), &dt);
+				if (fires[i]->timecount >=0.95f) {
+					fires[i]->end();
+				}
+				
+			}
+		}
 		
+		
+
+
+
+
+
+
+
+
+		fire.draw(&core, &fire.realshow, &vp, &shaders.shaders["shaderfire"], &psos, textures.find("font"), &dt);
+		fire.position.x -= 0.5f*rexdt;
+
+
+
+
 
 
 
@@ -400,6 +451,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		if (hero->health <= 0) {
 			end->draw(&core, &R, &vp, &shaders.shaders["shaderfont"], &psos, textures.find("font"), 14);
 		}
+		
 		core.finishFrame();
 
 	}
