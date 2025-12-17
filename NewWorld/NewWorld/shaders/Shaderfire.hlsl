@@ -35,39 +35,40 @@ struct PS_INPUT
 
 float hash1(float n)
 {
-    return frac(sin(n) * 43758.5453);
+    return frac(sin(n) * 52356.1237);
 }
 
 
-float3 FireworkParticles(
-    float3 worldPos,
-    float3 fireworkPos,
-    float time,
-    float3 baseColor
+float3 FireworkParticles( float3 worldPos,float3 fireworkPos,float time,float3 baseColor
 )
 {
+    float seed = hash1(dot(fireworkPos, float3(12.9898, 78.233, 45.164)));
+    //random seed
     float3 color = float3(0, 0, 0);
 
     const int NUM_PARTICLES = 109;
 
     for (int i = 0; i < NUM_PARTICLES; i++)
     {
-        float angle = hash1(i * 13.37) * 6.2831853;
-        float speed = lerp(3.0, 6.0, hash1(i * 91.17));
-
+        
+        float speed = lerp(3.0, 6.0, hash1(i *seed* 31.35));
+        //get random speed form 3 to 6
         float3 dir = normalize(float3(
-            cos(angle),
-            hash1(i * 7.1) * 1.2,
-            sin(angle)
+            hash1(i*seed * 33.95)*2-1 ,
+            hash1(i*seed * 7.1)*2-1 ,
+            hash1(i*seed * 25.12)*2-1
         ));
-
+    //random direction
         float3 p = fireworkPos + dir * speed * time;
-
+        //now position of particle
         float dist = length(worldPos - p);
         float size = 0.1;
         float fade = saturate(1.0 - time);
 
         float intensity = smoothstep(size, 0.0, dist) * fade;
+        //calculate color based on distance
+        //the dis more close to zero more light
+
         color += baseColor * intensity;
     }
 
@@ -96,9 +97,9 @@ PS_INPUT VS(VS_INPUT input)
 float4 PS(PS_INPUT input) : SV_Target
 {
    
-    float3 fireworkPos   = fireposition; // 世界空间位置
+    float3 fireworkPos   = fireposition; 
     float fireworkTime   = frac(iTime);             
-    float3 fireworkColor = float3(1.0f, 0.6f, 0.2f)*10; // 橙黄色
+    float3 fireworkColor = float3(1.0f, 0.6f, 0.2f)*10; 
 
     float3 firework = FireworkParticles(
         input.PosW,
@@ -110,11 +111,11 @@ float4 PS(PS_INPUT input) : SV_Target
 
 
 
-    float intensity = length(firework); // 亮度
+    float intensity = length(firework); 
     
-   if (intensity < 0.1f)
+   if (intensity < 0.1f)//cut the dark part
        discard;
-    float luminance = dot(fireworkColor, float3(0.2126, 0.7152, 0.0722));
+    float luminance = dot(fireworkColor, float3(0.2126, 0.7152, 0.0722));//cut the dark part
     if (luminance < 0.05)
    discard;
     return float4(firework, 1.0f);
