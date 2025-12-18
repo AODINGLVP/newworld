@@ -23,7 +23,7 @@ public:
 	unsigned int cbSizeInBytes;
 	unsigned int numInstances;
 	unsigned int offsetIndex;
-	void init(Core* core, unsigned int sizeInBytes, unsigned int maxDrawCalls = 1024)
+	void init(Core* core, unsigned int sizeInBytes, unsigned int maxDrawCalls = 100000)
 	{
 		cbSizeInBytes = (sizeInBytes + 255) & ~255;
 		unsigned int cbSizeInBytesAligned = cbSizeInBytes * maxDrawCalls;
