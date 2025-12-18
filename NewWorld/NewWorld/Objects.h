@@ -47,19 +47,25 @@ public:
 	{
 		Vec3 s = (realminpoint - r.o) * r.invdir;
 		Vec3 l = (realmaxpoint - r.o) * r.invdir;
+		//calculate the time of input and output in xyz directions
 		Vec3 s1 = Min(s, l);
 		Vec3 l1 = Max(s, l);
+		//if the direction is negative, swap the value
 		float ts = max(s1.x, max(s1.y, s1.z));
+		//the max number in min,the real enter time
 		float tl = min(l1.x, min(l1.y, l1.z));
+		//the min number in max, the real leave time
 		t = min(ts, tl);
 
 	
 		if (tl < 0.0f)
 			return false;
-
+		//direction is negative
 	
 
 		return (ts < tl);
+		
+
 	}
 
 	void staticinit(vector<STATIC_VERTEX> _staticbox, Vec3 _position) {
