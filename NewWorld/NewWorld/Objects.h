@@ -52,6 +52,13 @@ public:
 		float ts = max(s1.x, max(s1.y, s1.z));
 		float tl = min(l1.x, min(l1.y, l1.z));
 		t = min(ts, tl);
+
+	
+		if (tl < 0.0f)
+			return false;
+
+	
+
 		return (ts < tl);
 	}
 
@@ -204,68 +211,7 @@ public:
 	}
 
 
-	bool RayIntersectAABB( Vec3 rayOrigin, Vec3 rayDir,float outT) 
-	{
-		float tMin = -FLT_MAX;
-		float tMax = FLT_MAX;
-
-		
-		if (fabs(rayDir.x) < 1e-6f) {
-			
-			if (rayOrigin.x < realminpoint.x || rayOrigin.x > realmaxpoint.x)
-				
-				return false;
-		}
-		else {
-			float invD = 1.0f / rayDir.x;
-			float t1 = (realminpoint.x - rayOrigin.x) * invD;
-			
-			float t2 = (realmaxpoint.x - rayOrigin.x) * invD;
-			
-			if (t1 > t2) swap(t1, t2);
-			tMin = max(tMin, t1);
-			tMax = min(tMax, t2);
-			if (tMin > tMax) return false;
-		}
-
-		
-		if (fabs(rayDir.y) < 1e-6f) {
-			if (rayOrigin.y < realminpoint.y || rayOrigin.y > realmaxpoint.y)
-				return false;
-		}
-		else {
-			float invD = 1.0f / rayDir.y;
-			float t1 = (realminpoint.y - rayOrigin.y) * invD;
-			float t2 = (realmaxpoint.y - rayOrigin.y) * invD;
-			if (t1 > t2) std::swap(t1, t2);
-			tMin = max(tMin, t1);
-			tMax = min(tMax, t2);
-			if (tMin > tMax) return false;
-		}
-
-		
-		if (fabs(rayDir.z) < 1e-6f) {
-			if (rayOrigin.z < realminpoint.z || rayOrigin.z > realmaxpoint.z)
-				return false;
-		}
-		else {
-			float invD = 1.0f / rayDir.z;
-			float t1 = (realminpoint.z - rayOrigin.z) * invD;
-			float t2 = (realmaxpoint.z - rayOrigin.z) * invD;
-			if (t1 > t2) std::swap(t1, t2);
-			tMin = max(tMin, t1);
-			tMax = min(tMax, t2);
-			if (tMin > tMax) return false;
-		}
-
-		//outT = tMin > 0 ? tMin : tMax;
-		//return outT >= 0;
-		if (tMax < 0.0f)
-			return false;
-
-		outT = tMin;
-		return true;
-	}
+	
 
 
 };
@@ -961,7 +907,7 @@ public:
 	Vec3 forward=Vec3(0,0,0);
 	Matrix realshow;
 	string texturename;
-
+	Matrix roationnow;
 	vector<vector<ANIMATED_VERTEX>> manyvertices;
 	vector<vector<unsigned int>> manyindices;
 	string meshname;
@@ -1072,7 +1018,7 @@ public:
 	}
 	void draw(Core* core, Matrix* w, Matrix* vp, Vec3* camerafrom, Vec3* strength, Vec3* direction, Shader* shader, PSOManager* psos, AnimationInstance* instance, Matrix& roation, vector<Texture*> texture, vector<Texture*> NHtexture)
 	{
-		
+		roationnow = roation;
 		Vec4 gDiffuseAlbedo = Vec4(1, 1, 1, 1);
 		Vec4 gAmbientLight = Vec4(0.2f, 0.2f, 0.2f, 1.0f);
 		float  gRoughness = 0.1f;

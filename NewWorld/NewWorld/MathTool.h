@@ -856,6 +856,22 @@ namespace MathTool
 			return R;
 
 		}
+		Matrix static ForwardtoOnlyfire(Vec3 forward) {//rotation  the collider box and the Trex
+			//models have different basic forward,so only use in TRex
+			Matrix RY;
+			Matrix RX;
+
+			float yaw = atan2f(forward.x, forward.z);
+		
+			
+		
+			float pitch = -asinf(forward.y);
+			RY = RY.rotationY(yaw);
+			RX = RX.rotationX(pitch);
+			Matrix R = RY * RX;
+			return R;
+
+		}
 		Matrix static ForwardtoTOnlyHero(Vec3 forward) {//only for hero
 			Matrix RY;
 			Matrix RX;

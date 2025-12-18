@@ -141,14 +141,18 @@ public:
 
 				if (mouse[0] && bullet > 0) {
 					if (shot) {
-						raytest.init(from, forawrd);
+						raytest.init(from+forward*3, forawrd);
 						for (int i = 0; i < enemies.size(); i++) {
 							float t;
 							if (enemies[i]->enemymodel.collision.rayAABB(raytest, t)) {
 								enemies[i]->health -= 5;
 								for(int i=0;i< fires.size();i++){
 									if(!fires[i]->active){
-										fires[i]->work(rexdt, from+( forawrd*t));
+										
+											fires[i]->work(rexdt, from + (forawrd * (t + 3)));
+										
+										
+										fires[i]->work(rexdt, from+( forawrd*(t)));
 										break;
 									}
 								}
@@ -178,14 +182,17 @@ public:
 			}
 			else if (mouse[0] && bullet > 0) {
 				if (shot) {
-					raytest.init(from, forawrd);
+					raytest.init(from + forward * 3, forawrd);
 					for (int i = 0; i < enemies.size(); i++) {
 						float t;
 						if (enemies[i]->enemymodel.collision.rayAABB(raytest, t)) {
 							enemies[i]->health -= 5;
 							for (int i = 0; i < fires.size(); i++) {
 								if (!fires[i]->active) {
-									fires[i]->work(rexdt, from+(forawrd * t));
+									
+										fires[i]->work(rexdt, from + (forawrd * (t+3)));
+									
+									
 									break;
 								}
 							}

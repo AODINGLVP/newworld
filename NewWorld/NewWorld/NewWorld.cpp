@@ -359,6 +359,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			Vec3 from3 = Vec3(from.x, from.y, from.z);
 			Matrix R = Matrix::ForwardtoOnlyTRex(scv, &enemies[i]->enemymodel.forward,dt);
 			enemies[i]->enemymodel.collision.update(enemies[i]->enemymodel.position, R);
+			//if (enemies[i]->enemymodel.collision.AABBtest(hero->heromodel.collision.realminpoint, hero->heromodel.collision.realmaxpoint)) {
+			//	R = enemies[i]->enemymodel.roationnow;
+				//enemies[i]->enemymodel.collision.update(enemies[i]->enemymodel.position, R);
+			//}
+
 			enemies[i]->enemymodel.draw(&core, &enemies[i]->enemymodel.realshow, &vp,&from3,&light.Strength,&light.Direction,&shaders.shaders["shaderTexture"], &psos, &enemies[i]->enemymodelinstace, R,textures.find(enemies[i]->enemymodel.texturename), textures.findNH(enemies[i]->enemymodel.texturename));
 			
 			
@@ -394,6 +399,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		
 		hero->anim(from33, enemies, win.mouseButtons, rexdt, forward.TransToVec3RemoveW(), win.keys['R'],fires);
 		hero->heromodel.draw(&core, &hero->heromodel.realshow, &vp, &from33, &light.Strength, &light.Direction, &shaders.shaders["shaderTexture"], &psos, &hero->heromodelinstace, R, textures.find(hero->heromodel.texturename), textures.findNH(hero->heromodel.texturename));
+		//R = R.LookRotation(forward.TransToVec3RemoveW(),Vec3(0,1,0));
 		for (int i = 0; i < fires.size(); i++) {
 			if (fires[i]->active) {
 
@@ -401,7 +407,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				Vec3 scv;
 				scv = hero->heromodel.position - fires[i]->position;//calculate the new forward
 				scv = scv.normalize();
-				Matrix R = Matrix::ForwardtoOnlyTRex(scv, &scv, dt);
+				R = R.ForwardtoOnlyfire(forward.TransToVec3RemoveW());
 				fires[i]->draw(&core, &fires[i]->realshow, &vp, &shaders.shaders["shaderfire"], &psos, textures.find("font"), &dt, R);
 				if (fires[i]->timecount >=0.95f) {
 					fires[i]->end();
