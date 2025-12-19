@@ -112,10 +112,12 @@ public:
 		if (changeR&&!ischange) {
 			ischange = true;
 			heromodelinstace.update("17 reload", rexdt);
+			//start reload
 		}
 		if (bullet <= 0 && !ischange) {
 			ischange = true;
 			heromodelinstace.update("17 reload", rexdt);
+			//auto reload
 		}
 		if (ischange) {
 			heromodelinstace.update("17 reload", rexdt);
@@ -138,21 +140,24 @@ public:
 
 
 			if (mouse[1]) {
-
+				//zoom
 				if (mouse[0] && bullet > 0) {
 					if (shot) {
+						// zoom shot
 						raytest.init(from+forward*3, forawrd);
+						////plus 3 to make bullet shot front of camera
 						for (int i = 0; i < enemies.size(); i++) {
 							float t;
 							if (enemies[i]->enemymodel.collision.rayAABB(raytest, t)) {
+								//hit the target or not
 								enemies[i]->health -= 5;
 								for(int i=0;i< fires.size();i++){
 									if(!fires[i]->active){
 										
 											fires[i]->work(rexdt, from + (forawrd * (t + 3)));
+										//particle effect
 										
 										
-										fires[i]->work(rexdt, from+( forawrd*(t)));
 										break;
 									}
 								}
