@@ -342,55 +342,33 @@ public:
 		return v;
 	}
 	void init(Core* core, PSOManager* psos, Shader* shader, Vec3 _position, string _msehname) {
-		float size = 10.0f;       
-		float halfSize = size * 0.5f;
-
-		int width = 100;
-		int height = 100;
+		
 
 		std::vector<STATIC_VERTEX> vertices;
 		//A standing plane
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
+	
 
-				float u = j / float(width - 1);  
-				float v = i / float(height - 1);  
 
-				
-				float x = (u - 0.5f) * size;
-				float y = (v - 0.5f) * size;
+		vertices.push_back(addVertex(Vec3(-5, -5, 0), Vec3(0, 0, 0), 0, 0));
+		vertices.push_back(addVertex(Vec3(-5, 5, 0), Vec3(0, 0, 0), 0, 1));
+		vertices.push_back(addVertex(Vec3(5,5,0), Vec3(0, 0, 0), 1, 1));
+		vertices.push_back(addVertex(Vec3(5,-5, 0), Vec3(0, 0, 0), 1, 0));
+		
 
-				vertices.push_back(addVertex(Vec3(x, y, 0.0f),Vec3(0.0f, 0.0f, 1.0f), u, v ));
-			}
-		}
+
+
 
 		std::vector<unsigned int> indices;
-		for (int i = 0; i < height - 1; i++) {
-			for (int j = 0; j < width - 1; j++) {
+		indices.push_back(0);
+		indices.push_back(1);
+		indices.push_back(2);
 
-				int current = i * width + j;
-				int right = current + 1;
-				int down = current + width;
-				int downR = down + 1;
-
-				indices.push_back(current);
-				indices.push_back(down);
-				indices.push_back(right);
-
-
-				indices.push_back(right);
-				indices.push_back(down);
-				indices.push_back(downR);
-			}
-		}
-		vector<vector<STATIC_VERTEX>> scv;
-		scv.push_back(vertices);
-
-		vector<vector<unsigned int> >scv1;
-		scv1.push_back(indices);
-
-		//MeshManager::Instance().loadmesh(core, scv, scv1, meshname);
+		indices.push_back(0);
+		indices.push_back(2);
+		indices.push_back(3);
 		mesh.init(core, vertices, indices);
+		//MeshManager::Instance().loadmesh(core, scv, scv1, meshname);
+		
 
 
 		//shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
