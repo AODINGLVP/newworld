@@ -34,6 +34,8 @@ public:
 	}
 
 	vector<Objectload> LoadData(vector<Objectload>* scv1, vector<Objectload>* scv2) {
+
+		//get animted information from csv
 		ifstream file("../Resources/loadfile1.csv");
 
 		string line;
@@ -69,6 +71,7 @@ public:
 			getline(theline, word, ';');
 			getinformation.meshname = (word);
 			if (getinformation.type == "static") {
+				//not use
 				scv1->push_back(getinformation);
 			}
 			else {
@@ -85,6 +88,7 @@ public:
 	}
 
 	vector<Objectload> LoadinstaceData(vector<Objectload>* scv1) {
+		//get instance information from csv
 		ifstream file("../Resources/loadfileinstancedata.csv");
 
 		string line;
@@ -133,6 +137,7 @@ public:
 		return scv;
 	}
 	vector<Objectload> LoadinstacepositionData(vector<vector<Vec3>>* scv1) {
+		//get instance position from csv
 		ifstream file("../Resources/loadfileinstanceposition.csv");
 		vector<Vec3>instances;
 		string line;
@@ -171,6 +176,8 @@ public:
 
 
 	void Loadgame(vector<Enemies>* enemies, vector<StaticModle>* staticmodles, Core* core, PSOManager* psos, Shaders* shaders,TextureManager* textures) {
+		//not use
+
 		//Actually, I'm not quite sure. Maybe it's because of the initialization of the animation model,
 		// or the data passed into the vector is incorrect. In general, if I store the enemies into the vector and initialize it here, 
 		// it will cause the queue of the vector to crash and report an error. The content of the error seems to be that the red-black tree was damaged due to out-of-bounds access.

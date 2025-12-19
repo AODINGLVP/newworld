@@ -1259,43 +1259,43 @@ namespace MathTool
 		);
 	}
 
-	// Sutherland–Hodgman 三角形 Near-plane 裁剪
+	
 	inline std::vector<Vec4> ClipTriangleAgainstNearPlane(const std::vector<Vec4>& tri)
 	{
 		std::vector<Vec4> output;
 
 		int n = tri.size();
-		if (n != 3) return output;  // 三角形必须是三个点
+		if (n != 3) return output;  
 
 		for (int i = 0; i < n; i++)
 		{
-			Vec4 S = tri[(i + n - 1) % n];  // 上一个点
-			Vec4 P = tri[i];                // 当前点
+			Vec4 S = tri[(i + n - 1) % n];  
+			Vec4 P = tri[i];               
 
 			bool S_in = InsideNear(S);
 			bool P_in = InsideNear(P);
 
 			if (S_in && P_in)
 			{
-				// 都在里面 → 保留 P
+				
 				output.push_back(P);
 			}
 			else if (S_in && !P_in)
 			{
-				// S 在内，P 在外 → 加交点
+				
 				Vec4 I = IntersectNear(S, P);
 				output.push_back(I);
 			}
 			else if (!S_in && P_in)
 			{
-				// S 在外，P 在内 → 交点 + P
+				
 				Vec4 I = IntersectNear(S, P);
 				output.push_back(I);
 				output.push_back(P);
 			}
 			else
 			{
-				// 都在外 → 什么都不加
+				
 			}
 		}
 

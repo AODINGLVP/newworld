@@ -109,7 +109,7 @@ public:
 
 		if (FAILED(hr)) {
 			if (status) {
-				// Print the error to the Visual Studio Output window
+				
 				OutputDebugStringA((char*)status->GetBufferPointer());
 				status->Release();
 			}

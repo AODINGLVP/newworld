@@ -125,14 +125,14 @@ public:
 	{
 		maxInstances = maxInstanceCount;
 
-		// 指定实例缓冲区在GPU内存堆中
+		// The designated instance buffer is located in the GPU memory heap.
 		D3D12_HEAP_PROPERTIES heapProps = {};
 		//– Can be only in upload heap if instance data changes often
 		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
 		heapProps.CreationNodeMask = 1;
 		heapProps.VisibleNodeMask = 1;
 
-		// 创建实例缓冲区描述
+		// Create instance buffer description
 		D3D12_RESOURCE_DESC instanceBufferDesc = {};
 		instanceBufferDesc.Width = maxInstanceCount * instanceSizeInBytes;
 		instanceBufferDesc.Height = 1;
@@ -143,7 +143,7 @@ public:
 		instanceBufferDesc.SampleDesc.Quality = 0;
 		instanceBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-		// 创建实例缓冲区资源
+		// Create instance buffer resources
 		HRESULT hr = core->device->CreateCommittedResource(
 			&heapProps,
 			D3D12_HEAP_FLAG_NONE,
@@ -250,8 +250,9 @@ public:
 	}
 	map<string, vector<GeneralMesh*>> meshesmanager;
 	void loadmesh(Core* core, vector<vector<STATIC_VERTEX>> vertices, vector<vector<unsigned int>> indices,string meshname) {
+		//for static modle
 		if (meshesmanager.find(meshname) != meshesmanager.end()) {
-
+			//if exists,not load again
 		}
 		else {
 			vector<GeneralMesh*> meshes;
@@ -266,6 +267,7 @@ public:
 		
 	}
 	void loadmesh(Core* core, vector<vector<ANIMATED_VERTEX>> vertices, vector<vector<unsigned int>> indices, string meshname) {
+		//for animated modle
 		if (meshesmanager.find(meshname) != meshesmanager.end()) {
 
 		}

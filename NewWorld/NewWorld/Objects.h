@@ -39,10 +39,10 @@ class Collider {
 public:
 	vector<ANIMATED_VERTEX> animatebox;
 	vector<STATIC_VERTEX> staticbox;
-	Vec3 realminpoint;
-	Vec3 realmaxpoint;
-	Vec3 minpoint;
-	Vec3 maxpoint;
+	Vec3 realminpoint;//world space
+	Vec3 realmaxpoint;//world space
+	Vec3 minpoint;//local space
+	Vec3 maxpoint;//local space
 	bool rayAABB(const Ray& r, float& t)
 	{
 		Vec3 s = (realminpoint - r.o) * r.invdir;
@@ -108,6 +108,7 @@ public:
 
 
 	void staticcalculateBox() {
+		//find the min and max point
 		for (int i = 0; i < staticbox.size(); i++) {
 
 			if (staticbox[i].pos.x > maxpoint.x) {
@@ -131,8 +132,10 @@ public:
 		}
 		minpoint = minpoint * 0.01f;
 		maxpoint = maxpoint * 0.01f;
+		//scale down the box,but static modle don't test collision right now
 	}
 	void update(Vec3 position, Matrix scv) {
+		//rotation need calculate the 8 corner point and find the new min and max point
 		vector<Vec3>corner;
 		corner.push_back(Vec3(minpoint.x, minpoint.y, minpoint.z));
 		corner.push_back(Vec3(minpoint.x, minpoint.y, maxpoint.z));
@@ -205,7 +208,7 @@ public:
 
 	bool AABBtest(const Vec3& minB, const Vec3& maxB)
 	{
-
+		// If, in any direction, one bounding box lies completely on one side of the other, then they cannot intersect.
 		if (realmaxpoint.x < minB.x || realminpoint.x > maxB.x)
 			return false;
 		if (realmaxpoint.y < minB.y || realminpoint.y > maxB.y)
@@ -250,17 +253,14 @@ public:
 		int height = 25;
 		std::vector<STATIC_VERTEX> vertices;
 		
-		Vec3 p0(minpoint.x, minpoint.z, minpoint.z); // 左下
-		Vec3 p1(minpoint.x, maxpoint.z, maxpoint.z); // 左上
-		Vec3 p2(maxpoint.x, maxpoint.z, maxpoint.z); // 右上
-		Vec3 p3(maxpoint.x, minpoint.z, minpoint.z); // 右下
+		
 
-		vertices.push_back(addVertex(p0, Vec3(0, 0, 0), 0, 0));
-		vertices.push_back(addVertex(p1, Vec3(0, 0, 0), 0, 1));
-		vertices.push_back(addVertex(p2, Vec3(0, 0, 0), 1, 1));
-		vertices.push_back(addVertex(p3, Vec3(0, 0, 0), 1, 0));
-				//vertices.push_back(addVertex(Vec3(fi, 0, fj), Vec3(0.0f, 1.0f, 0.0f), (float)i / height, (float)j / width));
-
+		vertices.push_back(addVertex(Vec3 (minpoint.x, minpoint.z, minpoint.z), Vec3(0, 0, 0), 0, 0));
+		vertices.push_back(addVertex(Vec3 (minpoint.x, maxpoint.z, maxpoint.z), Vec3(0, 0, 0), 0, 1));
+		vertices.push_back(addVertex(Vec3 (maxpoint.x, maxpoint.z, maxpoint.z), Vec3(0, 0, 0), 1, 1));
+		vertices.push_back(addVertex(Vec3 (maxpoint.x, minpoint.z, minpoint.z), Vec3(0, 0, 0), 1, 0));
+		//in fact,UV is not right,but i changed the texture to fit it,so it's ok now
+		//When I was making it, it seemed that I misunderstood where the origin of UV was,but now i know.
 			
 		
 
@@ -349,7 +349,7 @@ public:
 		int height = 100;
 
 		std::vector<STATIC_VERTEX> vertices;
-
+		//A standing plane
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
 
@@ -504,6 +504,7 @@ public:
 		//shader->init(core,"ShaderVertices.hlsl","ShaderPixel.hlsl");
 
 		psos->createPSO(core, "Sphere", shader->vertexShader, shader->pixelShader, mesh.inputLayoutDesc,2);
+		//not input z for deepth test,to make sure always behidn other object
 	}
 	void apply(Core* core, Shader* shader) {
 		
@@ -552,8 +553,9 @@ public:
 
 
 class Cube {
+	//in fact it's a plane
 public:
-
+	
 	PRIM_VERTEX vertices[3];
 	//GeneralMesh mesh;
 	Vec3 position ;
@@ -873,7 +875,7 @@ public:
 	
 		shader->updatePSConstantBuffer(core, "staticLightBuffer", "Strength", strength);
 		shader->updatePSConstantBuffer(core, "staticLightBuffer", "Direction", direction);
-
+		//update light info
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
 
@@ -1167,9 +1169,12 @@ public:
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
 		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "W", w);
 		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "VP", vp);
-		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "freq", &freq);
-		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "time", time);
-		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "speed", &speed);
+
+
+
+
+
+
 		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "amplitude", &amplitude);
 	
 		

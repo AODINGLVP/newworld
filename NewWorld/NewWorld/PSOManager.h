@@ -41,18 +41,22 @@ public:
 		// Responsible for configuring the depth buffer
 		D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
 		if (method==0) {
+			//normal depth test
 			depthStencilDesc.DepthEnable = TRUE;
 			depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 			depthStencilDesc.StencilEnable = FALSE;
 		}
 		else if(method==1){
+
+			//no depth test
 			depthStencilDesc.DepthEnable = FALSE;              
 			depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 			depthStencilDesc.StencilEnable = FALSE;
 		}
 		else if (method == 2) {
+			//depth test but no depth write
 			depthStencilDesc.DepthEnable = TRUE;
 			depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;

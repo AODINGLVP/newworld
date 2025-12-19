@@ -27,6 +27,7 @@ public:
 		enemymodelinstace.init(&enemymodel.animation, 0);
 	}
 	void die(Vec3 heroposition) {
+		//respawn at random position around hero
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_real_distribution<float> dist(100.f, 150.f);
@@ -145,7 +146,7 @@ public:
 					if (shot) {
 						// zoom shot
 						raytest.init(from+forward*3, forawrd);
-						////plus 3 to make bullet shot front of camera
+						///add three Make sure the bullet is fired in front of the camera.
 						for (int i = 0; i < enemies.size(); i++) {
 							float t;
 							if (enemies[i]->enemymodel.collision.rayAABB(raytest, t)) {

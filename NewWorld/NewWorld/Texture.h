@@ -96,7 +96,7 @@ public:
 	map<string, vector<Texture*> > NHtextures;
 
 	void load(Core* core, vector<string> name, string texturename)
-	{
+	{//for mesh don't next NH,such as UI
 		if (textures.find(texturename) != textures.end()) {
 
 		}
@@ -117,7 +117,7 @@ public:
 		
 	}
 	void load(Core* core, vector<string> name,vector<string>NHname, string texturename)
-	{
+	{//load NH and texture
 		if (textures.find(texturename) != textures.end()) {
 
 		}
