@@ -186,6 +186,7 @@ public:
 
 			}
 			else if (mouse[0] && bullet > 0) {
+				//normal shot
 				if (shot) {
 					raytest.init(from + forward * 3, forawrd);
 					for (int i = 0; i < enemies.size(); i++) {
@@ -220,6 +221,7 @@ public:
 			}
 			else {
 				heromodelinstace.updatewithControl("04 idle", rexdt);
+				//idle
 			}
 		}
 	}

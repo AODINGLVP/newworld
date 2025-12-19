@@ -64,7 +64,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	shaders.load(&core, "shader1", "shaders/ShaderVertices.hlsl", "shaders/ShaderTexture.hlsl");
 	shaders.load(&core, "shaderAnim", "shaders/ShaderVerticesAnim.hlsl", "shaders/ShaderPixel.hlsl");
 	shaders.load(&core, "shaderTexture", "shaders/ShaderVerticesAnim.hlsl", "shaders/ShaderTexture.hlsl");
-	shaders.load(&core, "shaderSkyBox", "shaders/ShaderskyboxVector.hlsl", "shaders/ShaderTexture.hlsl");
+	
 	shaders.load(&core, "shaderlight", "shaders/ShaderTextureLight.hlsl", "shaders/ShaderTextureLight.hlsl");
 	shaders.load(&core, "shaderAnimlight", "shaders/ShaderTextureLightAnim.hlsl", "shaders/ShaderTextureLightAnim.hlsl");
 	shaders.load(&core, "shaderinstance", "shaders/ShaderTextureLightInstace.hlsl", "shaders/ShaderTextureLightInstace.hlsl");

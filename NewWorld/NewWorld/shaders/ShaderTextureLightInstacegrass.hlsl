@@ -27,7 +27,7 @@ cbuffer staticMeshBuffer
     float WindIntensity;
     float WindWeight;
    
-    float areaSize;
+    
 
 
 
@@ -35,9 +35,9 @@ cbuffer staticMeshBuffer
 
 cbuffer staticLightBuffer 
 {
-    float3 gEyePosW;    //camera from
-    float  pad0;            
-    float4 gDiffuseAlbedo;//baisc colour for obejct
+   
+    float2  pad0;            
+   
     float4 gAmbientLight;
    
     float3 Strength;
@@ -78,18 +78,18 @@ float3 GetWindEffect(float3 VertexWorldPos,  float GrassUV, float WindSpeed, flo
    
 }
 
-float3 ComputeDirectionalLight(Light L,float4 DiffuseAlbedo, float3 normal, float3 toEye)
+float3 ComputeDirectionalLight(Light L, float3 normal )
 {
     float3 lightVec = -normalize(L.Direction);//calculate the vector from surface to light
     float ndotl = max(dot(lightVec, normal), 0.0f);//Lambert’s Cosine Law,calculate the strength of light 
     float3 lightStrength = L.Strength * ndotl;//mix
 
-    return DiffuseAlbedo.rgb* lightStrength;
+    return lightStrength;
 }
 
-float4 ComputeLighting(Light L, float4 DiffuseAlbedo,float3 pos, float3 normal, float3 toEye,float shadowFactor)
+float4 ComputeLighting(Light L,float3 pos, float3 normal )
 {
-    float3 result = shadowFactor * ComputeDirectionalLight(L, DiffuseAlbedo, normal, toEye);
+    float3 result =  ComputeDirectionalLight(L, normal);
     return float4(result, 0.0f);
 }
 
@@ -105,7 +105,7 @@ PS_INPUT VS(VS_INPUT input)
 
   
    
-   // posW.y += sin(posW.x * freq + time * speed) * amplitude;
+   
 
     float4 PosW4=float4(o.PosW,1.0f);
     
@@ -144,21 +144,21 @@ float4 PS(PS_INPUT input) : SV_Target0
     float3 normalWS = normalize(mul(normalTS, TBN));//turn to world space normal
 
     
-    float3 toEyeW = normalize(gEyePosW - input.PosW);//direct
+  
 
    
     Light L;
     L.Strength  = Strength;
     L.Direction = normalize(Direction);
 
-    float4 ambient = gAmbientLight * gDiffuseAlbedo;//ambient light
+    float4 ambient = gAmbientLight ;//ambient light
 
  
    
 
    
-    float shadowFactor = 1.0f;
-    float4 directLight = ComputeLighting(L, gDiffuseAlbedo, input.PosW, normalWS, toEyeW, shadowFactor);
+   
+    float4 directLight = ComputeLighting(L, input.PosW, normalWS);
 
     
     float3 lighting = ambient.rgb + directLight.rgb;
