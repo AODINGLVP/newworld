@@ -4,7 +4,7 @@ static;tree;25;0;25;0;0;0;../Resources/OtherTree/pine1.gem;pine;1;pine
 static;tree;20;0;10;0;0;0;../Resources/OtherTree/pine1.gem;pine;1;pine
 static;bamboo;25;0;15;0;0;0;../Resources/OtherTree/bamboo.gem;bamboo;0;bamboo
 static;bamboo;30;0;20;0;0;0;../Resources/OtherTree/bamboo.gem;bamboo;0;bamboo
-anim;trex;20;0;20;0;0;0;../Resources/Trex/TRex.gem;enemy;1;enemy
+anim;trex;40;0;40;0;0;0;../Resources/Trex/TRex.gem;enemy;1;enemy
 static;grass;32;0;32;0;0;0;../Resources/OtherTree/flower1.gem;grass;0;flover
 static;tree;10;0;0;0;0;0;../Resources/OtherTree/pine1.gem;pine;0;pine
 static;tree;10;0;10;0;0;0;../Resources/OtherTree/pine1.gem;pine;0;pine
@@ -43,4 +43,4 @@ static;tree;138;0;138;0;0;0;../Resources/OtherTree/pine1.gem;pine;0;pine
 static;tree;142;0;142;0;0;0;../Resources/OtherTree/pine1.gem;pine;0;pine
 static;tree;146;0;146;0;0;0;../Resources/OtherTree/pine1.gem;pine;0;pine
 static;tree;150;0;150;0;0;0;../Resources/OtherTree/pine1.gem;pine;0;pine
-anim;trex;-20;0;-20;0;0;0;../Resources/Trex/TRex.gem;enemy;1;enemy
+anim;trex;-40;0;-40;0;0;0;../Resources/Trex/TRex.gem;enemy;1;enemy

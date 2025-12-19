@@ -288,12 +288,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		if (win.keys['W']) delta += Vec4(groundforawrd.x, 0, groundforawrd.z, 0);
 		if (win.keys['S']) delta -= Vec4(groundforawrd.x, 0, groundforawrd.z, 0);
 
-
+		/*
 		if (win.keys['N']) {
 			for (int i = 0; i < enemies.size(); i++) {
 				enemies[i]->die(from.TransToVec3RemoveW());
 			}
-		}
+		}*/
 		//delta=delta.normalize();
 		delta *= cameramovespeed * rexdt;
 		from = from + delta;
