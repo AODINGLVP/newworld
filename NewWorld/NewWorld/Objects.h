@@ -555,37 +555,29 @@ public:
 		meshname = _msehname;
 		position = _position;
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
-		int width = 16;
-		int height = 16;
 		std::vector<STATIC_VERTEX> vertices;
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				float fi = i / 1.f;
-				float fj = j / 1.f;
-				vertices.push_back(addVertex(Vec3(fi, 0, fj), Vec3(0.0f, 1.0f, 0.0f), (float)i / height, (float)j / width));
-
-			}
-		}
 		
 
+
+
+		vertices.push_back(addVertex(Vec3(-5, 0, -5), Vec3(0, 0, 0), 0, 0));
+		vertices.push_back(addVertex(Vec3(-5, 0, 5), Vec3(0, 0, 0), 0, 1));
+		vertices.push_back(addVertex(Vec3(5, 0, 5), Vec3(0, 0, 0), 1, 1));
+		vertices.push_back(addVertex(Vec3(5, -0, -5), Vec3(0, 0, 0), 1, 0));
+
+
+
+
+
 		std::vector<unsigned int> indices;
-		for (int i = 0; i < height - 1; i++) {
-			for (int j = 0; j < width - 1; j++) {
+		indices.push_back(0);
+		indices.push_back(1);
+		indices.push_back(2);
 
-				int current = i * width + j;
-				int right = current + 1;
-				int down = current + width;
-				int downR = down + 1;
-
-				indices.push_back(current);
-				indices.push_back(right);
-				indices.push_back(down);
-
-				indices.push_back(right);
-				indices.push_back(downR);
-				indices.push_back(down);
-			}
-		}
+		indices.push_back(0);
+		indices.push_back(2);
+		indices.push_back(3);
+		
 		vector<vector<STATIC_VERTEX>> scv;
 		scv.push_back(vertices);
 

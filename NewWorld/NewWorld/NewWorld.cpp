@@ -87,7 +87,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	for (int i = 0; i < 30; i++) {
 		for (int j = 0; j <30; j++) {
 			Cube* cube1 = new Cube();
-			cube1->init(&core, &psos, &shaders.shaders["shaderlight"], Vec3(-150+i*15, 0, -150 + j * 15), "plane");
+			cube1->init(&core, &psos, &shaders.shaders["shaderlight"], Vec3(-150+i*10, 0, -150 + j * 10), "plane");
 			cubes.push_back(cube1);
 		}
 	}
