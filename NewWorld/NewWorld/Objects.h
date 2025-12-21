@@ -555,8 +555,8 @@ public:
 		meshname = _msehname;
 		position = _position;
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
-		int width = 25;
-		int height = 25;
+		int width = 16;
+		int height = 16;
 		std::vector<STATIC_VERTEX> vertices;
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
@@ -578,13 +578,12 @@ public:
 				int downR = down + 1;
 
 				indices.push_back(current);
-				indices.push_back(down);
 				indices.push_back(right);
+				indices.push_back(down);
 
-				
 				indices.push_back(right);
-				indices.push_back(down);
 				indices.push_back(downR);
+				indices.push_back(down);
 			}
 		}
 		vector<vector<STATIC_VERTEX>> scv;
@@ -617,8 +616,10 @@ public:
 
 	}
 	
-	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, vector<Texture*> texture)
+	void draw(Core* core, Matrix* w, Matrix* vp, Shader* shader, PSOManager* psos, vector<Texture*> texture, vector<Texture*> textureNH,Vec3 *strength,Vec3 *direction)
 	{
+		
+
 
 		realshow = Matrix::translation(position) * Matrix::scaling(scale);
 
@@ -626,7 +627,13 @@ public:
 		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "W", w);
 		shader->updateVSConstantBuffer(core, "staticMeshBuffer", "VP", vp);
 
-		
+		Vec3 gAmbientLight = Vec3(0.8f, 0.8f, 0.8f);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "gAmbientLight", &gAmbientLight);
+
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "Strength", strength);
+		shader->updatePSConstantBuffer(core, "staticLightBuffer", "Direction", direction);
+
+
 
 		//shader.ps_constantBuffer["bufferName"].update("time", &cb->time);
 		//shader.ps_constantBuffer["bufferName"].update("lights", &cb->lights);
@@ -635,6 +642,7 @@ public:
 		psos->bind(core, "cube");
 		
 			shader->updateTexturePS(core, "tex", texture[0]->heapOffset);
+			shader->updateTexturePS(core, "NHtex", textureNH[0]->heapOffset);
 			for (int i = 0; i < MeshManager::Instance().meshesmanager[meshname].size(); i++) {
 				MeshManager::Instance().meshesmanager[meshname][i]->draw(core);
 			}

@@ -82,12 +82,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		fires.push_back(fire1);
 	}
 
-	Cube cube;
-	cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10),"plane");
-	for (int i = 0; i < 20; i++) {
-		for (int j = 0; j < 20; j++) {
+	//Cube cube;
+	//cube.init(&core,&psos, &shaders.shaders["shader1"],Vec3(10,0,10),"plane");
+	for (int i = 0; i < 30; i++) {
+		for (int j = 0; j <30; j++) {
 			Cube* cube1 = new Cube();
-			cube1->init(&core, &psos, &shaders.shaders["shader1"], Vec3(-150+i*20, 0, -150 + j * 20), "plane");
+			cube1->init(&core, &psos, &shaders.shaders["shaderlight"], Vec3(-150+i*15, 0, -150 + j * 15), "plane");
 			cubes.push_back(cube1);
 		}
 	}
@@ -98,7 +98,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	
 	vector<string> texturenames;
 	TextureManager textures;
-
+	vector<string> texturenamesNH;
 	
 	
 
@@ -106,7 +106,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	textures.load(&core, texturenames, "SkyBox");
 	texturenames.clear();
 	texturenames.push_back("../Resources/Grass/Grass01_2K_BaseColor.png");
-	textures.load(&core, texturenames, "Grass");
+	texturenamesNH.push_back("../Resources/Grass/Grass01_2K_Normal.png");
+	textures.load(&core, texturenames, texturenamesNH, "Grass");
 	texturenames.clear();
 	//texturenames.push_back("../Resources/Grass/Grass01_2K_BaseColor.png");
 	//textures.load(&core, texturenames, "font");
@@ -379,7 +380,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}
 		}
 		for (int i = 0; i < cubes.size(); i++) {
-			cubes[i]->draw(&core, &cubes[i]->realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
+			cubes[i]->draw(&core, &cubes[i]->realshow, &vp, &shaders.shaders["shaderlight"], &psos, textures.find("Grass"),textures.findNH("Grass"),&light.Strength,&light.Direction);
 		}
 		Vec3 from3 = Vec3(from.x, from.y, from.z);
 
@@ -388,7 +389,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		grasstest.draw(&core, &grasstest.realshow, &vp, &from3, &light.Strength, &light.Direction, &shaders.shaders["shaderinstancegrass"], &psos, textures.find(grasstest.texturename), textures.findNH(grasstest.texturename), &dt);
 
 	
-		cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
+		//cube.draw(&core, &cube.realshow, &vp, &shaders.shaders["shader1"], &psos, textures.find("Grass"));
 	
 
 
