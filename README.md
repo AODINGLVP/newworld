@@ -1,23 +1,23 @@
 # 🎮 DirectX 12 FPS Graphics Demo
 
-A real-time rendering focused first-person shooter demo built with **C++** and **DirectX 12**.
+This is a real-time first-person shooter (FPS) rendering demo built with **C++** and **DirectX 12**.
 
-This project was developed as part of a **Computer Graphics coursework**, with emphasis on modern rendering techniques, engine-level systems, and performance optimization rather than gameplay complexity.
+The project was developed as part of a **Computer Graphics coursework**, with a primary focus on modern rendering techniques, engine-level system design, and performance optimization rather than complex gameplay mechanics.
 
 ---
 
 ## ✨ Features
 
 - ⚙️ **DirectX 12 Rendering Pipeline**
-- 🌱 **Instanced Rendering** for large-scale scenes
+- 🌱 **Instanced Rendering** (supports large-scale scenes)
 - 💡 **Directional Lighting & Normal Mapping**
 - 🦴 **Skeletal Animation System**
 - 🌿 **Vertex Animation** (grass wind effect)
-- 💥 **Particle Effects** (spark-like impacts)
-- 📦 **AABB & Ray-based Collision Detection**
+- 💥 **Particle Effects** (hit spark effects)
+- 📦 **AABB and Ray-based Collision Detection**
 - 🌌 **Skybox Rendering**
-- 🧾 **Data-Driven Scene Construction (CSV)**
-- 🖥️ **UI Rendering in Screen Space**
+- 🧾 **CSV-based Data-Driven Scene Construction**
+- 🖥️ **Screen-Space UI Rendering**
 
 ---
 
@@ -28,7 +28,7 @@ This project was developed as part of a **Computer Graphics coursework**, with e
 | Move | W / A / S / D |
 | Look / Aim | Mouse |
 | Fire | Left Mouse Button |
-| Aim Down Sight | Right Mouse Button |
+| Aim | Right Mouse Button |
 | Reload | R |
 
 ---
@@ -36,54 +36,39 @@ This project was developed as part of a **Computer Graphics coursework**, with e
 ## 🧠 Technical Overview
 
 ### Rendering System
-- Multiple rendering pipelines support different object types.
-- Instanced rendering significantly reduces CPU draw-call overhead for large numbers of similar objects.
-- Alpha testing is applied in pixel shaders for foliage and transparent materials.
+- Multiple rendering pipelines are implemented to support different object types.
+- Instanced rendering significantly reduces CPU draw-call overhead when rendering large numbers of similar objects.
+- Alpha testing is applied in pixel shaders for vegetation and other cutout materials.
 
 ### Lighting & Materials
 - Directional lighting based on Lambert’s cosine law.
-- Normal mapping using TBN matrices.
-- Ambient lighting ensures minimum scene illumination.
+- Normal mapping with tangent-space normals transformed using the TBN matrix.
+- Ambient lighting ensures a minimum level of scene illumination.
 
 ### Animation System
-- Skeletal animation evaluated per frame and applied in shaders.
+- Vertex animation is used to simulate wind effects on grass.
+- Skeletal animation is evaluated per frame and applied in shaders.
 - Gameplay-driven animation state control:
-  - **T-Rex:** run / attack / death
+  - **T-Rex:** walk / attack / death
   - **UZI:** idle / aim / fire / reload
 
 ### Particle Effects
-- Spark-like particles triggered on ray hit events.
-- Pseudo-random direction and speed generation.
-- Billboard rendering with distance-based intensity falloff.
+- Spark-like particle effects are triggered when a ray hits a target.
+- Particle directions and speeds are generated using pseudo-random values.
+- Billboard rendering is used with distance-based intensity attenuation.
 
 ---
 
-## ⚡ Performance
+## ⚡ Performance Analysis
 
-Performance comparison between **standard rendering** and **instanced rendering** demonstrates that instancing effectively mitigates CPU bottlenecks caused by excessive draw calls.
-
----
-
-## ⚠️ Limitations
-
-- Tight coupling due to incremental development.
-- Some systems would benefit from clearer abstraction.
-- Minor z-fighting artifacts in closely positioned meshes.
+By comparing frame rates between **standard rendering** and **instanced rendering**, the results demonstrate that instancing effectively mitigates CPU bottlenecks caused by a large number of draw calls.
 
 ---
 
-## 🚀 Future Improvements
-
-- Refactor project architecture.
-- Introduce clearer inheritance hierarchies.
-- Improve texture management to reduce redundancy.
-- Further optimize rendering and animation systems.
-
----
-
-## 📂 Repository
+## 📂 Project Repository
 
 🔗 https://github.com/AODINGLVP/newworld.git
+
 
 # 🎮 DirectX 12 FPS 图形演示项目
 
@@ -129,10 +114,11 @@ Performance comparison between **standard rendering** and **instanced rendering*
 
 ### 光照与材质
 - 基于 Lambert 余弦定律的方向光照模型。
-- 使用 TBN 矩阵实现法线贴图。
+- 引入了法线贴图并且使用TBN矩阵进行转换。
 - 引入环境光以保证场景的最低亮度。
 
 ### 动画系统
+- 模拟吹动草场的顶点动画
 - 骨骼动画在每帧计算并在着色器中应用。
 - 基于游戏逻辑的动画状态控制：
   - **T-Rex：** 行走 / 攻击 / 死亡
@@ -142,6 +128,9 @@ Performance comparison between **standard rendering** and **instanced rendering*
 - 射线命中目标时触发火花粒子效果。
 - 使用伪随机数生成粒子的方向与速度。
 - 通过 Billboard 渲染并基于距离进行亮度衰减。
+  
+
+
 
 ---
 
@@ -151,22 +140,7 @@ Performance comparison between **standard rendering** and **instanced rendering*
 
 ---
 
-## ⚠️ 项目局限
 
-- 由于项目逐步迭代开发，部分模块耦合较紧。
-- 某些系统在抽象层次上仍有优化空间。
-- 个别模型存在轻微的 Z-Fighting 现象。
-
----
-
-## 🚀 未来改进方向
-
-- 重构整体项目架构。
-- 引入更清晰的继承与模块关系。
-- 优化纹理管理方式以减少冗余。
-- 进一步优化渲染与动画系统。
-
----
 
 ## 📂 项目仓库
 
